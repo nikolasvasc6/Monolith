@@ -433,6 +433,26 @@ function renderChart(trades) {
   const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)';
   const tooltipText = isLight ? '#1f2937' : '#f8fafc';
   const pointBorderColor = isLight ? '#ffffff' : '#0c0f17';
+  const crosshairColor = isLight ? 'rgba(0, 0, 0, 0.28)' : 'rgba(255, 255, 255, 0.28)';
+
+  const crosshairPlugin = {
+    id: 'crosshair',
+    afterDraw(chart) {
+      const active = chart.tooltip?.getActiveElements?.() || [];
+      if (!active.length) return;
+      const x = active[0].element.x;
+      const { top, bottom } = chart.chartArea;
+      const c = chart.ctx;
+      c.save();
+      c.beginPath();
+      c.moveTo(x, top);
+      c.lineTo(x, bottom);
+      c.lineWidth = 1;
+      c.strokeStyle = crosshairColor;
+      c.stroke();
+      c.restore();
+    }
+  };
 
   chartInstance = new Chart(ctx, {
     type: 'line',
@@ -445,8 +465,10 @@ function renderChart(trades) {
       pointHoverRadius: 6, tension: 0.35,
       fill: true, backgroundColor: gradient
     }] },
+    plugins: [crosshairPlugin],
     options: {
       responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false, axis: 'x' },
       plugins: {
         legend: { display: false },
         tooltip: {
