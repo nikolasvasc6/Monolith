@@ -5,7 +5,7 @@
  * preenchido automaticamente pelo Supabase (auth.uid) — basta o
  * cliente estar autenticado. O RLS no banco impede qualquer leak.
  */
-import { supabase } from '../supabase-client.js';
+import { supabase } from '../supabase-client.js?v=2';
 
 const TABLE = 'trades';
 

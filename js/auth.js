@@ -4,7 +4,7 @@
  * Centraliza signup, signin, signout, getSession e onAuthStateChange.
  * Toda mensagem de erro vem em pt-BR.
  */
-import { supabase } from './supabase-client.js';
+import { supabase } from './supabase-client.js?v=2';
 
 function translateError(err) {
   if (!err) return 'Erro desconhecido.';
