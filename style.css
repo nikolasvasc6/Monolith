@@ -1567,6 +1567,7 @@ select optgroup {
 
 textarea {
   width: 100%;
+  min-height: 96px;
   padding: 12px;
   background-color: var(--surface-2);
   border: 1px solid var(--border-color);
@@ -1574,6 +1575,7 @@ textarea {
   color: var(--text-active);
   font-family: var(--font-secondary);
   font-size: 0.88rem;
+  line-height: 1.5;
   outline: none;
   resize: vertical;
   transition: var(--transition-fast);
