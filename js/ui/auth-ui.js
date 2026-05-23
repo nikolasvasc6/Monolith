@@ -11,7 +11,7 @@
  *   2. Submit → chama auth.js
  *   3. Em caso de sucesso (com sessão), dispara o callback registrado
  */
-import { signIn, signUp, resetPassword } from '../auth.js?v=2';
+import { signIn, signUp, resetPassword } from '../auth.js';
 
 let onAuthenticatedCb = null;
 

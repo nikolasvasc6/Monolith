@@ -5,7 +5,7 @@
  * on_auth_user_created. Aqui só fazemos SELECT/UPDATE com upsert
  * defensivo (caso o trigger não tenha rodado por alguma razão).
  */
-import { supabase } from '../supabase-client.js?v=2';
+import { supabase } from '../supabase-client.js';
 
 const TABLE = 'user_preferences';
 

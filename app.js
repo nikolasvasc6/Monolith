@@ -8,8 +8,8 @@
  * - RLS no banco garante isolamento por usuário
  */
 
-import { onAuthChange, getSession, signOut } from './js/auth.js?v=2';
-import { initAuthUI, showAuthScreen, hideAuthScreen, onAuthenticated } from './js/ui/auth-ui.js?v=2';
+import { onAuthChange, getSession, signOut } from './js/auth.js';
+import { initAuthUI, showAuthScreen, hideAuthScreen, onAuthenticated } from './js/ui/auth-ui.js';
 import {
   fetchAllTradesByBlock,
   insertTrade,
@@ -19,11 +19,11 @@ import {
   bulkImportTrades,
   subscribeRealtime,
   unsubscribeRealtime
-} from './js/services/trades.js?v=2';
+} from './js/services/trades.js';
 import {
   fetchPreferences,
   updatePreferences
-} from './js/services/preferences.js?v=2';
+} from './js/services/preferences.js';
 
 // ==========================================================================
 // CONSTANTES & ESTADO
