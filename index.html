@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PositionPips | Diário de Trading Profissional</title>
+  <meta name="description" content="Gestão de risco e diário de trading profissional em blocos de 35 operações. Acompanhe sua evolução e performance de forma inteligente.">
+  
+  <!-- Fontes do Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Ícones Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js para o gráfico de performance -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Arquivo CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Layout Principal -->
+  <div class="app-container">
+    
+    <!-- Sidebar / Menu Lateral -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <div class="logo-area">
+          <span class="logo-icon"><i data-lucide="trending-up"></i></span>
+          <div class="logo-text">
+            <h2>PositionPips</h2>
+            <p>Ferramenta de gestão de risco</p>
+          </div>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <ul>
+          <li>
+            <a href="#" class="nav-item" data-tab="dashboard">
+              <i data-lucide="layout-dashboard"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-tab="forex-calc">
+              <i data-lucide="calculator"></i>
+              <span>Calculadora Forex</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-tab="futures-calc">
+              <i data-lucide="line-chart"></i>
+              <span>Calculadora Futuros EUA</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-tab="b3-calc">
+              <i data-lucide="percent"></i>
+              <span>Calculadora B3</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-tab="btc-calc">
+              <i data-lucide="coins"></i>
+              <span>Calculadora BTC CFD</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item active" data-tab="trading-journal">
+              <i data-lucide="book-open"></i>
+              <span>Diário de Trading</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="nav-item" data-tab="trading-plan">
+              <i data-lucide="scroll"></i>
+              <span>Plano Operacional</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <button id="btn-export-data" class="btn-sidebar-action" title="Exportar backup dos dados">
+          <i data-lucide="download"></i> Exportar Dados
+        </button>
+        <button id="btn-import-data" class="btn-sidebar-action" title="Importar backup dos dados">
+          <i data-lucide="upload"></i> Importar Dados
+        </button>
+        <input type="file" id="file-import-input" accept=".json" style="display: none;">
+        <button id="btn-reset-app" class="btn-sidebar-action btn-danger" title="Limpar todos os dados">
+          <i data-lucide="trash-2"></i> Resetar Dados
+        </button>
+      </div>
+    </aside>
+
+    <!-- Área de Conteúdo Principal -->
+    <main class="main-content">
+      
+      <!-- Topbar / Cabeçalho Superior -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="platform-title">PositionPips | Excelência Trading</span>
+        </div>
+        <div class="topbar-center">
+          <span class="platform-subtitle">Plataforma de Gestão Excelência Trading</span>
+        </div>
+        <div class="topbar-right">
+          <button id="btn-theme-toggle" class="btn-theme-toggle" title="Alternar Tema">
+            <i data-lucide="sun"></i>
+          </button>
+          <div class="access-badge">
+            <span class="badge-dot"></span>
+            Acesso Ativo
+          </div>
+          <div class="user-profile">
+            <div class="user-info">
+              <span class="user-role">Trader</span>
+              <span class="user-email" id="header-user-email">nikolasuvaconceito@gmail.com</span>
+            </div>
+            <div class="user-avatar">
+              <i data-lucide="user"></i>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Conteúdo das Páginas (Selecionável via Menu) -->
+      <section class="page-section active" id="page-trading-journal">
+        
+        <!-- Título do Diário -->
+        <div class="page-header">
+          <div class="page-title-area">
+            <h1>Diário de Trading</h1>
+            <p>Acompanhe suas operações e resultados</p>
+          </div>
+          <button id="btn-new-trade-header" class="btn-primary">
+            <i data-lucide="plus"></i> Nova operação
+          </button>
+        </div>
+
+        <!-- Cards de Estatísticas (KPIs) -->
+        <div class="kpi-grid">
+          <div class="kpi-card" id="kpi-registered">
+            <div class="kpi-icon-wrapper">
+              <i data-lucide="layers"></i>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-title">Operações registradas</span>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="val-registered">0</span>
+                <span class="kpi-subtext" id="sub-registered">/ 35 no bloco</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-registered" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-accumulated">
+            <div class="kpi-icon-wrapper">
+              <i data-lucide="dollar-sign"></i>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-title">Resultado acumulado</span>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="val-accumulated">$ 0.00</span>
+              </div>
+              <span class="kpi-indicator" id="ind-accumulated">Sem operações</span>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-winrate">
+            <div class="kpi-icon-wrapper">
+              <i data-lucide="award"></i>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-title">Win rate</span>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="val-winrate">0%</span>
+              </div>
+              <span class="kpi-indicator" id="ind-winrate">Taxa de acerto do bloco</span>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-average">
+            <div class="kpi-icon-wrapper">
+              <i data-lucide="trending-up"></i>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-title">Média por operação</span>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="val-average">$ 0.00</span>
+              </div>
+              <span class="kpi-indicator" id="ind-average">Média de lucro/prejuízo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card do Gráfico de Performance -->
+        <div class="card-chart-container">
+          <div class="chart-header">
+            <div class="chart-header-left">
+              <div class="chart-title-icon">
+                <i data-lucide="activity"></i>
+              </div>
+              <div>
+                <h3>Performance da Conta</h3>
+                <p>Evolução acumulada com base no Diário de Trading</p>
+              </div>
+            </div>
+            <div class="chart-header-right" id="chart-stats-summary">
+              <span class="summary-item">Trades: <strong id="summary-trades-count">0</strong></span>
+              <span class="summary-item">Win Rate: <strong id="summary-winrate">0%</strong></span>
+              <span class="summary-item">P/L: <strong id="summary-pl">$ 0.00</strong></span>
+            </div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="performanceChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Barra de Filtros, Visualizações e Navegação de Blocos -->
+        <div class="control-bar">
+          <div class="view-toggles">
+            <button class="btn-toggle active" id="btn-toggle-grid" title="Visualização em Grade">
+              <i data-lucide="grid"></i> Grid Visual
+            </button>
+            <button class="btn-toggle" id="btn-toggle-list" title="Visualização em Lista">
+              <i data-lucide="list"></i> Lista
+            </button>
+          </div>
+
+          <div class="block-navigation">
+            <button class="btn-nav" id="btn-prev-block" title="Bloco Anterior">
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <span class="block-label" id="block-info-display">Bloco 1 de 1 (Ciclo 1)</span>
+            <button class="btn-nav" id="btn-next-block" title="Próximo Bloco">
+              <i data-lucide="chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Área Dinâmica: Grid Visual de Trades (7x5) -->
+        <div class="view-content active" id="content-grid-view">
+          <div class="trades-grid" id="grid-container">
+            <!-- Gerado via Javascript -->
+          </div>
+        </div>
+
+        <!-- Área Dinâmica: Lista de Trades (Tabela) -->
+        <div class="view-content" id="content-list-view">
+          <div class="table-container">
+            <table class="trades-table" id="trades-table-el">
+              <thead>
+                <tr>
+                  <th>Nº</th>
+                  <th>Ativo / Par</th>
+                  <th>Tipo</th>
+                  <th>Data</th>
+                  <th>Resultado (P&L)</th>
+                  <th>Observações</th>
+                  <th class="actions-header">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="table-body-container">
+                <!-- Gerado via Javascript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====== Calculadora Forex ====== -->
+      <section class="page-section" id="page-forex-calc">
+        <div class="page-header">
+          <div class="page-title-area">
+            <h1>Calculadora Forex</h1>
+            <p>Dimensionamento de lote por risco e cálculo de pip value</p>
+          </div>
+        </div>
+
+        <div class="calc-grid">
+          <div class="calc-card calc-card-form">
+            <h3><i data-lucide="sliders-horizontal"></i> Parâmetros da Operação</h3>
+            <p class="calc-card-subtitle">Preencha os dados da operação</p>
+
+            <div class="form-group">
+              <label for="fx-pair">Par de Moedas</label>
+              <div class="input-with-icon">
+                <i data-lucide="arrow-left-right"></i>
+                <select id="fx-pair">
+                  <option value="EURUSD">EUR/USD</option>
+                  <option value="GBPUSD">GBP/USD</option>
+                  <option value="AUDUSD">AUD/USD</option>
+                  <option value="NZDUSD">NZD/USD</option>
+                  <option value="USDJPY">USD/JPY</option>
+                  <option value="USDCHF">USD/CHF</option>
+                  <option value="USDCAD">USD/CAD</option>
+                  <option value="EURJPY">EUR/JPY</option>
+                  <option value="GBPJPY">GBP/JPY</option>
+                  <option value="XAUUSD">XAU/USD (Ouro)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fx-stop-pips">Stop Loss (em pips)</label>
+                <div class="input-with-icon">
+                  <i data-lucide="ruler"></i>
+                  <input type="number" id="fx-stop-pips" placeholder="Ex: 20" value="20" step="0.1" min="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="fx-risk">Risco em USD</label>
+                <div class="input-with-icon">
+                  <i data-lucide="dollar-sign"></i>
+                  <input type="number" id="fx-risk" placeholder="Ex: 100" value="100.00" step="0.01" min="0">
+                </div>
+              </div>
+            </div>
+
+            <input type="hidden" id="fx-account" value="0">
+            <input type="hidden" id="fx-price" value="1.08500">
+
+            <button class="btn-primary btn-calc" id="btn-fx-calc">
+              <i data-lucide="calculator"></i> Calcular Tamanho de Posição
+            </button>
+          </div>
+
+          <div class="calc-card calc-card-result">
+            <h3><i data-lucide="target"></i> Resultado</h3>
+            <div class="calc-result-row">
+              <span>Risco máximo (em USD)</span>
+              <strong id="fx-out-risk">$ 0.00</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Valor por pip (1 lote padrão)</span>
+              <strong id="fx-out-pipval">$ 0.00</strong>
+            </div>
+            <div class="calc-result-row highlight">
+              <span>Tamanho do lote</span>
+              <strong id="fx-out-lots">0.00</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Lotes mini (0,1)</span>
+              <strong id="fx-out-mini">0.0</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Lotes micro (0,01)</span>
+              <strong id="fx-out-micro">0</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Unidades totais</span>
+              <strong id="fx-out-units">0</strong>
+            </div>
+            <small class="calc-help">Fórmula: Lote = Risco USD ÷ (Stop em pips × Valor do pip por lote). Cálculo presume conta em USD.</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== Calculadora Futuros EUA ====== -->
+      <section class="page-section" id="page-futures-calc">
+        <div class="page-header">
+          <div class="page-title-area">
+            <h1>Calculadora Futuros EUA</h1>
+            <p>Mini e Micro contratos do CME (índices, energia e metais)</p>
+          </div>
+        </div>
+
+        <div class="calc-grid">
+          <div class="calc-card calc-card-form">
+            <h3><i data-lucide="sliders-horizontal"></i> Parâmetros</h3>
+            <p class="calc-card-subtitle">Preencha os dados da operação</p>
+
+            <div class="form-group">
+              <label for="fut-symbol">Contrato</label>
+              <div class="input-with-icon">
+                <i data-lucide="line-chart"></i>
+                <select id="fut-symbol">
+                  <optgroup label="Índices E-mini">
+                    <option value="ES">ES — E-mini S&amp;P 500 ($50/ponto)</option>
+                    <option value="NQ">NQ — E-mini Nasdaq 100 ($20/ponto)</option>
+                    <option value="YM">YM — E-mini Dow Jones ($5/ponto)</option>
+                    <option value="RTY">RTY — E-mini Russell 2000 ($50/ponto)</option>
+                  </optgroup>
+                  <optgroup label="Índices Micro">
+                    <option value="MES">MES — Micro S&amp;P 500 ($5/ponto)</option>
+                    <option value="MNQ">MNQ — Micro Nasdaq ($2/ponto)</option>
+                    <option value="MYM">MYM — Micro Dow ($0,50/ponto)</option>
+                    <option value="M2K">M2K — Micro Russell ($5/ponto)</option>
+                  </optgroup>
+                  <optgroup label="Energia">
+                    <option value="CL">CL — Crude Oil ($1000/ponto)</option>
+                    <option value="MCL">MCL — Micro Crude Oil ($100/ponto)</option>
+                  </optgroup>
+                  <optgroup label="Metais">
+                    <option value="GC">GC — Gold ($100/ponto)</option>
+                    <option value="MGC">MGC — Micro Gold ($10/ponto)</option>
+                    <option value="SI">SI — Silver ($5000/ponto)</option>
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fut-stop">Stop Loss (em pontos)</label>
+                <div class="input-with-icon">
+                  <i data-lucide="ruler"></i>
+                  <input type="number" id="fut-stop" placeholder="Ex: 5" value="5" step="0.01" min="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="fut-risk">Risco em USD</label>
+                <div class="input-with-icon">
+                  <i data-lucide="dollar-sign"></i>
+                  <input type="number" id="fut-risk" placeholder="Ex: 250" value="250.00" step="0.01" min="0">
+                </div>
+              </div>
+            </div>
+
+            <input type="hidden" id="fut-account" value="0">
+
+            <button class="btn-primary btn-calc" id="btn-fut-calc">
+              <i data-lucide="calculator"></i> Calcular Nº de Contratos
+            </button>
+          </div>
+
+          <div class="calc-card calc-card-result">
+            <h3><i data-lucide="target"></i> Resultado</h3>
+            <div class="calc-result-row">
+              <span>Risco máximo (USD)</span>
+              <strong id="fut-out-risk">$ 0.00</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Valor por ponto (1 contrato)</span>
+              <strong id="fut-out-pointval">$ 0.00</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Valor por tick</span>
+              <strong id="fut-out-tickval">$ 0.00</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Perda por contrato no stop</span>
+              <strong id="fut-out-perctr">$ 0.00</strong>
+            </div>
+            <div class="calc-result-row highlight">
+              <span>Nº de contratos recomendado</span>
+              <strong id="fut-out-contracts">0</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Risco efetivo na operação</span>
+              <strong id="fut-out-actrisk">$ 0.00</strong>
+            </div>
+            <small class="calc-help">Fórmula: Contratos = ⌊Risco USD ÷ (Stop em pontos × Valor do ponto)⌋. Arredonda para baixo para não ultrapassar o risco definido.</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== Calculadora B3 ====== -->
+      <section class="page-section" id="page-b3-calc">
+        <div class="page-header">
+          <div class="page-title-area">
+            <h1>Calculadora B3</h1>
+            <p>Mini-contratos e contratos cheios da B3 (Índice e Dólar)</p>
+          </div>
+        </div>
+
+        <div class="calc-grid">
+          <div class="calc-card calc-card-form">
+            <h3><i data-lucide="sliders-horizontal"></i> Parâmetros</h3>
+            <p class="calc-card-subtitle">Preencha os dados da operação</p>
+
+            <div class="form-group">
+              <label for="b3-symbol">Contrato</label>
+              <div class="input-with-icon">
+                <i data-lucide="line-chart"></i>
+                <select id="b3-symbol">
+                  <optgroup label="Índice Bovespa">
+                    <option value="WIN">WIN — Mini-Índice (R$ 0,20/ponto)</option>
+                    <option value="IND">IND — Índice Cheio (R$ 1,00/ponto)</option>
+                  </optgroup>
+                  <optgroup label="Dólar Futuro">
+                    <option value="WDO">WDO — Mini-Dólar (R$ 10,00/ponto)</option>
+                    <option value="DOL">DOL — Dólar Cheio (R$ 50,00/ponto)</option>
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="b3-stop">Stop Loss (em pontos)</label>
+                <div class="input-with-icon">
+                  <i data-lucide="ruler"></i>
+                  <input type="number" id="b3-stop" placeholder="Ex: 150" value="150" step="1" min="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="b3-risk">Risco em R$</label>
+                <div class="input-with-icon">
+                  <i data-lucide="dollar-sign"></i>
+                  <input type="number" id="b3-risk" placeholder="Ex: 200" value="200.00" step="0.01" min="0">
+                </div>
+              </div>
+            </div>
+
+            <input type="hidden" id="b3-account" value="0">
+
+            <button class="btn-primary btn-calc" id="btn-b3-calc">
+              <i data-lucide="calculator"></i> Calcular Nº de Contratos
+            </button>
+          </div>
+
+          <div class="calc-card calc-card-result">
+            <h3><i data-lucide="target"></i> Resultado</h3>
+            <div class="calc-result-row">
+              <span>Risco máximo (R$)</span>
+              <strong id="b3-out-risk">R$ 0,00</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Valor por ponto (1 contrato)</span>
+              <strong id="b3-out-pointval">R$ 0,00</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Perda por contrato no stop</span>
+              <strong id="b3-out-perctr">R$ 0,00</strong>
+            </div>
+            <div class="calc-result-row highlight">
+              <span>Nº de contratos recomendado</span>
+              <strong id="b3-out-contracts">0</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Risco efetivo na operação</span>
+              <strong id="b3-out-actrisk">R$ 0,00</strong>
+            </div>
+            <small class="calc-help">Mini-Índice (WIN): cada ponto vale R$ 0,20. Mini-Dólar (WDO): cada ponto vale R$ 10,00. Stop em pontos do ativo (ex.: 150 pts no WIN ≈ R$ 30/contrato).</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== Calculadora BTC CFD ====== -->
+      <section class="page-section" id="page-btc-calc">
+        <div class="page-header">
+          <div class="page-title-area">
+            <h1>Calculadora BTC CFD</h1>
+            <p>Defina tamanho de posição com base no stop e no risco em dólares</p>
+          </div>
+        </div>
+
+        <div class="calc-grid">
+          <div class="calc-card calc-card-form">
+            <h3><i data-lucide="sliders-horizontal"></i> Parâmetros de entrada</h3>
+            <p class="calc-card-subtitle">Preencha os dados da operação</p>
+
+            <div class="form-group">
+              <label for="btc-broker">Ativo / Broker</label>
+              <div class="input-with-icon">
+                <i data-lucide="coins"></i>
+                <select id="btc-broker">
+                  <option value="BTCUSD_1">BTCUSD CFD (pip = $1)</option>
+                  <option value="BTCUSD_10">BTCUSD CFD (pip = $10)</option>
+                  <option value="BTCUSD_100">BTCUSD CFD (pip = $100)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="btc-stop-pips">Stop em pips/pontos</label>
+              <div class="input-with-icon">
+                <i data-lucide="ruler"></i>
+                <input type="number" id="btc-stop-pips" placeholder="100" value="100" step="1" min="0">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="btc-risk-usd">Risco em USD</label>
+              <div class="input-with-icon">
+                <i data-lucide="dollar-sign"></i>
+                <input type="number" id="btc-risk-usd" placeholder="100.00" value="100.00" step="0.01" min="0">
+              </div>
+            </div>
+
+            <button class="btn-primary btn-calc" id="btn-btc-calc">
+              <i data-lucide="calculator"></i> Calcular posição
+            </button>
+          </div>
+
+          <div class="calc-card calc-card-result">
+            <h3><i data-lucide="target"></i> Resultado</h3>
+            <div class="calc-result-row">
+              <span>Risco máximo (USD)</span>
+              <strong id="btc-out-risk">$ 0.00</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Valor do pip</span>
+              <strong id="btc-out-pipval">$ 0.00</strong>
+            </div>
+            <div class="calc-result-row">
+              <span>Perda por lote no stop</span>
+              <strong id="btc-out-losslot">$ 0.00</strong>
+            </div>
+            <div class="calc-result-row highlight">
+              <span>Tamanho da posição (lotes)</span>
+              <strong id="btc-out-size">0.00</strong>
+            </div>
+            <small class="calc-help">Fórmula: Lotes = Risco USD ÷ (Stop em pips × Valor do pip). Tamanho de posição que mantém o risco dentro do limite definido.</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- Placeholder para futuras seções -->
+      <section class="page-section" id="page-placeholder">
+        <div class="placeholder-content">
+          <div class="placeholder-icon">
+            <i data-lucide="construction"></i>
+          </div>
+          <h2>Área em Desenvolvimento</h2>
+          <p>Esta funcionalidade faz parte do ecossistema PositionPips e estará disponível em breve.</p>
+          <button class="btn-secondary" onclick="document.querySelector('[data-tab=trading-journal]').click()">
+            Voltar para o Diário de Trading
+          </button>
+        </div>
+      </section>
+      
+    </main>
+  </div>
+
+  <!-- Modal de Operação (Adicionar / Editar) -->
+  <div class="modal-overlay" id="trade-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Nova Operação</h3>
+        <button class="btn-close-modal" id="btn-close-modal-x">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="trade-form">
+        <!-- Input oculto para armazenar o ID do trade (quando editando) -->
+        <input type="hidden" id="trade-id-input">
+        <!-- Input oculto para armazenar o slot do grid correspondente -->
+        <input type="hidden" id="trade-slot-input">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="trade-asset">Ativo / Par de Moedas</label>
+            <div class="input-with-icon">
+              <i data-lucide="trending-up"></i>
+              <input type="text" id="trade-asset" placeholder="Ex: XAUUSD, EURUSD, Mini-Índice" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="trade-type">Tipo de Operação</label>
+            <div class="input-with-icon">
+              <i data-lucide="arrow-left-right"></i>
+              <select id="trade-type" required>
+                <option value="take">Take (Lucro)</option>
+                <option value="stop">Stop (Prejuízo)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="trade-pnl">Resultado Financeiro (P&L em USD/R$)</label>
+            <div class="input-with-icon">
+              <i data-lucide="dollar-sign"></i>
+              <input type="number" step="0.01" min="0" id="trade-pnl" placeholder="Ex: 25.68" required>
+            </div>
+            <small class="form-help">Informe o valor absoluto. O sinal será definido pelo tipo (Take = positivo, Stop = negativo).</small>
+          </div>
+
+          <div class="form-group">
+            <label for="trade-date">Data da Operação</label>
+            <div class="input-with-icon">
+              <i data-lucide="calendar"></i>
+              <input type="date" id="trade-date" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="trade-notes">Observações / Anotações (Opcional)</label>
+          <textarea id="trade-notes" rows="3" placeholder="Ex: Compra baseada em suporte do canal de H4, com confirmação de volume."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-danger-action" id="btn-delete-trade" style="display: none;">
+            <i data-lucide="trash-2"></i> Excluir Trade
+          </button>
+          <div class="modal-actions-right">
+            <button type="button" class="btn-secondary" id="btn-cancel-modal">Cancelar</button>
+            <button type="submit" class="btn-primary" id="btn-submit-modal">Salvar Operação</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Script principal -->
+  <script src="app.js"></script>
+</body>
+</html>
