@@ -814,7 +814,8 @@ function setupCalculatorsListeners() {
 
 function forexPipValuePerLot(pair, price) {
   const standardLot = 100000;
-  if (pair === 'XAUUSD') return 10;
+  // XAUUSD: calcula posição em mini lotes (10 oz → $1/pip), não em lote padrão
+  if (pair === 'XAUUSD') return 1;
   if (pair.endsWith('USD')) return 0.0001 * standardLot;
   if (pair.startsWith('USD')) {
     if (pair === 'USDJPY') return (0.01 * standardLot) / price;
