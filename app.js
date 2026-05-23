@@ -641,6 +641,11 @@ function setupEventListeners() {
   DOM.tradeModal.addEventListener('click', (e) => {
     if (e.target === DOM.tradeModal) closeTradeModal();
   });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && DOM.tradeModal.classList.contains('active')) {
+      closeTradeModal();
+    }
+  });
   DOM.tradeForm.addEventListener('submit', (e) => { e.preventDefault(); handleSaveTrade(); });
   DOM.btnDeleteTrade.addEventListener('click', async () => {
     const id = DOM.tradeIdInput.value;
