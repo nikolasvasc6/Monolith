@@ -834,13 +834,17 @@ function calculateForex() {
     toast('Preencha stop e risco corretamente (> 0).', 'error'); return;
   }
   const pipValuePerLot = forexPipValuePerLot(pair, price);
-  const lotSize = riskAmount / (stopPips * pipValuePerLot);
-  document.getElementById('fx-out-risk').textContent   = formatCurrency(riskAmount);
-  document.getElementById('fx-out-pipval').textContent = formatCurrency(pipValuePerLot);
-  document.getElementById('fx-out-lots').textContent   = lotSize.toFixed(2);
-  document.getElementById('fx-out-mini').textContent   = (lotSize * 10).toFixed(1);
-  document.getElementById('fx-out-micro').textContent  = Math.floor(lotSize * 100).toLocaleString('pt-BR');
-  document.getElementById('fx-out-units').textContent  = Math.round(lotSize * 100000).toLocaleString('pt-BR');
+  // Arredonda para baixo no passo de micro lote (0,01) para não ultrapassar o risco definido
+  const preciseLot = riskAmount / (stopPips * pipValuePerLot);
+  const lotSize    = Math.floor(preciseLot * 100) / 100;
+  const actualRisk = lotSize * stopPips * pipValuePerLot;
+  document.getElementById('fx-out-risk').textContent    = formatCurrency(riskAmount);
+  document.getElementById('fx-out-pipval').textContent  = formatCurrency(pipValuePerLot);
+  document.getElementById('fx-out-lots').textContent    = lotSize.toFixed(2);
+  document.getElementById('fx-out-mini').textContent    = (lotSize * 10).toFixed(1);
+  document.getElementById('fx-out-micro').textContent   = Math.floor(lotSize * 100).toLocaleString('pt-BR');
+  document.getElementById('fx-out-units').textContent   = Math.round(lotSize * 100000).toLocaleString('pt-BR');
+  document.getElementById('fx-out-actrisk').textContent = formatCurrency(actualRisk);
 }
 
 const FUTURES_SPECS = {
@@ -910,10 +914,14 @@ function calculateBTC() {
     toast('Preencha stop e risco corretamente (> 0).', 'error'); return;
   }
   const lossPerLot = stopPips * spec.pipValue;
+  // Arredonda para baixo (0,01) para não ultrapassar o risco
+  const lots = Math.floor((riskUSD / lossPerLot) * 100) / 100;
+  const actualRisk = lots * lossPerLot;
   document.getElementById('btc-out-risk').textContent    = formatCurrency(riskUSD);
   document.getElementById('btc-out-pipval').textContent  = formatCurrency(spec.pipValue);
   document.getElementById('btc-out-losslot').textContent = formatCurrency(lossPerLot);
-  document.getElementById('btc-out-size').textContent    = (riskUSD / lossPerLot).toFixed(2);
+  document.getElementById('btc-out-size').textContent    = lots.toFixed(2);
+  document.getElementById('btc-out-actrisk').textContent = formatCurrency(actualRisk);
 }
 
 // ==========================================================================

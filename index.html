@@ -406,7 +406,11 @@
               <span>Unidades totais</span>
               <strong id="fx-out-units">0</strong>
             </div>
-            <small class="calc-help">Fórmula: Lote = Risco USD ÷ (Stop em pips × Valor do pip por lote). Cálculo presume conta em USD.</small>
+            <div class="calc-result-row">
+              <span>Risco estimado</span>
+              <strong id="fx-out-actrisk">$ 0.00</strong>
+            </div>
+            <small class="calc-help">Fórmula: Lote = Risco USD ÷ (Stop em pips × Valor do pip por lote). Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.</small>
           </div>
         </div>
       </section>
@@ -502,10 +506,10 @@
               <strong id="fut-out-contracts">0</strong>
             </div>
             <div class="calc-result-row">
-              <span>Risco efetivo na operação</span>
+              <span>Risco estimado</span>
               <strong id="fut-out-actrisk">$ 0.00</strong>
             </div>
-            <small class="calc-help">Fórmula: Contratos = ⌊Risco USD ÷ (Stop em pontos × Valor do ponto)⌋. Arredonda para baixo para não ultrapassar o risco definido.</small>
+            <small class="calc-help">Fórmula: Contratos = ⌊Risco USD ÷ (Stop em pontos × Valor do ponto)⌋. Arredonda para baixo para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.</small>
           </div>
         </div>
       </section>
@@ -584,10 +588,10 @@
               <strong id="b3-out-contracts">0</strong>
             </div>
             <div class="calc-result-row">
-              <span>Risco efetivo na operação</span>
+              <span>Risco estimado</span>
               <strong id="b3-out-actrisk">R$ 0,00</strong>
             </div>
-            <small class="calc-help">Mini-Índice (WIN): cada ponto vale R$ 0,20. Mini-Dólar (WDO): cada ponto vale R$ 10,00. Stop em pontos do ativo (ex.: 150 pts no WIN ≈ R$ 30/contrato).</small>
+            <small class="calc-help">Mini-Índice (WIN): cada ponto vale R$ 0,20. Mini-Dólar (WDO): cada ponto vale R$ 10,00. Contratos arredondados para baixo para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.</small>
           </div>
         </div>
       </section>
@@ -657,7 +661,11 @@
               <span>Tamanho da posição (lotes)</span>
               <strong id="btc-out-size">0.00</strong>
             </div>
-            <small class="calc-help">Fórmula: Lotes = Risco USD ÷ (Stop em pips × Valor do pip). Tamanho de posição que mantém o risco dentro do limite definido.</small>
+            <div class="calc-result-row">
+              <span>Risco estimado</span>
+              <strong id="btc-out-actrisk">$ 0.00</strong>
+            </div>
+            <small class="calc-help">Fórmula: Lotes = Risco USD ÷ (Stop em pips × Valor do pip). Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.</small>
           </div>
         </div>
       </section>
