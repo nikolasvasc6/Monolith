@@ -19,11 +19,53 @@
 
   <!-- Arquivo CSS -->
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="auth.css">
 </head>
 <body>
 
+  <!-- ====== Tela de Login / Cadastro ====== -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-brand-icon"><i data-lucide="trending-up"></i></div>
+        <div>
+          <h2>PositionPips</h2>
+          <p>Diário de Trading na nuvem</p>
+        </div>
+      </div>
+      <h1 id="auth-title">Entrar</h1>
+      <p id="auth-subtitle">Acesse seu diário de trading na nuvem</p>
+      <form id="auth-form" autocomplete="on">
+        <div class="auth-field">
+          <label for="auth-email">E-mail</label>
+          <input type="email" id="auth-email" autocomplete="email" required placeholder="voce@exemplo.com">
+        </div>
+        <div class="auth-field">
+          <label for="auth-password">Senha</label>
+          <input type="password" id="auth-password" autocomplete="current-password" required placeholder="Mínimo 6 caracteres" minlength="6">
+        </div>
+        <button type="submit" id="auth-submit">Entrar</button>
+        <div id="auth-error" class="auth-message"></div>
+        <div id="auth-info" class="auth-message"></div>
+        <div class="auth-footer">
+          <button type="button" id="auth-switch-mode">Não tem conta? <strong>Cadastre-se</strong></button>
+          <a href="#" id="auth-forgot">Esqueci a senha</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====== Overlay de Loading Global ====== -->
+  <div id="app-loading">
+    <div class="spinner"></div>
+    <span>Sincronizando…</span>
+  </div>
+
+  <!-- ====== Container de Toasts ====== -->
+  <div id="toast-container"></div>
+
   <!-- Layout Principal -->
-  <div class="app-container">
+  <div class="app-container hidden" id="app-shell">
     
     <!-- Sidebar / Menu Lateral -->
     <aside class="sidebar" id="app-sidebar">
@@ -95,6 +137,9 @@
         <button id="btn-reset-app" class="btn-sidebar-action btn-danger" title="Limpar todos os dados">
           <i data-lucide="trash-2"></i> Resetar Dados
         </button>
+        <button id="btn-logout" class="btn-sidebar-action btn-logout" title="Sair da conta">
+          <i data-lucide="log-out"></i> Sair
+        </button>
       </div>
     </aside>
 
@@ -120,7 +165,7 @@
           <div class="user-profile">
             <div class="user-info">
               <span class="user-role">Trader</span>
-              <span class="user-email" id="header-user-email">nikolasuvaconceito@gmail.com</span>
+              <span class="user-email" id="header-user-email"></span>
             </div>
             <div class="user-avatar">
               <i data-lucide="user"></i>
@@ -707,7 +752,7 @@
     </div>
   </div>
 
-  <!-- Script principal -->
-  <script src="app.js"></script>
+  <!-- Script principal (ES Module) -->
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

@@ -1,0 +1,280 @@
+/* ============================================================
+   PositionPips — Estilos da tela de login/cadastro
+   Importado em index.html depois do style.css (herda variáveis).
+   ============================================================ */
+
+#auth-screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.18), transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(16, 185, 129, 0.12), transparent 50%),
+              #0c0f17;
+  z-index: 9999;
+  padding: 1.25rem;
+}
+
+#auth-screen.active { display: flex; }
+
+body.light-theme #auth-screen {
+  background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.12), transparent 50%),
+              radial-gradient(circle at 70% 80%, rgba(16, 185, 129, 0.08), transparent 50%),
+              #f8fafc;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(17, 22, 34, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  padding: 2.25rem 2rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+}
+
+body.light-theme .auth-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: #1f2937;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.auth-brand-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #10b981);
+  display: grid;
+  place-items: center;
+  color: white;
+}
+
+.auth-brand-icon svg { width: 22px; height: 22px; }
+
+.auth-brand h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.25rem;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.auth-brand p {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+#auth-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+}
+
+#auth-subtitle {
+  margin: 0 0 1.5rem;
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.auth-field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.auth-field input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  color: inherit;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+body.light-theme .auth-field input {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.auth-field input:focus {
+  outline: none;
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+#auth-submit {
+  width: 100%;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  border: 0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: filter 0.15s, transform 0.05s;
+  font-family: inherit;
+}
+
+#auth-submit:hover:not(:disabled)  { filter: brightness(1.08); }
+#auth-submit:active:not(:disabled) { transform: translateY(1px); }
+#auth-submit:disabled              { opacity: 0.6; cursor: not-allowed; }
+
+.auth-footer {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.auth-footer a,
+.auth-footer button {
+  background: none;
+  border: 0;
+  color: #6366f1;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+}
+
+.auth-footer a:hover,
+.auth-footer button:hover { text-decoration: underline; }
+
+.auth-message {
+  display: none;
+  margin-top: 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+#auth-error {
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fecaca;
+}
+
+#auth-info {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #a7f3d0;
+}
+
+body.light-theme #auth-error { color: #b91c1c; }
+body.light-theme #auth-info  { color: #047857; }
+
+/* ============================================================
+   Estado: app-shell escondido enquanto não autenticado
+   ============================================================ */
+#app-shell.hidden { display: none !important; }
+
+/* ============================================================
+   Loading overlay (carregando dados do Supabase)
+   ============================================================ */
+#app-loading {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 15, 23, 0.85);
+  z-index: 9998;
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#app-loading.active { display: flex; }
+
+body.light-theme #app-loading {
+  background: rgba(255, 255, 255, 0.85);
+  color: #1f2937;
+}
+
+.spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid rgba(99, 102, 241, 0.2);
+  border-top-color: #6366f1;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   Toast (mensagens de erro / sucesso)
+   ============================================================ */
+#toast-container {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 240px;
+  max-width: 360px;
+  background: #111622;
+  color: #e2e8f0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  animation: toast-in 0.18s ease-out;
+  pointer-events: auto;
+}
+
+.toast.success { border-left: 3px solid #10b981; }
+.toast.error   { border-left: 3px solid #f43f5e; }
+.toast.info    { border-left: 3px solid #6366f1; }
+
+body.light-theme .toast {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+   Botão de logout no sidebar-footer
+   ============================================================ */
+.btn-sidebar-action.btn-logout {
+  color: #f43f5e;
+}
