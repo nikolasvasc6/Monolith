@@ -1,5 +1,5 @@
 /**
- * PositionPips — Diário de Trading Profissional
+ * Monolith — Diário de Trading Profissional
  * Orquestrador principal (Módulo ES). Integrado com Supabase.
  *
  * - Autenticação via Supabase Auth (email + senha)
@@ -725,7 +725,7 @@ function exportData() {
   const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
   const a = document.createElement('a');
   a.setAttribute('href', dataStr);
-  a.setAttribute('download', `positionpips_backup_${new Date().toISOString().split('T')[0]}.json`);
+  a.setAttribute('download', `monolith_backup_${new Date().toISOString().split('T')[0]}.json`);
   document.body.appendChild(a); a.click(); a.remove();
 }
 
