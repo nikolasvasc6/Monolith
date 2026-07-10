@@ -43,7 +43,8 @@ const DEFAULT_STATE = {
 };
 
 let state          = { ...DEFAULT_STATE, blocks: { '1': [] } };
-let chartInstance  = null;
+let journalChartInstance = null; // gráfico do Diário (bloco ativo)
+let dashChartInstance    = null; // gráfico do Dashboard (conta inteira)
 let currentView    = 'grid'; // 'grid' ou 'list'
 let currentUser    = null;   // { id, email }
 let realtimeChan   = null;   // canal supabase
@@ -235,7 +236,8 @@ function teardownAuthenticatedApp() {
   currentUser  = null;
   bootDataLoaded = false;
   state        = { ...DEFAULT_STATE, blocks: { '1': [] } };
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  if (journalChartInstance) { journalChartInstance.destroy(); journalChartInstance = null; }
+  if (dashChartInstance)    { dashChartInstance.destroy();    dashChartInstance = null; }
 }
 
 // ==========================================================================
@@ -386,7 +388,8 @@ function renderApp() {
   DOM.userEmailEl.textContent = state.userEmail || '';
 
   updateKPIs(blockTrades);
-  renderChart(blockTrades);
+  if (journalChartInstance) journalChartInstance.destroy();
+  journalChartInstance = renderChart(DOM.canvasChart, blockTrades);
 
   if (currentView === 'grid') renderGridView(blockTrades);
   else                        renderListView(blockTrades);
@@ -538,8 +541,8 @@ function renderListView(trades) {
 // ==========================================================================
 // CHART.JS
 // ==========================================================================
-function renderChart(trades) {
-  if (chartInstance) chartInstance.destroy();
+function renderChart(canvas, trades, opts = {}) {
+  const startLabel = opts.startLabel || 'Início do Bloco';
   const labels = ['Start'];
   const data = [0];
   let currentSum = 0;
@@ -554,7 +557,7 @@ function renderChart(trades) {
   const colorGradientStart = isPositive ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.25)';
   const colorGradientEnd   = 'rgba(244, 63, 94, 0.0)';
 
-  const ctx = DOM.canvasChart.getContext('2d');
+  const ctx = canvas.getContext('2d');
   const gradient = ctx.createLinearGradient(0, 0, 0, 250);
   gradient.addColorStop(0, colorGradientStart);
   gradient.addColorStop(1, colorGradientEnd);
@@ -588,7 +591,7 @@ function renderChart(trades) {
     }
   };
 
-  chartInstance = new Chart(ctx, {
+  return new Chart(ctx, {
     type: 'line',
     data: { labels, datasets: [{
       label: 'Resultado Acumulado', data,
@@ -611,7 +614,7 @@ function renderChart(trades) {
           bodyFont: { family: 'Inter', size: 12 },
           borderColor: tooltipBorder, borderWidth: 1, padding: 10, displayColors: false,
           callbacks: {
-            title: (c) => c[0].dataIndex === 0 ? 'Início do Bloco' : `Operação #${c[0].dataIndex}`,
+            title: (c) => c[0].dataIndex === 0 ? startLabel : `Operação #${c[0].dataIndex}`,
             label: (c) => { const v = c.raw; return `Acumulado: ${v >= 0 ? '+' : ''}${formatCurrency(v)}`; }
           }
         }
