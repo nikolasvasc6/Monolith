@@ -877,6 +877,7 @@ function exportData() {
     blocks: state.blocks,
     userEmail: state.userEmail,
     theme: state.theme,
+    plan: state.plan,
     exportedAt: new Date().toISOString()
   };
   const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
@@ -903,6 +904,12 @@ function importData(e) {
       const blocks = await fetchAllTradesByBlock(currentUser.id);
       if (!blocks['1']) blocks['1'] = [];
       state.blocks = blocks;
+      // Restaura o plano operacional, se presente no backup
+      if (parsed.plan) {
+        await savePlan(currentUser.id, parsed.plan);
+        state.plan = await fetchPlan(currentUser.id);
+        renderPlanForm();
+      }
       renderApp();
       toast('Dados importados com sucesso.', 'success');
     } catch (err) {
