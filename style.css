@@ -1850,7 +1850,14 @@ body.light-theme .empty-table-state i {
   flex-direction: column;
   gap: 24px;
   max-width: 1100px;
-  margin-bottom: 40px;
+  margin: 0 auto 40px;
+}
+
+/* Cabeçalho da página alinhado ao container centralizado */
+#page-trading-plan .page-header {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .plan-row-3 {
