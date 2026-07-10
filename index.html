@@ -670,6 +670,123 @@
         </div>
       </section>
 
+      <!-- ====== Plano Operacional ====== -->
+      <section class="page-section" id="page-trading-plan">
+        <div class="page-header">
+          <div class="page-title-area">
+            <h1>Plano Operacional</h1>
+            <p>Defina e acompanhe suas regras, limites de risco e setups para manter a disciplina.</p>
+          </div>
+        </div>
+
+        <form id="plan-form" class="plan-layout">
+
+          <div class="calc-card plan-card">
+            <h3><i data-lucide="circle-user"></i> Identidade do Trader</h3>
+            <div class="plan-row-3">
+              <div class="form-group">
+                <label for="plan-trader-name">Nome do trader</label>
+                <input type="text" id="plan-trader-name" placeholder="Seu nome completo">
+              </div>
+              <div class="form-group">
+                <label for="plan-style">Estilo operacional</label>
+                <select id="plan-style">
+                  <option value="scalping">Scalping</option>
+                  <option value="intraday" selected>Intraday (Day Trade)</option>
+                  <option value="swing">Swing Trade</option>
+                  <option value="position">Position Trade</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="plan-market">Mercado principal</label>
+                <input type="text" id="plan-market" placeholder="Ex: Forex, B3, Cripto">
+              </div>
+            </div>
+          </div>
+
+          <div class="calc-card plan-card">
+            <h3><i data-lucide="shield-check"></i> Regras Comportamentais</h3>
+            <p class="calc-card-subtitle">Defina seus pilares de disciplina, controle emocional e consistência.</p>
+            <div class="form-group">
+              <textarea id="plan-behavioral-rules" rows="6" placeholder="Ex: Seguir os mapeamentos, respeitar o limite de stops diários, não olhar o resultado antes de fechar o bloco..."></textarea>
+            </div>
+            <label class="plan-commit" for="plan-committed">
+              <input type="checkbox" id="plan-committed">
+              <span>Estou ciente e comprometido em seguir meu plano operacional rigorosamente.</span>
+            </label>
+          </div>
+
+          <div class="calc-card plan-card">
+            <h3><i data-lucide="target"></i> Gestão de Risco</h3>
+            <div class="plan-row-2">
+              <div class="form-group">
+                <label for="plan-daily-stop">Stop diário ($)</label>
+                <input type="number" id="plan-daily-stop" step="0.01" min="0" placeholder="Ex: 100">
+              </div>
+              <div class="form-group">
+                <label for="plan-weekly-stop">Stop semanal ($)</label>
+                <input type="number" id="plan-weekly-stop" step="0.01" min="0" placeholder="Ex: 300">
+              </div>
+              <div class="form-group">
+                <label for="plan-risk-per-trade">Risco por trade (%)</label>
+                <input type="number" id="plan-risk-per-trade" step="0.01" min="0" placeholder="Ex: 1">
+              </div>
+              <div class="form-group">
+                <label for="plan-max-daily-risk">Risco máximo diário (%)</label>
+                <input type="number" id="plan-max-daily-risk" step="0.01" min="0" placeholder="Ex: 3">
+              </div>
+            </div>
+          </div>
+
+          <div class="calc-card plan-card">
+            <h3><i data-lucide="crosshair"></i> Operacional Técnico</h3>
+            <p class="calc-card-subtitle">Mapeie seus principais setups e gatilhos de entrada.</p>
+
+            <div class="form-group">
+              <label for="plan-setup1-name">Nome do Setup 1</label>
+              <input type="text" id="plan-setup1-name" placeholder="Ex: Rompimento de VWAP, Pullback na MM20...">
+            </div>
+            <div class="form-group">
+              <label for="plan-setup1-desc">Descrição e Gatilhos</label>
+              <textarea id="plan-setup1-desc" rows="4" placeholder="Descreva o contexto, indicadores necessários e o gatilho exato de entrada..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="plan-setup2-name">Nome do Setup 2</label>
+              <input type="text" id="plan-setup2-name" placeholder="Ex: Rompimento de VWAP, Pullback na MM20...">
+            </div>
+            <div class="form-group">
+              <label for="plan-setup2-desc">Descrição e Gatilhos</label>
+              <textarea id="plan-setup2-desc" rows="4" placeholder="Descreva o contexto, indicadores necessários e o gatilho exato de entrada..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="plan-setup3-name">Nome do Setup 3</label>
+              <input type="text" id="plan-setup3-name" placeholder="Ex: Rompimento de VWAP, Pullback na MM20...">
+            </div>
+            <div class="form-group">
+              <label for="plan-setup3-desc">Descrição e Gatilhos</label>
+              <textarea id="plan-setup3-desc" rows="4" placeholder="Descreva o contexto, indicadores necessários e o gatilho exato de entrada..."></textarea>
+            </div>
+          </div>
+
+          <div class="calc-card plan-card plan-card-danger">
+            <h3><i data-lucide="alert-triangle"></i> Regras de NÃO Operação</h3>
+            <p class="calc-card-subtitle">Filtros e situações onde você está proibido de abrir novas posições.</p>
+            <div class="form-group">
+              <textarea id="plan-no-trade-rules" rows="6" placeholder="Ex: Não operar após 2 stops seguidos, em dias de notícia de alto impacto, fora do horário planejado..."></textarea>
+            </div>
+          </div>
+
+          <div class="plan-actions">
+            <button type="submit" class="btn-primary" id="btn-save-plan">
+              <i data-lucide="save"></i> Salvar Plano
+            </button>
+          </div>
+
+        </form>
+      </section>
+
       <!-- Placeholder para futuras seções -->
       <section class="page-section" id="page-placeholder">
         <div class="placeholder-content">
