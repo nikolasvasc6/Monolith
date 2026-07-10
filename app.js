@@ -24,6 +24,10 @@ import {
   fetchPreferences,
   updatePreferences
 } from './js/services/preferences.js';
+import {
+  fetchPlan,
+  savePlan
+} from './js/services/plan.js';
 
 // ==========================================================================
 // CONSTANTES & ESTADO
@@ -34,7 +38,8 @@ const DEFAULT_STATE = {
   activeBlockIndex: 1,
   blocks: { '1': [] },
   userEmail: '',
-  theme: 'dark'
+  theme: 'dark',
+  plan: null
 };
 
 let state          = { ...DEFAULT_STATE, blocks: { '1': [] } };
@@ -61,6 +66,7 @@ function cacheDOM() {
   DOM.pageFuturesCalc   = document.getElementById('page-futures-calc');
   DOM.pageB3Calc        = document.getElementById('page-b3-calc');
   DOM.pageBtcCalc       = document.getElementById('page-btc-calc');
+  DOM.pageTradingPlan   = document.getElementById('page-trading-plan');
 
   DOM.userEmailEl       = document.getElementById('header-user-email');
 
@@ -115,6 +121,8 @@ function cacheDOM() {
   DOM.btnResetApp       = document.getElementById('btn-reset-app');
   DOM.btnThemeToggle    = document.getElementById('btn-theme-toggle');
   DOM.btnLogout         = document.getElementById('btn-logout');
+  DOM.planForm          = document.getElementById('plan-form');
+  DOM.btnSavePlan       = document.getElementById('btn-save-plan');
   DOM.appLoading        = document.getElementById('app-loading');
 }
 
@@ -228,9 +236,15 @@ function teardownAuthenticatedApp() {
 // PERSISTÊNCIA — CLOUD (SUPABASE)
 // ==========================================================================
 async function loadDataFromCloud() {
-  const [prefs, blocks] = await Promise.all([
+  const [prefs, blocks, plan] = await Promise.all([
     fetchPreferences(currentUser.id),
-    fetchAllTradesByBlock(currentUser.id)
+    fetchAllTradesByBlock(currentUser.id),
+    // Falha no plano não bloqueia o diário: loga, avisa e segue com null
+    fetchPlan(currentUser.id).catch(err => {
+      console.error('[Plan] fetch falhou', err);
+      toast(err.message, 'error');
+      return null;
+    })
   ]);
   // Garante bloco 1 sempre presente
   if (!blocks['1']) blocks['1'] = [];
@@ -239,7 +253,8 @@ async function loadDataFromCloud() {
     activeBlockIndex: prefs.activeBlockIndex,
     blocks,
     userEmail: currentUser.email,
-    theme: prefs.theme
+    theme: prefs.theme,
+    plan
   };
 
   // Se o bloco ativo não existe (ex: usuário apagou), volta pra 1
@@ -248,6 +263,7 @@ async function loadDataFromCloud() {
     await persistPreferences({ activeBlockIndex: 1 });
   }
   applyTheme(state.theme);
+  renderPlanForm();
 }
 
 async function persistPreferences(patch) {
@@ -255,6 +271,73 @@ async function persistPreferences(patch) {
     await updatePreferences(currentUser.id, patch);
   } catch (err) {
     toast(err.message, 'error');
+  }
+}
+
+// ==========================================================================
+// PLANO OPERACIONAL
+// ==========================================================================
+const PLAN_FIELDS = {
+  traderName:        'plan-trader-name',
+  style:             'plan-style',
+  market:            'plan-market',
+  behavioralRules:   'plan-behavioral-rules',
+  committed:         'plan-committed',
+  dailyStop:         'plan-daily-stop',
+  weeklyStop:        'plan-weekly-stop',
+  riskPerTrade:      'plan-risk-per-trade',
+  maxDailyRisk:      'plan-max-daily-risk',
+  setup1Name:        'plan-setup1-name',
+  setup1Description: 'plan-setup1-desc',
+  setup2Name:        'plan-setup2-name',
+  setup2Description: 'plan-setup2-desc',
+  setup3Name:        'plan-setup3-name',
+  setup3Description: 'plan-setup3-desc',
+  noTradeRules:      'plan-no-trade-rules'
+};
+
+const PLAN_NUMERIC_KEYS = ['dailyStop', 'weeklyStop', 'riskPerTrade', 'maxDailyRisk'];
+
+function renderPlanForm() {
+  if (!domReady || !state.plan) return;
+  for (const [key, id] of Object.entries(PLAN_FIELDS)) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    if (key === 'committed') {
+      el.checked = !!state.plan.committed;
+    } else {
+      el.value = state.plan[key] ?? '';
+    }
+  }
+}
+
+function collectPlanForm() {
+  const plan = {};
+  for (const [key, id] of Object.entries(PLAN_FIELDS)) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    if (key === 'committed') {
+      plan.committed = el.checked;
+    } else if (PLAN_NUMERIC_KEYS.includes(key)) {
+      plan[key] = el.value === '' ? null : Number(el.value);
+    } else {
+      plan[key] = el.value.trim();
+    }
+  }
+  return plan;
+}
+
+async function handleSavePlan() {
+  const plan = collectPlanForm();
+  DOM.btnSavePlan.disabled = true;
+  try {
+    await savePlan(currentUser.id, plan);
+    state.plan = plan;
+    toast('Plano operacional salvo.', 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    DOM.btnSavePlan.disabled = false;
   }
 }
 
@@ -674,7 +757,8 @@ function setupEventListeners() {
     'forex-calc':      DOM.pageForexCalc,
     'futures-calc':    DOM.pageFuturesCalc,
     'b3-calc':         DOM.pageB3Calc,
-    'btc-calc':        DOM.pageBtcCalc
+    'btc-calc':        DOM.pageBtcCalc,
+    'trading-plan':    DOM.pageTradingPlan
   };
 
   DOM.navItems.forEach(item => {
@@ -755,6 +839,12 @@ function setupEventListeners() {
       await persistPreferences({ activeBlockIndex: state.activeBlockIndex });
       renderApp();
     }
+  });
+
+  // Plano Operacional
+  DOM.planForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleSavePlan();
   });
 
   // Export / Import / Reset
