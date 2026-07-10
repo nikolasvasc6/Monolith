@@ -332,6 +332,14 @@ body {
   100% { transform: scale(0.9); opacity: 0.6; }
 }
 
+/* Com um modal aberto, pausa o pulse: um elemento animando sob o
+   backdrop-filter do overlay obriga o navegador a reprocessar o desfoque da
+   tela inteira a cada frame, o que trava a digitação no modal. Sem efeito
+   visual — o ponto fica atrás do vidro desfocado e escurecido. */
+body:has(.modal-overlay.active) .badge-dot {
+  animation-play-state: paused;
+}
+
 .user-profile {
   display: flex;
   align-items: center;

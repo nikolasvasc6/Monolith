@@ -8,7 +8,7 @@
  * - RLS no banco garante isolamento por usuário
  */
 
-import { onAuthChange, getSession, signOut } from './js/auth.js';
+import { onAuthChange, getSession, signOut, refreshSession } from './js/auth.js';
 import { initAuthUI, showAuthScreen, hideAuthScreen, onAuthenticated } from './js/ui/auth-ui.js';
 import {
   fetchAllTradesByBlock,
@@ -44,6 +44,8 @@ let currentUser    = null;   // { id, email }
 let realtimeChan   = null;   // canal supabase
 let isApplyingRemote = false;// evita loops de refetch
 let domReady       = false;
+let bootDataLoaded = false;  // a carga inicial de dados já concluiu?
+let loadInFlight   = null;   // promessa da carga em andamento (evita corrida)
 
 // ==========================================================================
 // DOM CACHE
@@ -152,6 +154,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (event === 'SIGNED_OUT' || !session) {
       teardownAuthenticatedApp();
       showAuthScreen();
+      return;
+    }
+    // Autocura: se o boot não conseguiu carregar os dados, tenta de novo
+    // quando a sessão se estabelece/renova (cobre o "só carrega após F5").
+    if (!bootDataLoaded && currentUser && (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN')) {
+      try {
+        await loadDataWithHeal();
+        setupRealtime();
+        renderApp();
+        bootDataLoaded = true;
+      } catch (err) {
+        console.error('[Monolith] Recarga após renovação de sessão falhou:', err);
+      }
     }
   });
 });
@@ -161,20 +176,50 @@ async function bootAuthenticatedApp(user) {
   showLoading(true);
   hideAuthScreen();
   try {
-    await loadDataFromCloud();
+    await loadDataWithHeal();
     setupRealtime();
     renderApp();
+    bootDataLoaded = true;
   } catch (err) {
+    bootDataLoaded = false;
     toast(err.message || 'Erro ao carregar dados.', 'error');
+    console.error('[Monolith] Falha ao carregar dados no boot:', err);
   } finally {
     showLoading(false);
   }
+}
+
+/**
+ * Carrega os dados com autocura: se a primeira tentativa falhar ou voltar
+ * 100% vazia (uma consulta que sai com a sessão dessincronizada devolve []
+ * em silêncio por causa do RLS), revalida a sessão no servidor e busca de
+ * novo — automatiza o F5 que resolvia manualmente.
+ */
+function loadDataWithHeal() {
+  if (loadInFlight) return loadInFlight;
+  loadInFlight = (async () => {
+    let firstError = null;
+    try { await loadDataFromCloud(); } catch (err) { firstError = err; }
+    if (firstError === null && countTradesInState() > 0) return;
+
+    console.warn('[Monolith] Primeira carga ' +
+      (firstError ? `falhou (${firstError.message})` : 'voltou sem operações') +
+      ' — revalidando sessão e refazendo a busca.');
+    try { await refreshSession(); } catch (_) { /* mantém a sessão atual */ }
+    await loadDataFromCloud();
+  })().finally(() => { loadInFlight = null; });
+  return loadInFlight;
+}
+
+function countTradesInState() {
+  return Object.values(state.blocks).reduce((sum, list) => sum + list.length, 0);
 }
 
 function teardownAuthenticatedApp() {
   unsubscribeRealtime(realtimeChan);
   realtimeChan = null;
   currentUser  = null;
+  bootDataLoaded = false;
   state        = { ...DEFAULT_STATE, blocks: { '1': [] } };
   if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
 }

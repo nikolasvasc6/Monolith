@@ -41,6 +41,16 @@ export async function getSession() {
   return data.session;
 }
 
+/**
+ * Força a renovação do access token junto ao servidor.
+ * Usada pela autocura do boot quando a primeira carga vem vazia/falha.
+ */
+export async function refreshSession() {
+  const { data, error } = await supabase.auth.refreshSession();
+  if (error) throw new Error(translateError(error));
+  return data.session;
+}
+
 export async function getUser() {
   const { data, error } = await supabase.auth.getUser();
   if (error) return null;
