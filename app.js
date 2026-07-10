@@ -390,6 +390,7 @@ function renderApp() {
   updateKPIs(blockTrades);
   if (journalChartInstance) journalChartInstance.destroy();
   journalChartInstance = renderChart(DOM.canvasChart, blockTrades);
+  renderDashboard();
 
   if (currentView === 'grid') renderGridView(blockTrades);
   else                        renderListView(blockTrades);
@@ -628,6 +629,39 @@ function renderChart(canvas, trades, opts = {}) {
 }
 
 // ==========================================================================
+// DASHBOARD
+// ==========================================================================
+/** Todos os trades da conta, na ordem: bloco 1..N, posição dentro do bloco. */
+function getAllTrades() {
+  return Object.keys(state.blocks)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .flatMap(idx => state.blocks[String(idx)] || []);
+}
+
+function renderDashboard() {
+  if (!domReady) return;
+  const trades = getAllTrades();
+
+  const count = trades.length;
+  const accumulatedPnL = trades.reduce((s, t) => s + t.pnl, 0);
+  const winTrades = trades.filter(t => t.pnl > 0).length;
+  const winRate = count > 0 ? Math.round((winTrades / count) * 100) : 0;
+
+  DOM.dashSummaryTradesCount.textContent = count;
+  DOM.dashSummaryWinrate.textContent = `${winRate}%`;
+  DOM.dashSummaryPL.textContent = formatCurrency(accumulatedPnL);
+  DOM.dashSummaryPL.className = count === 0 ? '' : (accumulatedPnL >= 0 ? 'pnl-positive' : 'pnl-negative');
+
+  // Canvas em seção oculta tem tamanho 0 — só desenha com a aba visível;
+  // a troca de aba chama renderDashboard() de novo.
+  if (!DOM.pageDashboard.classList.contains('active')) return;
+
+  if (dashChartInstance) dashChartInstance.destroy();
+  dashChartInstance = renderChart(DOM.canvasDashChart, trades, { startLabel: 'Início da Conta' });
+}
+
+// ==========================================================================
 // MODAL CRUD
 // ==========================================================================
 function openTradeModal(trade = null, slotIndex = null) {
@@ -782,6 +816,7 @@ function setupEventListeners() {
       if (target) {
         target.classList.add('active');
         if (tabName === 'trading-journal') renderApp();
+        else if (tabName === 'dashboard') renderDashboard();
         lucide.createIcons();
       } else {
         DOM.pagePlaceholder.classList.add('active');
