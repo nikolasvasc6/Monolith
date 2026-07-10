@@ -1841,3 +1841,139 @@ body.light-theme .modal-overlay {
 body.light-theme .empty-table-state i {
   color: rgba(0, 0, 0, 0.1);
 }
+/* ==========================================================================
+   PLANO OPERACIONAL
+   ========================================================================== */
+
+.plan-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1100px;
+  margin-bottom: 40px;
+}
+
+.plan-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.plan-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+  .plan-row-3 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .plan-row-2 { grid-template-columns: 1fr; }
+}
+
+/* Inputs e selects do plano (sem ícone) — mesmo visual dos inputs das calculadoras */
+.plan-card .form-group input,
+.plan-card .form-group select {
+  width: 100%;
+  padding: 12px 14px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-md);
+  color: var(--text-active);
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  outline: none;
+  transition: all var(--transition-fast);
+  appearance: none;
+}
+
+.plan-card .form-group input:hover,
+.plan-card .form-group select:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.plan-card .form-group input:focus,
+.plan-card .form-group select:focus {
+  border-color: var(--color-primary);
+  background-color: var(--bg-card);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+
+.plan-card .form-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+body.light-theme .plan-card .form-group input,
+body.light-theme .plan-card .form-group select {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+body.light-theme .plan-card .form-group input:hover,
+body.light-theme .plan-card .form-group select:hover {
+  border-color: #94a3b8;
+  background-color: #f8fafc;
+}
+
+body.light-theme .plan-card .form-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Checkbox de compromisso */
+.plan-commit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: var(--surface-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-active);
+}
+
+.plan-commit input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Variante de alerta — Regras de NÃO Operação */
+.plan-card-danger {
+  border-color: var(--color-danger-border);
+}
+
+.plan-card-danger:hover {
+  border-color: var(--color-danger);
+  box-shadow: 0 4px 14px var(--color-danger-glow);
+}
+
+.plan-card-danger h3,
+.plan-card-danger h3 i {
+  color: var(--color-danger);
+}
+
+/* Ações do formulário */
+.plan-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.plan-actions .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
