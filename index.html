@@ -177,6 +177,41 @@
         </div>
       </header>
 
+      <!-- Página: Dashboard -->
+      <section class="page-section" id="page-dashboard">
+
+        <div class="page-header">
+          <div class="page-title-area">
+            <h1>Dashboard</h1>
+            <p>Visão geral da sua conta</p>
+          </div>
+        </div>
+
+        <!-- Card do Gráfico de Performance (conta inteira) -->
+        <div class="card-chart-container">
+          <div class="chart-header">
+            <div class="chart-header-left">
+              <div class="chart-title-icon">
+                <i data-lucide="activity"></i>
+              </div>
+              <div>
+                <h3>Performance da Conta</h3>
+                <p>Evolução acumulada de todos os blocos</p>
+              </div>
+            </div>
+            <div class="chart-header-right" id="dash-stats-summary">
+              <span class="summary-item">Trades: <strong id="dash-summary-trades-count">0</strong></span>
+              <span class="summary-item">Win Rate: <strong id="dash-summary-winrate">0%</strong></span>
+              <span class="summary-item">P/L: <strong id="dash-summary-pl">$ 0.00</strong></span>
+            </div>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="dashboardChart"></canvas>
+          </div>
+        </div>
+
+      </section>
+
       <!-- Conteúdo das Páginas (Selecionável via Menu) -->
       <section class="page-section active" id="page-trading-journal">
         

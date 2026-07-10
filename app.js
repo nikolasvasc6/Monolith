@@ -67,6 +67,7 @@ function cacheDOM() {
   DOM.pageB3Calc        = document.getElementById('page-b3-calc');
   DOM.pageBtcCalc       = document.getElementById('page-btc-calc');
   DOM.pageTradingPlan   = document.getElementById('page-trading-plan');
+  DOM.pageDashboard     = document.getElementById('page-dashboard');
 
   DOM.userEmailEl       = document.getElementById('header-user-email');
 
@@ -87,6 +88,11 @@ function cacheDOM() {
   DOM.summaryWinrate    = document.getElementById('summary-winrate');
   DOM.summaryPL         = document.getElementById('summary-pl');
   DOM.canvasChart       = document.getElementById('performanceChart');
+
+  DOM.canvasDashChart        = document.getElementById('dashboardChart');
+  DOM.dashSummaryTradesCount = document.getElementById('dash-summary-trades-count');
+  DOM.dashSummaryWinrate     = document.getElementById('dash-summary-winrate');
+  DOM.dashSummaryPL          = document.getElementById('dash-summary-pl');
 
   DOM.btnToggleGrid     = document.getElementById('btn-toggle-grid');
   DOM.btnToggleList     = document.getElementById('btn-toggle-list');
@@ -753,6 +759,7 @@ async function handleDeleteTrade(id) {
 // ==========================================================================
 function setupEventListeners() {
   const tabToPage = {
+    'dashboard':       DOM.pageDashboard,
     'trading-journal': DOM.pageTradingJournal,
     'forex-calc':      DOM.pageForexCalc,
     'futures-calc':    DOM.pageFuturesCalc,
