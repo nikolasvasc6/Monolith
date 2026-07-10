@@ -142,3 +142,58 @@ create policy "trades_delete_own"
 -- ----------------------------------------------------------------------------
 alter publication supabase_realtime add table public.trades;
 alter publication supabase_realtime add table public.user_preferences;
+
+-- ----------------------------------------------------------------------------
+-- 7. Tabela: trading_plans (Plano Operacional — 1 linha por usuário)
+--    Sem Realtime: edição rara, política last-write-wins entre dispositivos.
+-- ----------------------------------------------------------------------------
+create table if not exists public.trading_plans (
+  user_id            uuid primary key references auth.users(id) on delete cascade,
+  trader_name        text not null default '',
+  style              text not null default 'intraday'
+                     check (style in ('scalping','intraday','swing','position')),
+  market             text not null default '',
+  behavioral_rules   text not null default '',
+  committed          boolean not null default false,
+  daily_stop         numeric(18,2),
+  weekly_stop        numeric(18,2),
+  risk_per_trade     numeric(8,2),
+  max_daily_risk     numeric(8,2),
+  setup1_name        text not null default '',
+  setup1_description text not null default '',
+  setup2_name        text not null default '',
+  setup2_description text not null default '',
+  setup3_name        text not null default '',
+  setup3_description text not null default '',
+  no_trade_rules     text not null default '',
+  updated_at         timestamptz not null default now()
+);
+
+drop trigger if exists plans_set_updated_at on public.trading_plans;
+create trigger plans_set_updated_at
+  before update on public.trading_plans
+  for each row execute function public.set_updated_at();
+
+alter table public.trading_plans enable row level security;
+
+drop policy if exists "plans_select_own" on public.trading_plans;
+drop policy if exists "plans_insert_own" on public.trading_plans;
+drop policy if exists "plans_update_own" on public.trading_plans;
+drop policy if exists "plans_delete_own" on public.trading_plans;
+
+create policy "plans_select_own"
+  on public.trading_plans for select
+  using (auth.uid() = user_id);
+
+create policy "plans_insert_own"
+  on public.trading_plans for insert
+  with check (auth.uid() = user_id);
+
+create policy "plans_update_own"
+  on public.trading_plans for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "plans_delete_own"
+  on public.trading_plans for delete
+  using (auth.uid() = user_id);
