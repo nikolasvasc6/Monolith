@@ -187,6 +187,61 @@
           </div>
         </div>
 
+        <!-- Cards de Estatísticas da Conta (KPIs) -->
+        <div class="kpi-grid">
+          <div class="kpi-card" id="dash-kpi-registered">
+            <div class="kpi-icon-wrapper">
+              <i data-lucide="layers"></i>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-title">Operações registradas</span>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="dash-val-registered">0</span>
+                <span class="kpi-subtext" id="dash-sub-registered">em 1 bloco</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="dash-kpi-accumulated">
+            <div class="kpi-icon-wrapper">
+              <i data-lucide="dollar-sign"></i>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-title">Resultado acumulado</span>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="dash-val-accumulated">$ 0.00</span>
+              </div>
+              <span class="kpi-indicator" id="dash-ind-accumulated">Sem operações</span>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="dash-kpi-winrate">
+            <div class="kpi-icon-wrapper">
+              <i data-lucide="award"></i>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-title">Win rate</span>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="dash-val-winrate">0%</span>
+              </div>
+              <span class="kpi-indicator" id="dash-ind-winrate">Taxa de acerto da conta</span>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="dash-kpi-average">
+            <div class="kpi-icon-wrapper">
+              <i data-lucide="trending-up"></i>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-title">Média por operação</span>
+              <div class="kpi-value-row">
+                <span class="kpi-value" id="dash-val-average">$ 0.00</span>
+              </div>
+              <span class="kpi-indicator" id="dash-ind-average">Média de lucro/prejuízo</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Card do Gráfico de Performance (conta inteira) -->
         <div class="card-chart-container">
           <div class="chart-header">

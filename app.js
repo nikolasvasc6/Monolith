@@ -95,6 +95,18 @@ function cacheDOM() {
   DOM.dashSummaryWinrate     = document.getElementById('dash-summary-winrate');
   DOM.dashSummaryPL          = document.getElementById('dash-summary-pl');
 
+  DOM.dashKpiAccumulatedCard = document.getElementById('dash-kpi-accumulated');
+  DOM.dashKpiWinrateCard     = document.getElementById('dash-kpi-winrate');
+  DOM.dashKpiAverageCard     = document.getElementById('dash-kpi-average');
+  DOM.dashValRegistered      = document.getElementById('dash-val-registered');
+  DOM.dashSubRegistered      = document.getElementById('dash-sub-registered');
+  DOM.dashValAccumulated     = document.getElementById('dash-val-accumulated');
+  DOM.dashIndAccumulated     = document.getElementById('dash-ind-accumulated');
+  DOM.dashValWinrate         = document.getElementById('dash-val-winrate');
+  DOM.dashIndWinrate         = document.getElementById('dash-ind-winrate');
+  DOM.dashValAverage         = document.getElementById('dash-val-average');
+  DOM.dashIndAverage         = document.getElementById('dash-ind-average');
+
   DOM.btnToggleGrid     = document.getElementById('btn-toggle-grid');
   DOM.btnToggleList     = document.getElementById('btn-toggle-list');
   DOM.btnPrevBlock      = document.getElementById('btn-prev-block');
@@ -648,16 +660,58 @@ function getAllTrades() {
 function renderDashboard() {
   if (!domReady) return;
   const trades = getAllTrades();
+  const { count, accumulated, winTrades, winRate, average } = computeStats(trades);
 
-  const count = trades.length;
-  const accumulatedPnL = trades.reduce((s, t) => s + t.pnl, 0);
-  const winTrades = trades.filter(t => t.pnl > 0).length;
-  const winRate = count > 0 ? Math.round((winTrades / count) * 100) : 0;
+  // Cards de KPI da conta
+  const totalBlocks = Math.max(1, Object.keys(state.blocks).length);
+  DOM.dashValRegistered.textContent = count;
+  DOM.dashSubRegistered.textContent = totalBlocks === 1 ? 'em 1 bloco' : `em ${totalBlocks} blocos`;
 
+  DOM.dashValAccumulated.textContent = formatCurrency(accumulated);
+  DOM.dashKpiAccumulatedCard.classList.remove('win-trend', 'loss-trend');
+  DOM.dashKpiWinrateCard.classList.remove('win-trend');
+  DOM.dashKpiAverageCard.classList.remove('win-trend', 'loss-trend');
+
+  if (count === 0) {
+    DOM.dashIndAccumulated.textContent = 'Sem operações';
+    DOM.dashIndAccumulated.className = 'kpi-indicator';
+  } else if (accumulated >= 0) {
+    DOM.dashIndAccumulated.textContent = 'Saldo positivo';
+    DOM.dashIndAccumulated.className = 'kpi-indicator pnl-positive';
+    DOM.dashKpiAccumulatedCard.classList.add('win-trend');
+  } else {
+    DOM.dashIndAccumulated.textContent = 'Saldo negativo';
+    DOM.dashIndAccumulated.className = 'kpi-indicator pnl-negative';
+    DOM.dashKpiAccumulatedCard.classList.add('loss-trend');
+  }
+
+  DOM.dashValWinrate.textContent = `${winRate}%`;
+  if (count > 0) {
+    DOM.dashIndWinrate.textContent = `${winTrades} de ${count} vitoriosos`;
+    if (winRate >= 50) DOM.dashKpiWinrateCard.classList.add('win-trend');
+  } else {
+    DOM.dashIndWinrate.textContent = 'Taxa de acerto da conta';
+  }
+
+  DOM.dashValAverage.textContent = formatCurrency(average);
+  if (count === 0) {
+    DOM.dashIndAverage.textContent = 'Média de lucro/prejuízo';
+    DOM.dashIndAverage.className = 'kpi-indicator';
+  } else if (average >= 0) {
+    DOM.dashIndAverage.textContent = 'Média positiva';
+    DOM.dashIndAverage.className = 'kpi-indicator pnl-positive';
+    DOM.dashKpiAverageCard.classList.add('win-trend');
+  } else {
+    DOM.dashIndAverage.textContent = 'Média negativa';
+    DOM.dashIndAverage.className = 'kpi-indicator pnl-negative';
+    DOM.dashKpiAverageCard.classList.add('loss-trend');
+  }
+
+  // Resumo do card do gráfico
   DOM.dashSummaryTradesCount.textContent = count;
   DOM.dashSummaryWinrate.textContent = `${winRate}%`;
-  DOM.dashSummaryPL.textContent = formatCurrency(accumulatedPnL);
-  DOM.dashSummaryPL.className = count === 0 ? '' : (accumulatedPnL >= 0 ? 'pnl-positive' : 'pnl-negative');
+  DOM.dashSummaryPL.textContent = formatCurrency(accumulated);
+  DOM.dashSummaryPL.className = count === 0 ? '' : (accumulated >= 0 ? 'pnl-positive' : 'pnl-negative');
 
   // Canvas em seção oculta tem tamanho 0 — só desenha com a aba visível;
   // a troca de aba chama renderDashboard() de novo.
