@@ -51,6 +51,10 @@
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
   --bg-gradient-glow: #0e1424;
 
+  /* Slots vazios do diário — visíveis sem competir com os preenchidos */
+  --slot-empty-border: rgba(255, 255, 255, 0.16);
+  --slot-empty-text: #64748b;
+
   /* Shadow & Blur */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -847,12 +851,12 @@ body:has(.modal-overlay.active) .badge-dot {
 
 /* Passive empty slots (placeholders locked for future trades) */
 .grid-slot.slot-empty {
-  border: 1px dashed var(--surface-3);
-  background-color: transparent;
+  border: 1px dashed var(--slot-empty-border);
+  background-color: var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--surface-5);
+  color: var(--slot-empty-text);
 }
 
 .grid-slot.slot-empty span {
@@ -1805,6 +1809,10 @@ body.light-theme {
   --surface-8: rgba(0, 0, 0, 0.08);
   --scrollbar-thumb: rgba(0, 0, 0, 0.15);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+
+  /* Slots vazios do diário */
+  --slot-empty-border: rgba(0, 0, 0, 0.18);
+  --slot-empty-text: #6b7280;
 
   /* Accents — opacidades ajustadas para tema claro */
   --color-success-bg: rgba(16, 185, 129, 0.06);
