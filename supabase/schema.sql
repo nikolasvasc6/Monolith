@@ -40,6 +40,14 @@ create index if not exists trades_user_block_pos_idx
 create index if not exists trades_user_created_idx
   on public.trades (user_id, created_at);
 
+-- Invariante do diário: posição única dentro de cada bloco por usuário.
+-- Sem isso, um estado defasado (outra aba/dispositivo com o realtime caído)
+-- consegue gravar uma 36ª operação no mesmo bloco. Se a criação falhar por
+-- duplicatas antigas, abra o app uma vez (a autocura reflui os blocos) e
+-- reexecute este arquivo.
+create unique index if not exists trades_user_block_pos_uniq
+  on public.trades (user_id, block_index, position);
+
 -- ----------------------------------------------------------------------------
 -- 3. Trigger: atualizar updated_at automaticamente
 -- ----------------------------------------------------------------------------

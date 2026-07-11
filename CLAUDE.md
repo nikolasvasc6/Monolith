@@ -45,6 +45,8 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 
 - **`trades`** — `id` (uuid), `user_id`, `block_index` (≥1), `position` (0–34), `asset`,
   `type` (`'take'` | `'stop'`), `pnl` `numeric(18,2)`, `trade_date`, `notes`, timestamps.
+  Índice **único** em `(user_id, block_index, position)` — garante no banco o limite de
+  35 por bloco (estado defasado de outra aba/dispositivo não consegue gravar uma 36ª).
 - **`user_preferences`** — `user_id` (PK), `active_block_index`, `theme` (`'dark'`|`'light'`),
   `updated_at`.
 - **Triggers:** `updated_at` automático; criação automática da linha em `user_preferences`
@@ -56,6 +58,9 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 
 - **Bloco de 35 operações** (`TRADES_PER_BLOCK = 35`): o diário agrupa trades em blocos de
   35; ao completar um bloco, o próximo abre automaticamente. A UI navega entre blocos.
+  Posições são contíguas (0..n-1): excluir renumera as seguintes no banco, e a autocura
+  no carregamento (`healBlockLayout`) reflui excedentes de blocos com mais de 35 para o
+  bloco seguinte. Importar entra sempre **depois** do último bloco usado.
 - **`take` / `stop`:** `take` = lucro (pnl positivo), `stop` = prejuízo (pnl gravado
   negativo). No modal o usuário digita o **valor absoluto**; o sinal vem do tipo.
 - **KPIs:** operações registradas, resultado acumulado, win rate, média por operação. O

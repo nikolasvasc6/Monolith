@@ -20,7 +20,10 @@ export async function fetchAllTradesByBlock(userId) {
     .select('*')
     .eq('user_id', userId)
     .order('block_index', { ascending: true })
-    .order('position',    { ascending: true });
+    .order('position',    { ascending: true })
+    // desempate determinístico caso duas linhas tenham a mesma posição
+    // (dado antigo corrompido) — a autocura decide qual delas move
+    .order('created_at',  { ascending: true });
 
   if (error) throw new Error('Falha ao carregar operações: ' + error.message);
 
@@ -74,6 +77,22 @@ export async function updateTrade(tradeId, { asset, type, pnl, date, notes, bloc
   return rowToTrade(data);
 }
 
+/**
+ * Corrige bloco/posição de operações (usado pela autocura e pela renumeração
+ * após excluir). Atualiza uma a uma, na ordem recebida — com o índice único
+ * (user_id, block_index, position) no banco, a ordem crescente garante que
+ * cada update entra numa posição já livre.
+ */
+export async function updateTradePlacements(changes) {
+  for (const { id, blockIndex, position } of changes) {
+    const { error } = await supabase
+      .from(TABLE)
+      .update({ block_index: blockIndex, position })
+      .eq('id', id);
+    if (error) throw new Error('Falha ao corrigir posição da operação: ' + error.message);
+  }
+}
+
 export async function deleteTrade(tradeId) {
   const { error } = await supabase
     .from(TABLE)
@@ -96,14 +115,16 @@ export async function deleteAllTrades(userId) {
 /**
  * Importa em lote (usado pelo "Importar Dados").
  * Recebe a estrutura legada { blocks: { "1": [...] } }.
+ * `blockOffset` desloca os blocos do arquivo para depois dos blocos já
+ * usados na conta — importar nunca grava por cima de posições existentes.
  */
-export async function bulkImportTrades(userId, blocks) {
+export async function bulkImportTrades(userId, blocks, blockOffset = 0) {
   const rows = [];
   for (const [blockIdx, list] of Object.entries(blocks || {})) {
     list.forEach((t, position) => {
       rows.push({
         user_id:     userId,
-        block_index: Number(blockIdx),
+        block_index: Number(blockIdx) + blockOffset,
         position,
         asset:       String(t.asset || '').toUpperCase().slice(0, 64),
         type:        t.type === 'stop' ? 'stop' : 'take',

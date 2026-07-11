@@ -14,6 +14,7 @@ import {
   fetchAllTradesByBlock,
   insertTrade,
   updateTrade,
+  updateTradePlacements,
   deleteTrade as remoteDeleteTrade,
   deleteAllTrades,
   bulkImportTrades,
@@ -269,6 +270,8 @@ async function loadDataFromCloud() {
   // Garante bloco 1 sempre presente
   if (!blocks['1']) blocks['1'] = [];
 
+  await healBlockLayout(blocks);
+
   state = {
     activeBlockIndex: prefs.activeBlockIndex,
     blocks,
@@ -284,6 +287,44 @@ async function loadDataFromCloud() {
   }
   applyTheme(state.theme);
   renderPlanForm();
+}
+
+/**
+ * Autocura do layout de blocos: garante no máximo TRADES_PER_BLOCK operações
+ * por bloco (excedentes fluem para o fim do bloco seguinte, em cascata) e
+ * posições contíguas 0..n-1 dentro de cada bloco. Repara dados gravados por
+ * estado defasado (outra aba/dispositivo com o realtime caído) e por versões
+ * antigas do import, que sobrepunham posições. Muda `blocks` in place; se a
+ * persistência falhar, a memória fica correta e o banco é curado no próximo boot.
+ */
+async function healBlockLayout(blocks) {
+  const changes = [];
+  const indices = Object.keys(blocks).map(Number).sort((a, b) => a - b);
+  for (let k = 0; k < indices.length; k++) {
+    const bIdx = indices[k];
+    const list = blocks[String(bIdx)] || [];
+    if (list.length > TRADES_PER_BLOCK) {
+      const extras = list.splice(TRADES_PER_BLOCK);
+      const nextIdx = bIdx + 1;
+      if (!blocks[String(nextIdx)]) blocks[String(nextIdx)] = [];
+      blocks[String(nextIdx)].push(...extras);
+      if (!indices.includes(nextIdx)) indices.splice(k + 1, 0, nextIdx);
+    }
+    list.forEach((t, i) => {
+      if (t.blockIndex !== bIdx || t.position !== i) {
+        t.blockIndex = bIdx;
+        t.position = i;
+        changes.push({ id: t.id, blockIndex: bIdx, position: i });
+      }
+    });
+  }
+  if (changes.length === 0) return;
+  try {
+    await updateTradePlacements(changes);
+    console.warn(`[Monolith] Autocura: bloco/posição corrigidos em ${changes.length} operação(ões).`);
+  } catch (err) {
+    console.error('[Monolith] Autocura não conseguiu persistir as correções:', err);
+  }
 }
 
 async function persistPreferences(patch) {
@@ -788,11 +829,13 @@ async function createTrade({ asset, type, pnl, date, notes }) {
   let blockIndex = state.activeBlockIndex;
   let blockArr   = state.blocks[String(blockIndex)] || [];
 
-  if (blockArr.length >= TRADES_PER_BLOCK) {
-    // Avança/cria próximo bloco
+  // Avança até o primeiro bloco com vaga (pode precisar pular vários cheios)
+  while (blockArr.length >= TRADES_PER_BLOCK) {
     blockIndex = blockIndex + 1;
     if (!state.blocks[String(blockIndex)]) state.blocks[String(blockIndex)] = [];
     blockArr = state.blocks[String(blockIndex)];
+  }
+  if (blockIndex !== state.activeBlockIndex) {
     state.activeBlockIndex = blockIndex;
     await persistPreferences({ activeBlockIndex: blockIndex });
   }
@@ -839,9 +882,19 @@ async function handleDeleteTrade(id) {
   setSubmitLoading(true);
   try {
     await remoteDeleteTrade(id);
-    for (const list of Object.values(state.blocks)) {
+    for (const [bIdx, list] of Object.entries(state.blocks)) {
       const idx = list.findIndex(t => t.id === id);
-      if (idx !== -1) { list.splice(idx, 1); break; }
+      if (idx === -1) continue;
+      list.splice(idx, 1);
+      // Fecha a lacuna também no banco: sem renumerar, a próxima inserção
+      // (posição = tamanho da lista) colidiria com uma posição existente
+      const changes = [];
+      for (let i = idx; i < list.length; i++) {
+        list[i].position = i;
+        changes.push({ id: list[i].id, blockIndex: Number(bIdx), position: i });
+      }
+      if (changes.length) await updateTradePlacements(changes);
+      break;
     }
     renderApp();
   } catch (err) {
@@ -1003,8 +1056,13 @@ function importData(e) {
       if (!confirm('Importar irá ADICIONAR todas as operações do arquivo à sua conta no Supabase. Continuar?')) return;
 
       showLoading(true);
-      // Bulk insert
-      await bulkImportTrades(currentUser.id, parsed.blocks);
+      // Bulk insert — blocos do arquivo entram DEPOIS do último bloco com
+      // operações, nunca por cima das posições existentes
+      const usedBlocks = Object.entries(state.blocks)
+        .filter(([, list]) => list.length > 0)
+        .map(([k]) => Number(k));
+      const blockOffset = usedBlocks.length ? Math.max(...usedBlocks) : 0;
+      await bulkImportTrades(currentUser.id, parsed.blocks, blockOffset);
       // Refetch
       const blocks = await fetchAllTradesByBlock(currentUser.id);
       if (!blocks['1']) blocks['1'] = [];
