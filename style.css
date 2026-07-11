@@ -267,6 +267,9 @@ body {
 .main-content {
   margin-left: 270px;
   flex-grow: 1;
+  /* flex item: sem isto o min-content dos filhos (tabela larga) alarga a página
+     e o conteúdo desliza para baixo da sidebar fixa via scroll horizontal */
+  min-width: 0;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -969,6 +972,7 @@ body:has(.modal-overlay.active) .badge-dot {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  overflow-x: auto; /* tabela larga rola dentro do card, não a página inteira */
   box-shadow: var(--shadow-sm);
   margin-bottom: 40px;
 }
