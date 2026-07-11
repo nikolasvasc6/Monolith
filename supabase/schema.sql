@@ -147,9 +147,26 @@ create policy "trades_delete_own"
 
 -- ----------------------------------------------------------------------------
 -- 6. Realtime: habilita publicações para sincronização entre dispositivos
+--    (guardado por IF NOT EXISTS manual: ADD TABLE repetido falharia com
+--    "already member of publication" e abortaria o resto do script)
 -- ----------------------------------------------------------------------------
-alter publication supabase_realtime add table public.trades;
-alter publication supabase_realtime add table public.user_preferences;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public' and tablename = 'trades'
+  ) then
+    alter publication supabase_realtime add table public.trades;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public' and tablename = 'user_preferences'
+  ) then
+    alter publication supabase_realtime add table public.user_preferences;
+  end if;
+end $$;
 
 -- ----------------------------------------------------------------------------
 -- 7. Tabela: trading_plans (Plano Operacional — 1 linha por usuário)
