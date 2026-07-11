@@ -1010,6 +1010,10 @@ body:has(.modal-overlay.active) .badge-dot {
   background-color: var(--surface-1);
 }
 
+.trades-table tbody tr.table-row-clickable {
+  cursor: pointer;
+}
+
 .table-index {
   font-family: var(--font-secondary);
   font-weight: 700 !important;

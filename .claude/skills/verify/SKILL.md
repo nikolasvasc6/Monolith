@@ -50,5 +50,11 @@ page.on('request', req => {
   single/insert/update/upsert/delete` e `channel/removeChannel` (no-op).
   Se um service novo usar método novo do SDK, adicione ao stub.
 - `favicon.ico` dá 404 no console — pré-existente, ignorar.
+- Defina `page.setViewport({ width: 1440, height: 900 })`: no viewport padrão
+  (800×600) um botão da sidebar (`.btn-sidebar-action`) fica sobre as primeiras
+  colunas da tabela e "rouba" cliques por coordenada.
+- Após fechar o modal (Escape), aguarde o fade-out do overlay
+  (`pointer-events: none` / `opacity: 0`) antes do próximo clique — durante a
+  transição o overlay ainda intercepta cliques.
 - Em caminhos Windows dentro de `node -e "..."` no Git Bash, use barras
   normais (`C:/...`); barras invertidas somem no escaping.

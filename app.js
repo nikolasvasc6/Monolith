@@ -568,6 +568,7 @@ function renderListView(trades) {
   }
   trades.forEach((trade, index) => {
     const tr = document.createElement('tr');
+    tr.classList.add('table-row-clickable');
     const pnlClass = trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
     const typeLabel = trade.type === 'take' ? 'Take' : 'Stop';
     const typeClass = trade.type === 'take' ? 'pnl-positive' : 'pnl-negative';
@@ -584,6 +585,7 @@ function renderListView(trades) {
           <button class="btn-table-action btn-delete" title="Excluir Operação"><i data-lucide="trash-2"></i></button>
         </div>
       </td>`;
+    tr.addEventListener('click', () => openTradeModal(trade, index));
     tr.querySelector('.btn-edit').addEventListener('click', (e) => {
       e.stopPropagation();
       openTradeModal(trade, index);
