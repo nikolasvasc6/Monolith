@@ -398,16 +398,25 @@ function renderApp() {
   lucide.createIcons();
 }
 
-function updateKPIs(trades) {
+/** Estatísticas de uma lista de trades (bloco ativo ou conta inteira). */
+function computeStats(trades) {
   const count = trades.length;
+  const accumulated = trades.reduce((s, t) => s + t.pnl, 0);
+  const winTrades = trades.filter(t => t.pnl > 0).length;
+  const winRate = count > 0 ? Math.round((winTrades / count) * 100) : 0;
+  const average = count > 0 ? (accumulated / count) : 0;
+  return { count, accumulated, winTrades, winRate, average };
+}
+
+function updateKPIs(trades) {
+  const { count, accumulated, winTrades, winRate, average } = computeStats(trades);
 
   DOM.valRegistered.textContent = count;
   DOM.subRegistered.textContent = `/ 35 no bloco`;
   const pct = (count / TRADES_PER_BLOCK) * 100;
   DOM.progressRegistered.style.width = `${pct}%`;
 
-  const accumulatedPnL = trades.reduce((s, t) => s + t.pnl, 0);
-  DOM.valAccumulated.textContent = formatCurrency(accumulatedPnL);
+  DOM.valAccumulated.textContent = formatCurrency(accumulated);
 
   DOM.kpiAccumulatedCard.classList.remove('win-trend', 'loss-trend');
   DOM.kpiWinrateCard.classList.remove('win-trend');
@@ -416,7 +425,7 @@ function updateKPIs(trades) {
   if (count === 0) {
     DOM.indAccumulated.textContent = 'Sem operações';
     DOM.indAccumulated.className = 'kpi-indicator';
-  } else if (accumulatedPnL >= 0) {
+  } else if (accumulated >= 0) {
     DOM.indAccumulated.textContent = 'Saldo positivo';
     DOM.indAccumulated.className = 'kpi-indicator pnl-positive';
     DOM.kpiAccumulatedCard.classList.add('win-trend');
@@ -426,8 +435,6 @@ function updateKPIs(trades) {
     DOM.kpiAccumulatedCard.classList.add('loss-trend');
   }
 
-  const winTrades = trades.filter(t => t.pnl > 0).length;
-  const winRate = count > 0 ? Math.round((winTrades / count) * 100) : 0;
   DOM.valWinrate.textContent = `${winRate}%`;
   if (count > 0) {
     DOM.indWinrate.textContent = `${winTrades} de ${count} vitoriosos`;
@@ -436,12 +443,11 @@ function updateKPIs(trades) {
     DOM.indWinrate.textContent = 'Taxa de acerto do bloco';
   }
 
-  const averagePnL = count > 0 ? (accumulatedPnL / count) : 0;
-  DOM.valAverage.textContent = formatCurrency(averagePnL);
+  DOM.valAverage.textContent = formatCurrency(average);
   if (count === 0) {
     DOM.indAverage.textContent = 'Média de lucro/prejuízo';
     DOM.indAverage.className = 'kpi-indicator';
-  } else if (averagePnL >= 0) {
+  } else if (average >= 0) {
     DOM.indAverage.textContent = 'Média positiva';
     DOM.indAverage.className = 'kpi-indicator pnl-positive';
     DOM.kpiAverageCard.classList.add('win-trend');
@@ -453,8 +459,8 @@ function updateKPIs(trades) {
 
   DOM.summaryTradesCount.textContent = count;
   DOM.summaryWinrate.textContent = `${winRate}%`;
-  DOM.summaryPL.textContent = formatCurrency(accumulatedPnL);
-  DOM.summaryPL.className = accumulatedPnL >= 0 ? 'pnl-positive' : 'pnl-negative';
+  DOM.summaryPL.textContent = formatCurrency(accumulated);
+  DOM.summaryPL.className = accumulated >= 0 ? 'pnl-positive' : 'pnl-negative';
   if (count === 0) DOM.summaryPL.className = '';
 }
 
