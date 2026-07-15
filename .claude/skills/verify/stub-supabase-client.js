@@ -96,6 +96,7 @@ class Query {
 }
 
 const session = { user: USER, access_token: 'stub-token' };
+const authListeners = [];
 
 export const supabase = {
   auth: {
@@ -104,9 +105,14 @@ export const supabase = {
     async getUser() { return { data: { user: USER }, error: null }; },
     async signInWithPassword() { return { data: { session, user: USER }, error: null }; },
     async signUp() { return { data: { session, user: USER }, error: null }; },
-    async signOut() { return { error: null }; },
+    async signOut() {
+      // Como o SDK real: notifica os listeners para o app reagir ao logout
+      setTimeout(() => authListeners.forEach(cb => cb('SIGNED_OUT', null)), 0);
+      return { error: null };
+    },
     async resetPasswordForEmail() { return { error: null }; },
     onAuthStateChange(cb) {
+      authListeners.push(cb);
       setTimeout(() => cb('SIGNED_IN', session), 0);
       return { data: { subscription: { unsubscribe() {} } } };
     }
