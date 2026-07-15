@@ -1,10 +1,10 @@
 # CLAUDE.md — Monolith
 
-> ⚠️ **Nomes:** o produto aparece como **"Monolith"** na UI e a pasta se chama
-> **`Monolith`** (até jul/2026 era `trades777`, nome que o repositório GitHub ainda
-> usa: `nikolasvasc6/trades777`). **"PositionPips"** em comentários antigos
-> (`config.js`, `schema.sql`) é o mesmo app. Subtítulo de marca na interface:
-> *Excelência Trading*.
+> ⚠️ **Nomes:** o produto aparece como **"Monolith"** na UI; a pasta e o repositório
+> GitHub (`nikolasvasc6/Monolith`) também se chamam assim (até jul/2026 ambos eram
+> `trades777`). **"PositionPips"** em comentários antigos (`config.js`, `schema.sql`)
+> é o mesmo app. Subtítulo de marca na interface: *Excelência Trading*.
+> Site publicado: https://nikolasvasc6.github.io/Monolith/
 
 ## O que é
 
