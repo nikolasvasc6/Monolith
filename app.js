@@ -543,7 +543,7 @@ function renderGridView(trades) {
       slotEl.innerHTML = `
         <div class="slot-placeholder-inner">
           <div class="slot-plus-icon"><i data-lucide="plus"></i></div>
-          <span>Trade +</span>
+          <span>Trade</span>
         </div>
       `;
       slotEl.addEventListener('click', () => openTradeModal(null, i));
