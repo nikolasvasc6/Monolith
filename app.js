@@ -135,6 +135,8 @@ function cacheDOM() {
   DOM.btnSubmitModal    = document.getElementById('btn-submit-modal');
   DOM.btnNewTradeHeader = document.getElementById('btn-new-trade-header');
 
+  DOM.sidebarFooter     = document.getElementById('sidebar-footer');
+  DOM.btnFooterMenu     = document.getElementById('btn-footer-menu-toggle');
   DOM.btnExportData     = document.getElementById('btn-export-data');
   DOM.btnImportData     = document.getElementById('btn-import-data');
   DOM.fileImportInput   = document.getElementById('file-import-input');
@@ -1005,6 +1007,12 @@ function setupEventListeners() {
   DOM.planForm.addEventListener('submit', (e) => {
     e.preventDefault();
     handleSavePlan();
+  });
+
+  // Menu "Opções" do rodapé da sidebar (recolhido por padrão)
+  DOM.btnFooterMenu.addEventListener('click', () => {
+    const aberto = DOM.sidebarFooter.classList.toggle('open');
+    DOM.btnFooterMenu.setAttribute('aria-expanded', String(aberto));
   });
 
   // Export / Import / Reset

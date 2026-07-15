@@ -129,20 +129,29 @@
         </ul>
       </nav>
       
-      <div class="sidebar-footer">
-        <button id="btn-export-data" class="btn-sidebar-action" title="Exportar backup dos dados">
-          <i data-lucide="download"></i> Exportar Dados
+      <div class="sidebar-footer" id="sidebar-footer">
+        <button id="btn-footer-menu-toggle" class="sidebar-menu-toggle" aria-expanded="false" aria-controls="sidebar-menu" title="Mais opções">
+          <i data-lucide="settings"></i>
+          <span>Opções</span>
+          <i data-lucide="chevron-down" class="sidebar-menu-chevron"></i>
         </button>
-        <button id="btn-import-data" class="btn-sidebar-action" title="Importar backup dos dados">
-          <i data-lucide="upload"></i> Importar Dados
-        </button>
-        <input type="file" id="file-import-input" accept=".json" style="display: none;">
-        <button id="btn-reset-app" class="btn-sidebar-action btn-danger" title="Limpar todos os dados">
-          <i data-lucide="trash-2"></i> Resetar Dados
-        </button>
-        <button id="btn-logout" class="btn-sidebar-action btn-logout" title="Sair da conta">
-          <i data-lucide="log-out"></i> Sair
-        </button>
+        <div class="sidebar-menu" id="sidebar-menu">
+          <div class="sidebar-menu-inner">
+            <button id="btn-export-data" class="sidebar-menu-item" title="Exportar backup dos dados">
+              <i data-lucide="download"></i> Exportar Dados
+            </button>
+            <button id="btn-import-data" class="sidebar-menu-item" title="Importar backup dos dados">
+              <i data-lucide="upload"></i> Importar Dados
+            </button>
+            <input type="file" id="file-import-input" accept=".json" style="display: none;">
+            <button id="btn-reset-app" class="sidebar-menu-item sidebar-menu-item-danger" title="Limpar todos os dados">
+              <i data-lucide="trash-2"></i> Resetar Dados
+            </button>
+            <button id="btn-logout" class="sidebar-menu-item" title="Sair da conta">
+              <i data-lucide="log-out"></i> Sair
+            </button>
+          </div>
+        </div>
       </div>
     </aside>
 

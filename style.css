@@ -220,45 +220,96 @@ body {
 }
 
 .sidebar-footer {
-  padding: 20px 16px;
+  padding: 12px 16px;
   border-top: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
-.btn-sidebar-action {
+.sidebar-menu-toggle {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background-color: var(--surface-2);
-  border: 1px solid var(--border-color);
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
   color: var(--text-secondary);
-  padding: 10px;
+  padding: 10px 16px;
   border-radius: var(--radius-md);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  width: 100%;
   transition: var(--transition-fast);
 }
 
-.btn-sidebar-action:hover {
-  background-color: var(--surface-5);
+.sidebar-menu-toggle i {
+  width: 18px;
+  height: 18px;
+}
+
+.sidebar-menu-toggle:hover {
+  background-color: var(--surface-3);
   color: var(--text-active);
-  border-color: var(--border-hover);
 }
 
-.btn-sidebar-action.btn-danger {
-  color: var(--color-danger);
-  border-color: rgba(244, 63, 94, 0.15);
+.sidebar-menu-chevron {
+  margin-left: auto;
+  transition: transform 0.25s ease;
 }
 
-.btn-sidebar-action.btn-danger:hover {
+.sidebar-footer.open .sidebar-menu-chevron {
+  transform: rotate(180deg);
+}
+
+.sidebar-menu {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden; /* também tira os itens da ordem de Tab quando fechado */
+  transition: grid-template-rows 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.sidebar-footer.open .sidebar-menu {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition: grid-template-rows 0.25s ease, visibility 0s;
+}
+
+.sidebar-menu-inner {
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 4px;
+}
+
+.sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 9px 16px 9px 26px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.sidebar-menu-item i {
+  width: 16px;
+  height: 16px;
+}
+
+.sidebar-menu-item:hover {
+  background-color: var(--surface-3);
+  color: var(--text-active);
+}
+
+.sidebar-menu-item.sidebar-menu-item-danger:hover {
   background-color: rgba(244, 63, 94, 0.08);
-  border-color: var(--color-danger);
-  color: #fff;
+  color: var(--color-danger);
 }
 
 /* ==========================================================================
