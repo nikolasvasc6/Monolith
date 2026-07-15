@@ -471,22 +471,24 @@ function updateKPIs(trades) {
   const pct = (count / TRADES_PER_BLOCK) * 100;
   DOM.progressRegistered.style.width = `${pct}%`;
 
-  DOM.valAccumulated.textContent = formatCurrency(accumulated);
-
   DOM.kpiAccumulatedCard.classList.remove('win-trend', 'loss-trend');
   DOM.kpiWinrateCard.classList.remove('win-trend');
   DOM.kpiAverageCard.classList.remove('win-trend', 'loss-trend');
 
+  DOM.indAccumulated.className = 'kpi-indicator';
   if (count === 0) {
+    DOM.valAccumulated.textContent = formatCurrency(accumulated);
+    DOM.valAccumulated.className = 'kpi-value';
     DOM.indAccumulated.textContent = 'Sem operações';
-    DOM.indAccumulated.className = 'kpi-indicator';
   } else if (accumulated >= 0) {
+    DOM.valAccumulated.textContent = formatCurrencySigned(accumulated);
+    DOM.valAccumulated.className = 'kpi-value pnl-positive';
     DOM.indAccumulated.textContent = 'Saldo positivo';
-    DOM.indAccumulated.className = 'kpi-indicator pnl-positive';
     DOM.kpiAccumulatedCard.classList.add('win-trend');
   } else {
+    DOM.valAccumulated.textContent = formatCurrencySigned(accumulated);
+    DOM.valAccumulated.className = 'kpi-value pnl-negative';
     DOM.indAccumulated.textContent = 'Saldo negativo';
-    DOM.indAccumulated.className = 'kpi-indicator pnl-negative';
     DOM.kpiAccumulatedCard.classList.add('loss-trend');
   }
 
@@ -498,17 +500,20 @@ function updateKPIs(trades) {
     DOM.indWinrate.textContent = 'Taxa de acerto do bloco';
   }
 
-  DOM.valAverage.textContent = formatCurrency(average);
+  DOM.indAverage.className = 'kpi-indicator';
   if (count === 0) {
+    DOM.valAverage.textContent = formatCurrency(average);
+    DOM.valAverage.className = 'kpi-value';
     DOM.indAverage.textContent = 'Média de lucro/prejuízo';
-    DOM.indAverage.className = 'kpi-indicator';
   } else if (average >= 0) {
+    DOM.valAverage.textContent = formatCurrencySigned(average);
+    DOM.valAverage.className = 'kpi-value pnl-positive';
     DOM.indAverage.textContent = 'Média positiva';
-    DOM.indAverage.className = 'kpi-indicator pnl-positive';
     DOM.kpiAverageCard.classList.add('win-trend');
   } else {
+    DOM.valAverage.textContent = formatCurrencySigned(average);
+    DOM.valAverage.className = 'kpi-value pnl-negative';
     DOM.indAverage.textContent = 'Média negativa';
-    DOM.indAverage.className = 'kpi-indicator pnl-negative';
     DOM.kpiAverageCard.classList.add('loss-trend');
   }
 
@@ -712,21 +717,24 @@ function renderDashboard() {
   DOM.dashValRegistered.textContent = count;
   DOM.dashSubRegistered.textContent = totalBlocks === 1 ? 'em 1 bloco' : `em ${totalBlocks} blocos`;
 
-  DOM.dashValAccumulated.textContent = formatCurrency(accumulated);
   DOM.dashKpiAccumulatedCard.classList.remove('win-trend', 'loss-trend');
   DOM.dashKpiWinrateCard.classList.remove('win-trend');
   DOM.dashKpiAverageCard.classList.remove('win-trend', 'loss-trend');
 
+  DOM.dashIndAccumulated.className = 'kpi-indicator';
   if (count === 0) {
+    DOM.dashValAccumulated.textContent = formatCurrency(accumulated);
+    DOM.dashValAccumulated.className = 'kpi-value';
     DOM.dashIndAccumulated.textContent = 'Sem operações';
-    DOM.dashIndAccumulated.className = 'kpi-indicator';
   } else if (accumulated >= 0) {
+    DOM.dashValAccumulated.textContent = formatCurrencySigned(accumulated);
+    DOM.dashValAccumulated.className = 'kpi-value pnl-positive';
     DOM.dashIndAccumulated.textContent = 'Saldo positivo';
-    DOM.dashIndAccumulated.className = 'kpi-indicator pnl-positive';
     DOM.dashKpiAccumulatedCard.classList.add('win-trend');
   } else {
+    DOM.dashValAccumulated.textContent = formatCurrencySigned(accumulated);
+    DOM.dashValAccumulated.className = 'kpi-value pnl-negative';
     DOM.dashIndAccumulated.textContent = 'Saldo negativo';
-    DOM.dashIndAccumulated.className = 'kpi-indicator pnl-negative';
     DOM.dashKpiAccumulatedCard.classList.add('loss-trend');
   }
 
@@ -738,17 +746,20 @@ function renderDashboard() {
     DOM.dashIndWinrate.textContent = 'Taxa de acerto da conta';
   }
 
-  DOM.dashValAverage.textContent = formatCurrency(average);
+  DOM.dashIndAverage.className = 'kpi-indicator';
   if (count === 0) {
+    DOM.dashValAverage.textContent = formatCurrency(average);
+    DOM.dashValAverage.className = 'kpi-value';
     DOM.dashIndAverage.textContent = 'Média de lucro/prejuízo';
-    DOM.dashIndAverage.className = 'kpi-indicator';
   } else if (average >= 0) {
+    DOM.dashValAverage.textContent = formatCurrencySigned(average);
+    DOM.dashValAverage.className = 'kpi-value pnl-positive';
     DOM.dashIndAverage.textContent = 'Média positiva';
-    DOM.dashIndAverage.className = 'kpi-indicator pnl-positive';
     DOM.dashKpiAverageCard.classList.add('win-trend');
   } else {
+    DOM.dashValAverage.textContent = formatCurrencySigned(average);
+    DOM.dashValAverage.className = 'kpi-value pnl-negative';
     DOM.dashIndAverage.textContent = 'Média negativa';
-    DOM.dashIndAverage.className = 'kpi-indicator pnl-negative';
     DOM.dashKpiAverageCard.classList.add('loss-trend');
   }
 
@@ -1273,6 +1284,11 @@ function formatCurrency(value) {
   const isNeg = value < 0;
   const formatted = Math.abs(value).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return `${isNeg ? '- ' : ''}${formatted}`;
+}
+
+/** Como formatCurrency, mas com sinal explícito também no positivo ("+ $46.88"). */
+function formatCurrencySigned(value) {
+  return value >= 0 ? `+ ${formatCurrency(value)}` : formatCurrency(value);
 }
 
 function formatDateBR(s) {
