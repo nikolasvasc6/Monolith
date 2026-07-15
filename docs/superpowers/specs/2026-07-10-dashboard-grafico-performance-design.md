@@ -61,7 +61,7 @@ Nova `<section class="page-section" id="page-dashboard">`, antes de
 
 ## Verificação
 
-Rodar a skill `projetos/apps/trades777:verify` (navegador real com Supabase stubado):
+Rodar a skill `projetos/apps/Monolith:verify` (navegador real com Supabase stubado):
 
 1. Aba Dashboard abre com o gráfico da conta inteira (vários blocos somados).
 2. Diário continua mostrando só o bloco ativo.

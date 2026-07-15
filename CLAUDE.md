@@ -1,8 +1,10 @@
-# CLAUDE.md — trades777 (app "Monolith")
+# CLAUDE.md — Monolith
 
-> ⚠️ **Nomes:** o produto aparece como **"Monolith"** na UI, **"PositionPips"** em
-> comentários antigos (`config.js`, `schema.sql`) e a pasta se chama **`trades777`**.
-> São a mesma coisa. Subtítulo de marca na interface: *Excelência Trading*.
+> ⚠️ **Nomes:** o produto aparece como **"Monolith"** na UI e a pasta se chama
+> **`Monolith`** (até jul/2026 era `trades777`, nome que o repositório GitHub ainda
+> usa: `nikolasvasc6/trades777`). **"PositionPips"** em comentários antigos
+> (`config.js`, `schema.sql`) é o mesmo app. Subtítulo de marca na interface:
+> *Excelência Trading*.
 
 ## O que é
 

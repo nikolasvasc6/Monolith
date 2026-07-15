@@ -1,9 +1,9 @@
 ---
 name: verify
-description: Verifica mudanças do trades777 no navegador real com Supabase stubado (sem rede/credenciais). Use ao validar qualquer mudança de UI/fluxo antes de commitar.
+description: Verifica mudanças do Monolith no navegador real com Supabase stubado (sem rede/credenciais). Use ao validar qualquer mudança de UI/fluxo antes de commitar.
 ---
 
-# Verificar o trades777 localmente (stub + puppeteer)
+# Verificar o Monolith localmente (stub + puppeteer)
 
 O app exige login no Supabase; para verificar sem credenciais, sirva o app por
 HTTP e intercepte `js/supabase-client.js` com o stub deste diretório

@@ -54,7 +54,7 @@ cd /c/Users/nikol/AppData/Local/Temp/trades777-rig
 npm init -y >/dev/null 2>&1
 npm i puppeteer-core >/dev/null 2>&1
 # servidor do app (deixar rodando em background):
-cd /c/Users/nikol/Desktop/Niko/projetos/apps/trades777
+cd /c/Users/nikol/Desktop/Niko/projetos/apps/Monolith
 python -m http.server 8077 &
 ```
 
@@ -70,7 +70,7 @@ import { readFileSync } from 'node:fs';
 
 const APP = 'http://localhost:8077';
 const STUB = readFileSync(
-  'C:/Users/nikol/Desktop/Niko/projetos/apps/trades777/.claude/skills/verify/stub-supabase-client.js',
+  'C:/Users/nikol/Desktop/Niko/projetos/apps/Monolith/.claude/skills/verify/stub-supabase-client.js',
   'utf8'
 );
 
@@ -321,7 +321,7 @@ renderizado — chega na Task 3). Exit code 1.
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /c/Users/nikol/Desktop/Niko/projetos/apps/trades777
+cd /c/Users/nikol/Desktop/Niko/projetos/apps/Monolith
 git add index.html app.js
 git commit -m "feat(dashboard): página da aba Dashboard com card do gráfico
 
@@ -492,7 +492,7 @@ quebrou o Diário: parar e corrigir antes de commitar.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /c/Users/nikol/Desktop/Niko/projetos/apps/trades777
+cd /c/Users/nikol/Desktop/Niko/projetos/apps/Monolith
 git add app.js
 git commit -m "refactor(chart): renderChart parametrizada por canvas
 
@@ -587,7 +587,7 @@ intacto, tema, conta vazia, CRUD com a aba aberta).
 - [ ] **Step 5: Commit e encerrar o rig**
 
 ```bash
-cd /c/Users/nikol/Desktop/Niko/projetos/apps/trades777
+cd /c/Users/nikol/Desktop/Niko/projetos/apps/Monolith
 git add app.js
 git commit -m "feat(dashboard): gráfico de performance da conta inteira
 

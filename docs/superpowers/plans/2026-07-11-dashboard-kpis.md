@@ -51,7 +51,7 @@ as edições abaixo.
 - [ ] **Step 1: Subir o servidor do app**
 
 ```bash
-cd /c/Users/nikol/Desktop/Niko/projetos/apps/trades777
+cd /c/Users/nikol/Desktop/Niko/projetos/apps/Monolith
 python -m http.server 8077 &
 ```
 
@@ -270,7 +270,7 @@ refactor quebrou algo: corrigir antes de commitar.
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /c/Users/nikol/Desktop/Niko/projetos/apps/trades777
+cd /c/Users/nikol/Desktop/Niko/projetos/apps/Monolith
 git add app.js
 git commit -m "refactor(kpi): extrai computeStats() compartilhada
 
@@ -456,7 +456,7 @@ spec: H com seed, D/D2 de regressão, F2 pós-CRUD, G2 conta vazia).
 - [ ] **Step 5: Commit e encerrar o rig**
 
 ```bash
-cd /c/Users/nikol/Desktop/Niko/projetos/apps/trades777
+cd /c/Users/nikol/Desktop/Niko/projetos/apps/Monolith
 git add index.html app.js
 git commit -m "feat(dashboard): KPIs da conta inteira na aba Dashboard
 
