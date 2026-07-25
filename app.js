@@ -1246,6 +1246,8 @@ function calculateForex() {
     document.getElementById('fx-out-units').textContent = Math.round(lotSize * 100000).toLocaleString('pt-BR');
   }
   document.getElementById('fx-out-actrisk').textContent = formatCurrency(actualRisk);
+  // Lote zerado: com esse stop, o risco definido não paga nem o lote mínimo
+  if (lotSize <= 0) toast('Risco insuficiente para 0,01 lote com esse stop.', 'error');
 }
 
 const FUTURES_SPECS = {
