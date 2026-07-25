@@ -68,9 +68,10 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 - **KPIs:** operações registradas, resultado acumulado, win rate, média por operação. O
   gráfico é a **soma acumulada** do P&L do bloco.
 - **Calculadoras de risco** (não persistem nada): Forex (lote por pip — inclui XAU/USD e o
-  CFD de índice USTEC/Nasdaq 100, a $1 por ponto, com o painel adaptado ao vocabulário de
-  índice), Futuros EUA/CME, B3 (WIN/IND/WDO/DOL) e BTC CFD. Todas dimensionam a posição
-  **arredondando para baixo** para nunca ultrapassar o risco definido.
+  CFD de índice USTEC/Nasdaq 100, onde **1 pip = 0,1 ponto do índice → $0,10 por lote**;
+  nesse modo o painel esconde as linhas de lote mini/micro/unidades, que só fazem sentido
+  em par de moedas), Futuros EUA/CME, B3 (WIN/IND/WDO/DOL) e BTC CFD. Todas dimensionam a
+  posição **arredondando para baixo** para nunca ultrapassar o risco definido.
 
 ## Convenções ao trabalhar aqui
 

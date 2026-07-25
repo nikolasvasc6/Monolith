@@ -16,11 +16,18 @@ referência (positionpips.com/forex), em vez de ganhar aba própria. O seletor
 `#fx-pair` deixa de ser "Par de Moedas" e passa a ser **"Ativo"** — o ouro já morava
 lá como exceção.
 
-**Valor do ponto: $1 por lote** (contract size 1, padrão de Exness/IC Markets/
-Pepperstone/Vantage). Conta em USD, sem conversão de moeda.
+**Valor do pip: $0,10 por lote.** No USTEC, 1 pip = 0,1 ponto do índice (cotação com
+uma casa decimal), e é em pips que o stop é medido na plataforma do Nikolas — o stop
+segue no mesmo vocabulário dos pares de moedas. Conta em USD, sem conversão de moeda.
+
+> Correção de 2026-07-25, depois da primeira implementação: a versão original desta
+> spec dizia "$1 por ponto" e trocava os rótulos de "pips" para "pontos". O valor por
+> ponto está certo ($1), mas a unidade que a plataforma usa é o pip — logo o valor
+> que entra na fórmula é **$0,10**, e o resultado é 10× maior em lotes. Corrigido em
+> código e aqui.
 
 Alternativas descartadas: aba "Índices CFD" separada e fusão com a aba BTC CFD (ambas
-criam tela nova para um ativo só); campo editável de valor do ponto (mais um campo
+criam tela nova para um ativo só); campo editável de valor do pip (mais um campo
 para preencher a cada cálculo, sem ganho enquanto a corretora não mudar).
 
 Escopo: **só USTEC**. US30/US500 não entram agora — a estrutura deixa a adição em uma
@@ -31,24 +38,25 @@ linha de código + uma `<option>`.
 - **`app.js` — tabela nova**, no estilo de `FUTURES_SPECS`/`B3_SPECS`/`BTC_PIP_SPECS`:
 
   ```js
-  const INDEX_CFD_SPECS = { USTEC: { pointValue: 1 } };
+  const INDEX_CFD_SPECS = { USTEC: { pipValue: 0.10 } };
   ```
 
   É a **única fonte de verdade** de "este ativo é índice, e não par de moedas" —
   cálculo e UI consultam ela, sem lista de ativos duplicada.
 
 - **`app.js` — `forexPipValuePerLot(pair, price)`** ganha uma linha no topo:
-  `if (INDEX_CFD_SPECS[pair]) return INDEX_CFD_SPECS[pair].pointValue;`. O resto da
+  `if (INDEX_CFD_SPECS[pair]) return INDEX_CFD_SPECS[pair].pipValue;`. O resto da
   função fica intacto. Fórmula e arredondamento (0,01 lote, para baixo, para nunca
   ultrapassar o risco) são os mesmos de sempre — só a origem do valor do pip muda.
 
 - **`app.js` — `applyForexAssetMode(pair)`** (nova): ajusta a UI ao ativo. Em modo
   índice, esconde as linhas "Lotes mini (0,1)", "Lotes micro (0,01)" e "Unidades
   totais" (× 100.000 é conversão de par de moedas; para índice seria número
-  mentiroso) e troca os rótulos de "pips" para "pontos" — label do stop, "Valor por
-  pip (1 lote padrão)" → "Valor por ponto (1 lote)", e o texto da fórmula no rodapé.
-  Em modo forex, restaura tudo. **Idempotente:** alternar o seletor N vezes dá o
-  mesmo resultado.
+  mentiroso) e tira a menção a "lote padrão", que só existe em par de moedas:
+  "Valor por pip (1 lote padrão)" → "Valor por pip (1 lote)". O texto da fórmula no
+  rodapé passa a explicitar que 1 pip = 0,1 ponto do índice. **O label do stop não
+  muda** — é "Stop Loss (em pips)" nos dois modos. Em modo forex, restaura tudo.
+  **Idempotente:** alternar o seletor N vezes dá o mesmo resultado.
 
 - **`app.js` — `calculateForex()`**: chama `applyForexAssetMode()` e só preenche
   mini/micro/unidades quando o ativo não é índice.
@@ -62,8 +70,8 @@ linha de código + uma `<option>`.
 - **`index.html`**: `<option value="USTEC">USTEC (Nasdaq 100 CFD)</option>` no
   `#fx-pair`; label do grupo vira "Ativo"; IDs novos nos elementos que
   `applyForexAssetMode()` manipula (as três `.calc-result-row` que sofrem toggle, o
-  label do stop, o rótulo do valor por pip e o `small.calc-help`). **Nenhum ID
-  existente muda** — os handlers atuais continuam válidos.
+  rótulo do valor por pip e o `small.calc-help`). **Nenhum ID existente muda** — os
+  handlers atuais continuam válidos.
 
 - **Erro novo:** quando o lote arredondado for 0,00 (risco pequeno demais para o
   stop), `toast` de aviso *"Risco insuficiente para 0,01 lote com esse stop."* Hoje a
@@ -80,10 +88,10 @@ Skill `verify` do projeto (navegador real com Supabase stubado), risco de $100:
 
 | Ativo | Stop | Esperado |
 |-------|------|----------|
-| USTEC | 50 pontos | 2,00 lotes · valor do ponto $1,00 · risco estimado $100,00 |
-| USTEC | 33 pontos | 3,03 lotes (não 3,0303) · risco estimado $99,99 — nunca acima do risco |
-| USTEC | 200 pontos, risco $1 | 0,00 lote + toast de aviso |
-| EUR/USD | 20 pips | 0,50 lote · as três linhas reaparecem · rótulos voltam a "pips" (regressão) |
+| USTEC | 50 pips | 20,00 lotes · valor do pip $0,10 · risco estimado $100,00 |
+| USTEC | 33 pips | 30,30 lotes (não 30,3030) · risco estimado $99,99 — nunca acima do risco |
+| USTEC | 2000 pips, risco $1 | 0,00 lote + toast de aviso |
+| EUR/USD | 20 pips | 0,50 lote · as três linhas reaparecem · rótulo volta a "1 lote padrão" (regressão) |
 | XAU/USD | 20 pips | 1 pip = $1, igual a hoje (regressão) |
 
 Conferir também em tema dark e light.

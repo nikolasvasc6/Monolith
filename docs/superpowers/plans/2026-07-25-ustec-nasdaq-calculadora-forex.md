@@ -1,5 +1,12 @@
 # USTEC (Nasdaq 100 CFD) na Calculadora Forex — Implementation Plan
 
+> **Plano executado e depois corrigido (2026-07-25).** Ele foi escrito com a premissa
+> errada de que o stop do USTEC é medido em pontos a $1 cada. A unidade correta é o
+> **pip = 0,1 ponto → $0,10 por lote**, e o stop segue em pips como nos pares de moedas.
+> Os números e rótulos abaixo estão desatualizados: a fonte de verdade é a spec
+> (`docs/superpowers/specs/2026-07-25-ustec-nasdaq-calculadora-forex-design.md`) e o
+> código. Mantido como registro do que foi executado.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Permitir dimensionar posição em USTEC (Nasdaq 100 CFD) pela Calculadora Forex do Monolith, a $1 por ponto, com o painel de resultado adaptado ao vocabulário de índice.

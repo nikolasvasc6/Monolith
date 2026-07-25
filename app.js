@@ -1172,14 +1172,15 @@ function setupCalculatorsListeners() {
   }
 }
 
-// CFDs de índice negociados em lote fracionário: valor fixo em USD por ponto, por lote.
+// CFDs de índice negociados em lote fracionário: valor fixo em USD por pip, por lote.
+// No USTEC 1 pip = 0,1 ponto do índice (cotação com uma casa decimal) → $0,10 por lote.
 // Única fonte de verdade de "este ativo é índice, não par de moedas" — cálculo e UI consultam daqui.
-const INDEX_CFD_SPECS = { USTEC: { pointValue: 1 } };
+const INDEX_CFD_SPECS = { USTEC: { pipValue: 0.10 } };
 
 function forexPipValuePerLot(pair, price) {
   const standardLot = 100000;
-  // CFD de índice (USTEC): valor do ponto é fixo por lote, sem conversão de moeda
-  if (INDEX_CFD_SPECS[pair]) return INDEX_CFD_SPECS[pair].pointValue;
+  // CFD de índice (USTEC): valor do pip é fixo por lote, sem conversão de moeda
+  if (INDEX_CFD_SPECS[pair]) return INDEX_CFD_SPECS[pair].pipValue;
   // XAUUSD: calcula posição em mini lotes (10 oz → $1/pip), não em lote padrão
   if (pair === 'XAUUSD') return 1;
   if (pair.endsWith('USD')) return 0.0001 * standardLot;
@@ -1192,12 +1193,13 @@ function forexPipValuePerLot(pair, price) {
 }
 
 const FX_HELP_FOREX = 'Fórmula: Lote = Risco USD ÷ (Stop em pips × Valor do pip por lote). Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.';
-const FX_HELP_INDEX = 'Fórmula: Lotes = Risco USD ÷ (Stop em pontos × Valor do ponto). Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.';
+const FX_HELP_INDEX = 'Fórmula: Lotes = Risco USD ÷ (Stop em pips × Valor do pip). No USTEC 1 pip = 0,1 ponto do índice. Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.';
 
 /**
  * Ajusta o painel Forex ao ativo selecionado. Em CFD de índice, esconde as linhas de
  * lote mini/micro/unidades (× 100.000 é conversão de par de moedas — para índice seria
- * número sem sentido) e troca o vocabulário de "pips" para "pontos". Idempotente.
+ * número sem sentido) e tira a menção a "lote padrão", que só existe em par de moedas.
+ * O stop continua medido em pips nos dois modos. Idempotente.
  */
 function applyForexAssetMode(pair) {
   const isIndex = !!INDEX_CFD_SPECS[pair];
@@ -1205,10 +1207,8 @@ function applyForexAssetMode(pair) {
     const row = document.getElementById(id);
     if (row) row.style.display = isIndex ? 'none' : 'flex';
   });
-  const stopLabel = document.getElementById('fx-stop-label');
-  if (stopLabel) stopLabel.textContent = isIndex ? 'Stop Loss (em pontos)' : 'Stop Loss (em pips)';
   const pipLabel = document.getElementById('fx-pipval-label');
-  if (pipLabel) pipLabel.textContent = isIndex ? 'Valor por ponto (1 lote)' : 'Valor por pip (1 lote padrão)';
+  if (pipLabel) pipLabel.textContent = isIndex ? 'Valor por pip (1 lote)' : 'Valor por pip (1 lote padrão)';
   const help = document.getElementById('fx-help');
   if (help) help.textContent = isIndex ? FX_HELP_INDEX : FX_HELP_FOREX;
 }
