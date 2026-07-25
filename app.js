@@ -1165,8 +1165,14 @@ function setupCalculatorsListeners() {
   if (btcBtn) btcBtn.addEventListener('click', calculateBTC);
 }
 
+// CFDs de índice negociados em lote fracionário: valor fixo em USD por ponto, por lote.
+// Única fonte de verdade de "este ativo é índice, não par de moedas" — cálculo e UI consultam daqui.
+const INDEX_CFD_SPECS = { USTEC: { pointValue: 1 } };
+
 function forexPipValuePerLot(pair, price) {
   const standardLot = 100000;
+  // CFD de índice (USTEC): valor do ponto é fixo por lote, sem conversão de moeda
+  if (INDEX_CFD_SPECS[pair]) return INDEX_CFD_SPECS[pair].pointValue;
   // XAUUSD: calcula posição em mini lotes (10 oz → $1/pip), não em lote padrão
   if (pair === 'XAUUSD') return 1;
   if (pair.endsWith('USD')) return 0.0001 * standardLot;
