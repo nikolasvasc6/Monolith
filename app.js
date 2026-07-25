@@ -1163,6 +1163,13 @@ function setupCalculatorsListeners() {
   if (futBtn) futBtn.addEventListener('click', calculateFutures);
   if (b3Btn)  b3Btn.addEventListener('click',  calculateB3);
   if (btcBtn) btcBtn.addEventListener('click', calculateBTC);
+  const fxPair = document.getElementById('fx-pair');
+  if (fxPair) {
+    // O Chrome restaura a seleção do <select> no F5, então o modo precisa ser
+    // aplicado no boot e não só na troca.
+    applyForexAssetMode(fxPair.value);
+    fxPair.addEventListener('change', onForexPairChange);
+  }
 }
 
 // CFDs de índice negociados em lote fracionário: valor fixo em USD por ponto, por lote.
@@ -1184,6 +1191,38 @@ function forexPipValuePerLot(pair, price) {
   return 0.0001 * standardLot;
 }
 
+const FX_HELP_FOREX = 'Fórmula: Lote = Risco USD ÷ (Stop em pips × Valor do pip por lote). Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.';
+const FX_HELP_INDEX = 'Fórmula: Lotes = Risco USD ÷ (Stop em pontos × Valor do ponto). Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.';
+
+/**
+ * Ajusta o painel Forex ao ativo selecionado. Em CFD de índice, esconde as linhas de
+ * lote mini/micro/unidades (× 100.000 é conversão de par de moedas — para índice seria
+ * número sem sentido) e troca o vocabulário de "pips" para "pontos". Idempotente.
+ */
+function applyForexAssetMode(pair) {
+  const isIndex = !!INDEX_CFD_SPECS[pair];
+  ['fx-row-mini', 'fx-row-micro', 'fx-row-units'].forEach(id => {
+    const row = document.getElementById(id);
+    if (row) row.style.display = isIndex ? 'none' : 'flex';
+  });
+  const stopLabel = document.getElementById('fx-stop-label');
+  if (stopLabel) stopLabel.textContent = isIndex ? 'Stop Loss (em pontos)' : 'Stop Loss (em pips)';
+  const pipLabel = document.getElementById('fx-pipval-label');
+  if (pipLabel) pipLabel.textContent = isIndex ? 'Valor por ponto (1 lote)' : 'Valor por pip (1 lote padrão)';
+  const help = document.getElementById('fx-help');
+  if (help) help.textContent = isIndex ? FX_HELP_INDEX : FX_HELP_FOREX;
+}
+
+function onForexPairChange() {
+  const pair = document.getElementById('fx-pair').value;
+  applyForexAssetMode(pair);
+  const risk = parseFloat(document.getElementById('fx-risk').value);
+  const stop = parseFloat(document.getElementById('fx-stop-pips').value);
+  // Recalcula só com os campos já válidos: trocar de ativo não é tentativa de
+  // calcular, então nunca deve gerar toast de erro.
+  if (!isNaN(risk) && !isNaN(stop) && risk > 0 && stop > 0) calculateForex();
+}
+
 function calculateForex() {
   const riskAmount = parseFloat(document.getElementById('fx-risk').value);
   const stopPips   = parseFloat(document.getElementById('fx-stop-pips').value);
@@ -1197,12 +1236,15 @@ function calculateForex() {
   const preciseLot = riskAmount / (stopPips * pipValuePerLot);
   const lotSize    = Math.floor(preciseLot * 100) / 100;
   const actualRisk = lotSize * stopPips * pipValuePerLot;
+  applyForexAssetMode(pair);
   document.getElementById('fx-out-risk').textContent    = formatCurrency(riskAmount);
   document.getElementById('fx-out-pipval').textContent  = formatCurrency(pipValuePerLot);
   document.getElementById('fx-out-lots').textContent    = lotSize.toFixed(2);
-  document.getElementById('fx-out-mini').textContent    = (lotSize * 10).toFixed(1);
-  document.getElementById('fx-out-micro').textContent   = Math.floor(lotSize * 100).toLocaleString('pt-BR');
-  document.getElementById('fx-out-units').textContent   = Math.round(lotSize * 100000).toLocaleString('pt-BR');
+  if (!INDEX_CFD_SPECS[pair]) {
+    document.getElementById('fx-out-mini').textContent  = (lotSize * 10).toFixed(1);
+    document.getElementById('fx-out-micro').textContent = Math.floor(lotSize * 100).toLocaleString('pt-BR');
+    document.getElementById('fx-out-units').textContent = Math.round(lotSize * 100000).toLocaleString('pt-BR');
+  }
   document.getElementById('fx-out-actrisk').textContent = formatCurrency(actualRisk);
 }
 
