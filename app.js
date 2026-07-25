@@ -1177,6 +1177,15 @@ function setupCalculatorsListeners() {
 // Única fonte de verdade de "este ativo é índice, não par de moedas" — cálculo e UI consultam daqui.
 const INDEX_CFD_SPECS = { USTEC: { pipValue: 0.10 } };
 
+// Ativos da Calculadora Forex que não são par de moedas: o tamanho da posição não se
+// expressa em unidades de moeda, então lote mini/micro e "unidades totais" (× 100.000)
+// não se aplicam. O ouro entra aqui por ser dimensionado em onças, não em moeda.
+const FX_NON_CURRENCY_ASSETS = new Set(['XAUUSD']);
+
+function isForexNonCurrencyAsset(pair) {
+  return !!INDEX_CFD_SPECS[pair] || FX_NON_CURRENCY_ASSETS.has(pair);
+}
+
 function forexPipValuePerLot(pair, price) {
   const standardLot = 100000;
   // CFD de índice (USTEC): valor do pip é fixo por lote, sem conversão de moeda
@@ -1196,21 +1205,22 @@ const FX_HELP_FOREX = 'Fórmula: Lote = Risco USD ÷ (Stop em pips × Valor do p
 const FX_HELP_INDEX = 'Fórmula: Lotes = Risco USD ÷ (Stop em pips × Valor do pip). No USTEC 1 pip = 0,1 ponto do índice. Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.';
 
 /**
- * Ajusta o painel Forex ao ativo selecionado. Em CFD de índice, esconde as linhas de
- * lote mini/micro/unidades (× 100.000 é conversão de par de moedas — para índice seria
- * número sem sentido) e tira a menção a "lote padrão", que só existe em par de moedas.
- * O stop continua medido em pips nos dois modos. Idempotente.
+ * Ajusta o painel Forex ao ativo selecionado. Fora de par de moedas (CFD de índice e
+ * ouro), esconde as linhas de lote mini/micro/unidades (× 100.000 é tamanho de lote de
+ * moeda — nesses ativos seria número sem sentido) e tira a menção a "lote padrão". A
+ * fórmula no rodapé só muda em índice, que tem a conversão pip↔ponto. O stop continua
+ * medido em pips em todos os ativos. Idempotente.
  */
 function applyForexAssetMode(pair) {
-  const isIndex = !!INDEX_CFD_SPECS[pair];
+  const isNonCurrency = isForexNonCurrencyAsset(pair);
   ['fx-row-mini', 'fx-row-micro', 'fx-row-units'].forEach(id => {
     const row = document.getElementById(id);
-    if (row) row.style.display = isIndex ? 'none' : 'flex';
+    if (row) row.style.display = isNonCurrency ? 'none' : 'flex';
   });
   const pipLabel = document.getElementById('fx-pipval-label');
-  if (pipLabel) pipLabel.textContent = isIndex ? 'Valor por pip (1 lote)' : 'Valor por pip (1 lote padrão)';
+  if (pipLabel) pipLabel.textContent = isNonCurrency ? 'Valor por pip (1 lote)' : 'Valor por pip (1 lote padrão)';
   const help = document.getElementById('fx-help');
-  if (help) help.textContent = isIndex ? FX_HELP_INDEX : FX_HELP_FOREX;
+  if (help) help.textContent = INDEX_CFD_SPECS[pair] ? FX_HELP_INDEX : FX_HELP_FOREX;
 }
 
 function onForexPairChange() {
@@ -1240,7 +1250,7 @@ function calculateForex() {
   document.getElementById('fx-out-risk').textContent    = formatCurrency(riskAmount);
   document.getElementById('fx-out-pipval').textContent  = formatCurrency(pipValuePerLot);
   document.getElementById('fx-out-lots').textContent    = lotSize.toFixed(2);
-  if (!INDEX_CFD_SPECS[pair]) {
+  if (!isForexNonCurrencyAsset(pair)) {
     document.getElementById('fx-out-mini').textContent  = (lotSize * 10).toFixed(1);
     document.getElementById('fx-out-micro').textContent = Math.floor(lotSize * 100).toLocaleString('pt-BR');
     document.getElementById('fx-out-units').textContent = Math.round(lotSize * 100000).toLocaleString('pt-BR');

@@ -77,10 +77,15 @@ linha de código + uma `<option>`.
   stop), `toast` de aviso *"Risco insuficiente para 0,01 lote com esse stop."* Hoje a
   tela mostra 0.00 e $0.00 sem explicar. Vale para todos os ativos da Forex.
 
-Fora de escopo, levantado e deixado como está a pedido: XAU/USD sofre do mesmo
-defeito de "Unidades totais" (lote × 100.000 não significa nada para ouro, que é
-dimensionado em mini lotes de 10 oz). O mecanismo desta spec resolveria de graça,
-mas mexe em tela que já está em uso.
+**Ouro (acrescentado em 2026-07-25, depois da primeira implementação).** XAU/USD
+sofria do mesmo defeito: "Unidades totais" = lote × 100.000 é tamanho de lote de
+moeda e não significa nada para ouro, dimensionado em onças. Foi levantado como fora
+de escopo e o Nikolas pediu para aplicar em seguida. A condição do modo deixou de ser
+"é índice" e passou a ser **"não é par de moedas"** (`isForexNonCurrencyAsset()`), com
+`FX_NON_CURRENCY_ASSETS = new Set(['XAUUSD'])` ao lado de `INDEX_CFD_SPECS`. O cálculo
+do ouro **não muda** ($1/pip, mini lote de 10 oz); muda só a exibição — as três linhas
+somem e o rótulo perde o "lote padrão". O texto da fórmula no rodapé continua decidido
+por `INDEX_CFD_SPECS`, porque a nota "1 pip = 0,1 ponto do índice" só vale para o USTEC.
 
 ## Verificação
 

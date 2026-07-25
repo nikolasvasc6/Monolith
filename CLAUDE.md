@@ -67,11 +67,15 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   negativo). No modal o usuário digita o **valor absoluto**; o sinal vem do tipo.
 - **KPIs:** operações registradas, resultado acumulado, win rate, média por operação. O
   gráfico é a **soma acumulada** do P&L do bloco.
-- **Calculadoras de risco** (não persistem nada): Forex (lote por pip — inclui XAU/USD e o
-  CFD de índice USTEC/Nasdaq 100, onde **1 pip = 0,1 ponto do índice → $0,10 por lote**;
-  nesse modo o painel esconde as linhas de lote mini/micro/unidades, que só fazem sentido
-  em par de moedas), Futuros EUA/CME, B3 (WIN/IND/WDO/DOL) e BTC CFD. Todas dimensionam a
-  posição **arredondando para baixo** para nunca ultrapassar o risco definido.
+- **Calculadoras de risco** (não persistem nada): Forex (lote por pip), Futuros EUA/CME,
+  B3 (WIN/IND/WDO/DOL) e BTC CFD. Todas dimensionam a posição **arredondando para baixo**
+  para nunca ultrapassar o risco definido.
+- **Forex além dos pares:** o seletor da Calculadora Forex também tem XAU/USD e o CFD de
+  índice USTEC/Nasdaq 100 (**1 pip = 0,1 ponto do índice → $0,10 por lote**). Para esses,
+  `isForexNonCurrencyAsset()` esconde as linhas de lote mini/micro e "Unidades totais"
+  (× 100.000 é tamanho de lote de **moeda**) e tira a menção a "lote padrão". Ao adicionar
+  um ativo que não seja par de moedas, registre-o em `INDEX_CFD_SPECS` (índice, com valor
+  do pip) ou em `FX_NON_CURRENCY_ASSETS` — senão o painel volta a mostrar as unidades.
 
 ## Convenções ao trabalhar aqui
 
