@@ -222,3 +222,49 @@ create policy "plans_update_own"
 create policy "plans_delete_own"
   on public.trading_plans for delete
   using (auth.uid() = user_id);
+
+-- ----------------------------------------------------------------------------
+-- 8. Imagens por operação
+--    Os caminhos ficam na linha do trade; os arquivos, no bucket trade-images.
+--    O caminho é {user_id}/{uuid}.webp — a pasta do usuário é o que as
+--    políticas do Storage conferem, então não há pasta por operação (numa
+--    operação nova o id só existe depois do insert).
+-- ----------------------------------------------------------------------------
+alter table public.trades
+  add column if not exists images jsonb not null default '[]'::jsonb;
+
+-- Teto de 10 garantido no banco: estado defasado no cliente não grava a 11ª
+alter table public.trades drop constraint if exists trades_images_max;
+alter table public.trades add constraint trades_images_max
+  check (jsonb_typeof(images) = 'array' and jsonb_array_length(images) <= 10);
+
+-- Bucket privado: toda exibição passa por URL assinada
+insert into storage.buckets (id, name, public)
+values ('trade-images', 'trade-images', false)
+on conflict (id) do nothing;
+
+-- Políticas do Storage: espelham o RLS da tabela — a 1ª pasta do caminho é o dono
+drop policy if exists "trade_images_select_own" on storage.objects;
+drop policy if exists "trade_images_insert_own" on storage.objects;
+drop policy if exists "trade_images_update_own" on storage.objects;
+drop policy if exists "trade_images_delete_own" on storage.objects;
+
+create policy "trade_images_select_own"
+  on storage.objects for select
+  using (bucket_id = 'trade-images'
+         and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "trade_images_insert_own"
+  on storage.objects for insert
+  with check (bucket_id = 'trade-images'
+              and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "trade_images_update_own"
+  on storage.objects for update
+  using (bucket_id = 'trade-images'
+         and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "trade_images_delete_own"
+  on storage.objects for delete
+  using (bucket_id = 'trade-images'
+         and (storage.foldername(name))[1] = auth.uid()::text);
