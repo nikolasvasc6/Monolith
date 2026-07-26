@@ -1186,22 +1186,38 @@ function isForexNonCurrencyAsset(pair) {
   return !!INDEX_CFD_SPECS[pair] || FX_NON_CURRENCY_ASSETS.has(pair);
 }
 
-function forexPipValuePerLot(pair, price) {
-  const standardLot = 100000;
+/**
+ * Valor do pip por lote padrão (100.000 unidades da moeda base), em USD, conta em USD:
+ *   XXX/USD   → 0,0001 × 100.000 = $10 — não depende de câmbio nenhum
+ *   USD/XXX   → (tamanho do pip × 100.000) ÷ cotação USD/XXX
+ *   cross JPY → 1.000 JPY ÷ cotação **USD/JPY** (a cotação do próprio par não entra)
+ *
+ * Nos pares cuja moeda de cotação não é o dólar o valor depende do câmbio do dia, então
+ * o número aqui é uma referência que **envelhece** — é o preço de manter a tela sem campo
+ * de cotação, e o rodapé avisa que os valores são aproximados. Para atualizar: recalcule
+ * pelas fórmulas acima com a cotação do dia e mova `FX_QUOTES_DATE` junto.
+ *
+ * Cotações de referência (BCE): USD/JPY 163,82 · USD/CHF 0,81761 · USD/CAD 1,4086.
+ */
+const FX_QUOTES_DATE = '24/07/2026';
+const FX_PIP_VALUE_PER_LOT = {
+  EURUSD: 10,   GBPUSD: 10,    AUDUSD: 10,   NZDUSD: 10,
+  USDJPY: 6.10, USDCHF: 12.23, USDCAD: 7.10,
+  EURJPY: 6.10, GBPJPY: 6.10
+};
+
+function forexPipValuePerLot(pair) {
   // CFD de índice (USTEC): valor do pip é fixo por lote, sem conversão de moeda
   if (INDEX_CFD_SPECS[pair]) return INDEX_CFD_SPECS[pair].pipValue;
   // XAUUSD: calcula posição em mini lotes (10 oz → $1/pip), não em lote padrão
   if (pair === 'XAUUSD') return 1;
-  if (pair.endsWith('USD')) return 0.0001 * standardLot;
-  if (pair.startsWith('USD')) {
-    if (pair === 'USDJPY') return (0.01 * standardLot) / price;
-    return (0.0001 * standardLot) / price;
-  }
-  if (pair.endsWith('JPY')) return (0.01 * standardLot) / 150;
-  return 0.0001 * standardLot;
+  // Par fora da tabela devolve null, e quem chama recusa calcular: chutar $10 faria a
+  // calculadora errar calada num par novo — foi assim que o preço fixo passou despercebido.
+  const pipValue = FX_PIP_VALUE_PER_LOT[pair];
+  return pipValue === undefined ? null : pipValue;
 }
 
-const FX_HELP_FOREX = 'Fórmula: Lote = Risco USD ÷ (Stop em pips × Valor do pip por lote). Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.';
+const FX_HELP_FOREX = `Fórmula: Lote = Risco USD ÷ (Stop em pips × Valor do pip por lote). Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Nos pares sem o dólar na cotação (iene, franco suíço e dólar canadense) o valor do pip usa o câmbio de referência de ${FX_QUOTES_DATE}. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.`;
 const FX_HELP_INDEX = 'Fórmula: Lotes = Risco USD ÷ (Stop em pips × Valor do pip). No USTEC 1 pip = 0,1 ponto do índice. Cálculo presume conta em USD. Posição arredondada para baixo (0,01 lote) para não ultrapassar o risco definido. Valores aproximados baseados em padrão de mercado. Pode variar conforme corretora.';
 
 /**
@@ -1232,11 +1248,13 @@ function calculateForex() {
   const riskAmount = parseFloat(document.getElementById('fx-risk').value);
   const stopPips   = parseFloat(document.getElementById('fx-stop-pips').value);
   const pair       = document.getElementById('fx-pair').value;
-  const price      = parseFloat(document.getElementById('fx-price').value) || 1.08500;
   if (isNaN(riskAmount) || isNaN(stopPips) || stopPips <= 0 || riskAmount <= 0) {
     toast('Preencha stop e risco corretamente (> 0).', 'error'); return;
   }
-  const pipValuePerLot = forexPipValuePerLot(pair, price);
+  const pipValuePerLot = forexPipValuePerLot(pair);
+  if (pipValuePerLot === null) {
+    toast('Este ativo ainda não tem valor de pip cadastrado.', 'error'); return;
+  }
   // Arredonda para baixo no passo de micro lote (0,01) para não ultrapassar o risco definido
   const preciseLot = riskAmount / (stopPips * pipValuePerLot);
   const lotSize    = Math.floor(preciseLot * 100) / 100;

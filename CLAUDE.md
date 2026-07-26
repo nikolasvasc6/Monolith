@@ -79,6 +79,15 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 - **O painel de resultado do Forex é enxuto de propósito:** risco máximo, valor do pip,
   tamanho do lote e risco estimado. "Lotes mini/micro" e "Unidades totais" saíram em
   2026-07-26 (eram o tamanho do lote com a vírgula deslocada). **Não reintroduzir.**
+- **Valor do pip vem de tabela, não de cotação ao vivo** (`FX_PIP_VALUE_PER_LOT`): pares
+  XXX/USD valem $10 por pip sempre, e os que têm iene, franco ou dólar canadense na
+  cotação dependem do câmbio — esses ficam gravados com um câmbio de referência datado em
+  `FX_QUOTES_DATE`, citado no rodapé da calculadora. **Esse número envelhece:** revise
+  quando o câmbio andar muito, recalculando pelas fórmulas do comentário sobre a tabela.
+  Par que não estiver na tabela faz a calculadora **recusar o cálculo** em vez de assumir
+  $10 — o bug anterior (até 2026-07-26) era justamente um preço fixo de 1,085 que passava
+  despercebido e fazia o USD/JPY reportar $921,66 por pip e o USD/CHF estourar o risco
+  em 35%.
 
 ## Convenções ao trabalhar aqui
 
