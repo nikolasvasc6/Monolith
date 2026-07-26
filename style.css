@@ -837,7 +837,10 @@ body:has(.modal-overlay.active) .badge-dot {
 
 .trades-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  /* 5 colunas (não 7): a faixa de imagem da Task 7 é 46% da altura do card,
+     e o card só fica alto o bastante para essa faixa valer a pena com menos
+     colunas por linha — largo demais e o print vira uma tira ilegível. */
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   margin-bottom: 40px;
 }
@@ -1998,7 +2001,11 @@ textarea:focus {
    ========================================================================== */
 @media (max-width: 1400px) {
   .trades-grid {
-    grid-template-columns: repeat(5, 1fr); /* 5 colunas para telas médias */
+    /* Base já é 5 — este degrau existia para reduzir de 7 para 5 e virou
+       redundante com a Task 7b. Mantido como degrau próprio (4 colunas) em
+       vez de removido, porque sem ele o pulo de 5 para 3 (degrau seguinte)
+       ficaria brusco demais nessa faixa de largura. */
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -2007,7 +2014,7 @@ textarea:focus {
     grid-template-columns: repeat(2, 1fr);
   }
   .trades-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
