@@ -930,6 +930,66 @@ body:has(.modal-overlay.active) .badge-dot {
   box-shadow: var(--shadow-md);
 }
 
+/* Card com print: a imagem ocupa a faixa de cima, sangrando até a borda.
+   A altura do card não muda — o texto só se acomoda no que sobra.
+
+   overflow:hidden aqui é o que de fato prende a altura ao aspect-ratio: com
+   overflow visível (padrão), o navegador deixa o conteúdo crescer o card
+   além do aspect-ratio quando não cabe — e no grid real (7 colunas,
+   ~170px de card) a faixa de 46% + header/body/footer não cabem, o card
+   cresceria uns 8px a mais que o card sem imagem, quebrando a exigência de
+   mesma altura. Com overflow:hidden o navegador respeita o aspect-ratio à
+   risca e o excedente é cortado — e flex-shrink:1 na faixa (em vez do 0
+   que deixaria o excesso sobrar) garante que quem cede esses pixels é a
+   imagem, não o texto: overflow:hidden já zera o tamanho mínimo automático
+   deste item, então ele é o primeiro a ceder; header/body/footer não têm
+   overflow:hidden e preservam seu próprio mínimo de conteúdo. */
+.grid-slot.slot-has-image {
+  overflow: hidden;
+}
+
+.grid-slot.slot-has-image .slot-thumb {
+  margin: -12px -12px 8px;
+  height: 46%;
+  overflow: hidden;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background-color: var(--surface-3);
+  cursor: zoom-in;
+  flex-shrink: 1;
+}
+
+.grid-slot.slot-has-image .slot-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+/* Só aparece quando a URL assinada chega e a imagem carrega */
+.grid-slot.slot-has-image .slot-thumb img.carregada {
+  opacity: 1;
+}
+
+.grid-slot.slot-has-image .slot-header {
+  margin-bottom: 2px;
+}
+
+/* Selo com a contagem, quando há mais de uma */
+.slot-thumb-contador {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(3, 4, 7, 0.72);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
 .slot-header {
   display: flex;
   justify-content: space-between;

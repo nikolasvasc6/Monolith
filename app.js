@@ -33,6 +33,7 @@ import {
   uploadTradeImage,
   removeTradeImages,
   getSignedUrls,
+  invalidateSignedUrl,
   removeAllUserImages
 } from './js/services/trade-images.js';
 
@@ -539,8 +540,15 @@ function renderGridView(trades) {
     const trade = trades[i];
     const slotEl = document.createElement('div');
     if (trade) {
-      slotEl.className = `grid-slot slot-filled ${trade.pnl >= 0 ? 'slot-win' : 'slot-loss'}`;
+      const temImagem = Array.isArray(trade.images) && trade.images.length > 0;
+      slotEl.className = `grid-slot slot-filled ${trade.pnl >= 0 ? 'slot-win' : 'slot-loss'}`
+                       + (temImagem ? ' slot-has-image' : '');
       slotEl.innerHTML = `
+        ${temImagem ? `
+        <div class="slot-thumb" data-caminho="${escapeHTML(trade.images[0].thumb)}">
+          <img alt="Print da operação ${escapeHTML(trade.asset)}">
+          ${trade.images.length > 1 ? `<span class="slot-thumb-contador">${trade.images.length}</span>` : ''}
+        </div>` : ''}
         <div class="slot-header">
           <span class="slot-asset">${escapeHTML(trade.asset)}</span>
           <span class="slot-type-badge ${trade.type}">${trade.type === 'take' ? 'Take' : 'Stop'}</span>
@@ -570,6 +578,48 @@ function renderGridView(trades) {
     }
     DOM.gridContainer.appendChild(slotEl);
   }
+  hidratarMiniaturasDoGrid(trades);
+}
+
+/**
+ * Assina as URLs de todas as miniaturas do bloco de uma vez só — 35 cards
+ * pedindo sozinhos seriam 35 requisições. Se uma URL expirar com o app
+ * aberto, o onerror pede outra e tenta mais uma vez.
+ */
+async function hidratarMiniaturasDoGrid(trades) {
+  const caminhos = trades
+    .filter((t) => Array.isArray(t.images) && t.images.length > 0)
+    .map((t) => t.images[0].thumb);
+  if (caminhos.length === 0) return;
+
+  let mapa;
+  try {
+    mapa = await getSignedUrls(caminhos);
+  } catch (err) {
+    console.warn('Falha ao assinar miniaturas do bloco:', err);
+    return;
+  }
+
+  DOM.gridContainer.querySelectorAll('.slot-thumb').forEach((caixa) => {
+    const caminho = caixa.dataset.caminho;
+    const url = mapa.get(caminho);
+    if (!url) return;
+    const img = caixa.querySelector('img');
+    let jaTentou = false;
+
+    img.addEventListener('load', () => img.classList.add('carregada'), { once: true });
+    img.addEventListener('error', async () => {
+      if (jaTentou) return;
+      jaTentou = true;
+      invalidateSignedUrl(caminho);
+      try {
+        const novo = await getSignedUrls([caminho]);
+        if (novo.get(caminho)) img.src = novo.get(caminho);
+      } catch { /* miniatura fica no fundo cinza */ }
+    });
+
+    img.src = url;
+  });
 }
 
 function renderListView(trades) {
