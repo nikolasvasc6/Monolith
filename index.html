@@ -907,48 +907,53 @@
         <!-- Input oculto para armazenar o slot do grid correspondente -->
         <input type="hidden" id="trade-slot-input">
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="trade-asset">Ativo / Par de Moedas</label>
-            <div class="input-with-icon">
-              <i data-lucide="trending-up"></i>
-              <input type="text" id="trade-asset" placeholder="Ex: XAUUSD, EURUSD, Mini-Índice" required>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label for="trade-type">Tipo de Operação</label>
-            <div class="input-with-icon">
-              <i data-lucide="arrow-left-right"></i>
-              <select id="trade-type" required>
-                <option value="take">Take (Lucro)</option>
-                <option value="stop">Stop (Prejuízo)</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        <!-- Corpo rolável: campos em cima, observações ocupando a altura restante -->
+        <div class="modal-body">
+          <div class="modal-fields">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="trade-asset">Ativo / Par de Moedas</label>
+                <div class="input-with-icon">
+                  <i data-lucide="trending-up"></i>
+                  <input type="text" id="trade-asset" placeholder="Ex: XAUUSD, EURUSD, Mini-Índice" required>
+                </div>
+              </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="trade-pnl">Resultado Financeiro (P&L em USD/R$)</label>
-            <div class="input-with-icon">
-              <i data-lucide="dollar-sign"></i>
-              <input type="number" step="0.01" min="0" id="trade-pnl" placeholder="Ex: 25.68" required>
+              <div class="form-group">
+                <label for="trade-type">Tipo de Operação</label>
+                <div class="input-with-icon">
+                  <i data-lucide="arrow-left-right"></i>
+                  <select id="trade-type" required>
+                    <option value="take">Take (Lucro)</option>
+                    <option value="stop">Stop (Prejuízo)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="trade-pnl">Resultado Financeiro (P&L em USD/R$)</label>
+                <div class="input-with-icon">
+                  <i data-lucide="dollar-sign"></i>
+                  <input type="number" step="0.01" min="0" id="trade-pnl" placeholder="Ex: 25.68" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="trade-date">Data da Operação</label>
+                <div class="input-with-icon">
+                  <i data-lucide="calendar"></i>
+                  <input type="date" id="trade-date" required>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="trade-date">Data da Operação</label>
-            <div class="input-with-icon">
-              <i data-lucide="calendar"></i>
-              <input type="date" id="trade-date" required>
-            </div>
+          <div class="form-group form-group-notes">
+            <label for="trade-notes">Observações / Anotações (Opcional)</label>
+            <textarea id="trade-notes" rows="3" placeholder="Descreva seu racional, contexto do trade, emoções, erros ou acertos..."></textarea>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label for="trade-notes">Observações / Anotações (Opcional)</label>
-          <textarea id="trade-notes" rows="3" placeholder="Descreva seu racional, contexto do trade, emoções, erros ou acertos..."></textarea>
         </div>
 
         <div class="modal-actions">
