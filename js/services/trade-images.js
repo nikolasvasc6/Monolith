@@ -98,14 +98,35 @@ export function invalidateSignedUrl(path) {
 /**
  * Esvazia a pasta do usuário — usado pelo "Resetar Dados". Sem isso, apagar
  * as operações deixaria todos os prints ocupando a cota.
+ *
+ * Pagina em vez de listar tudo numa chamada só: o `list()` do Storage devolve
+ * no máximo 1000 itens por página, e cada imagem grava DOIS objetos (full +
+ * thumb) — um usuário com mais de 500 imagens já estoura essa página sozinho.
+ * Sem paginação, a função removeria só a primeira leva e voltaria sem erro,
+ * como se tivesse limpado tudo: o resto ficaria órfão consumindo cota, sem
+ * sinal nenhum — falha silenciosa bem no meio do "Resetar Dados", o fluxo
+ * mais sensível do app. NÃO simplifique isto de volta para uma chamada única.
+ *
+ * Estratégia: relista sempre a partir do offset 0, em laço, até a página vir
+ * vazia — nunca avança o offset manualmente. Como cada leva já removida some
+ * do bucket, a chamada seguinte a offset 0 devolve naturalmente a leva
+ * seguinte; se avançássemos o offset enquanto removemos ao mesmo tempo, os
+ * itens restantes deslizariam para trás e pularíamos arquivos. O teto de
+ * iterações é só uma trava de segurança contra laço infinito por bug de
+ * paginação — nunca deve ser atingido em uso normal.
  */
 export async function removeAllUserImages(userId) {
-  const { data, error } = await supabase.storage.from(BUCKET).list(userId, { limit: 1000 });
-  if (error) throw new Error('Falha ao listar imagens: ' + error.message);
-  if (!data || data.length === 0) return;
+  const LIMITE_PAGINA = 1000;
+  const TETO_ITERACOES = 50; // 50 * 1000 = 50 mil objetos; nunca deve chegar perto disso
 
-  const caminhos = data.map((f) => `${userId}/${f.name}`);
-  caminhos.forEach(invalidateSignedUrl);
-  const { error: errRemove } = await supabase.storage.from(BUCKET).remove(caminhos);
-  if (errRemove) throw new Error('Falha ao remover imagens: ' + errRemove.message);
+  for (let i = 0; i < TETO_ITERACOES; i++) {
+    const { data, error } = await supabase.storage.from(BUCKET).list(userId, { limit: LIMITE_PAGINA, offset: 0 });
+    if (error) throw new Error('Falha ao listar imagens: ' + error.message);
+    if (!data || data.length === 0) return;
+
+    const caminhos = data.map((f) => `${userId}/${f.name}`);
+    caminhos.forEach(invalidateSignedUrl);
+    const { error: errRemove } = await supabase.storage.from(BUCKET).remove(caminhos);
+    if (errRemove) throw new Error('Falha ao remover imagens: ' + errRemove.message);
+  }
 }
