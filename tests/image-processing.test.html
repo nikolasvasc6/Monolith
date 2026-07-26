@@ -89,6 +89,15 @@
     conta('recusa arquivo acima de 15 MB', msg !== null && /15 MB/.test(msg), String(msg));
   }
 
+  // 7. HEIC com `type` vazio (Chrome/Firefox não preenchem o MIME deste
+  // formato) só é pego pelo ramo do NOME — cobre o `||` de validarEntrada
+  // isoladamente do ramo do MIME já exercitado no caso 5.
+  {
+    const heicSemTipo = new File([new Uint8Array(10)], 'IMG_0002.heic', { type: '' });
+    const msg = await erroDe(processImageFile(heicSemTipo));
+    conta('recusa HEIC sem MIME, só pelo nome do arquivo', msg !== null && /heic/i.test(msg), String(msg));
+  }
+
   const resumo = document.createElement('h1');
   resumo.className = falhas === 0 ? 'ok' : 'fail';
   resumo.textContent = falhas === 0 ? 'TUDO PASSOU' : `${falhas} FALHA(S)`;
