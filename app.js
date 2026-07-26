@@ -1245,6 +1245,13 @@ async function editTrade(id, fields) {
 async function handleDeleteTrade(id) {
   setSubmitLoading(true);
   try {
+    // Snapshot antes de qualquer await: depois do splice o trade some do estado
+    let imagensDoTrade = [];
+    for (const lista of Object.values(state.blocks)) {
+      const achado = lista.find((t) => t.id === id);
+      if (achado) { imagensDoTrade = achado.images || []; break; }
+    }
+
     await remoteDeleteTrade(id);
     for (const [bIdx, list] of Object.entries(state.blocks)) {
       const idx = list.findIndex(t => t.id === id);
@@ -1261,6 +1268,14 @@ async function handleDeleteTrade(id) {
       break;
     }
     renderApp();
+
+    // Só agora: a linha já saiu do banco. Se apagássemos antes e o delete
+    // falhasse, sobraria operação viva apontando para arquivo inexistente.
+    // Falha aqui deixa órfão no bucket, que é o mal menor — não vira toast.
+    if (imagensDoTrade.length) {
+      await removeTradeImages(imagensDoTrade)
+        .catch((e) => console.warn('Imagens não removidas do Storage:', e));
+    }
   } catch (err) {
     toast(err.message, 'error');
   } finally {
@@ -1497,6 +1512,14 @@ async function resetApp() {
     state.blocks = { '1': [] };
     state.activeBlockIndex = 1;
     renderApp();
+
+    // Depois de o banco já estar zerado, pelo mesmo motivo do Step 1: se a
+    // limpeza rodasse antes e o delete falhasse, sobrariam operações vivas
+    // apontando para arquivos já apagados. O .catch aqui dentro garante que
+    // uma falha na limpeza não vire o toast de erro do reset — só console.warn.
+    await removeAllUserImages(currentUser.id)
+      .catch((e) => console.warn('Imagens não removidas no reset:', e));
+
     toast('Banco de dados redefinido.', 'success');
   } catch (err) {
     toast(err.message, 'error');
