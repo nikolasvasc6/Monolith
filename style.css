@@ -2311,3 +2311,88 @@ body.light-theme .plan-card .form-group select {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ==========================================================================
+   LIGHTBOX (imagens da operação)
+   ========================================================================== */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000; /* acima do modal, que está em 1000 */
+  background-color: rgba(3, 4, 7, 0.92);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
+.lightbox-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.lightbox-imagem {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+}
+
+.lightbox-fechar,
+.lightbox-nav {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.lightbox-fechar:hover,
+.lightbox-nav:hover { background-color: rgba(255, 255, 255, 0.18); }
+
+.lightbox-fechar   { top: 24px; right: 24px; }
+.lightbox-anterior { left: 24px; }
+.lightbox-proxima  { right: 24px; }
+
+/* Com uma imagem só, as setas não fazem sentido */
+.lightbox-overlay.solo .lightbox-nav,
+.lightbox-overlay.solo .lightbox-contador { display: none; }
+
+.lightbox-fechar :is(i, svg),
+.lightbox-nav :is(i, svg) {
+  width: 20px;
+  height: 20px;
+}
+
+.lightbox-contador {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Branco fixo, não var(--text-secondary): o fundo do lightbox é escuro nos
+     DOIS temas (rgba(3,4,7,.92)), mas --text-secondary vira cinza-escuro
+     (#4b5563) no tema claro — medido, o contador cairia para 2,7:1 sobre o
+     fundo, ilegível. Os botões aqui já usam #fff pelo mesmo motivo. */
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+@media (max-width: 768px) {
+  .lightbox-overlay { padding: 16px; }
+  .lightbox-fechar   { top: 12px; right: 12px; }
+  .lightbox-anterior { left: 8px; }
+  .lightbox-proxima  { right: 8px; }
+}

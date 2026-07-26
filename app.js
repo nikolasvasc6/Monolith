@@ -36,6 +36,7 @@ import {
   invalidateSignedUrl,
   removeAllUserImages
 } from './js/services/trade-images.js';
+import { initLightbox, abrirLightbox, lightboxEstaAberto } from './js/ui/lightbox.js';
 
 // ==========================================================================
 // CONSTANTES & ESTADO
@@ -167,6 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initAuthUI();
   setupEventListeners();
   lucide.createIcons();
+  initLightbox();
 
   // Recuperar sessão persistida
   showLoading(true);
@@ -607,6 +609,40 @@ async function hidratarMiniaturasDoGrid(trades) {
     const img = caixa.querySelector('img');
     let jaTentou = false;
 
+    caixa.addEventListener('click', async (e) => {
+      e.stopPropagation(); // não abre o modal da operação junto
+      const trade = trades.find((t) => t.images?.[0]?.thumb === caminho);
+      if (!trade) return;
+      // Retrato antes do await, e referência da imagem clicada guardada por
+      // identidade: a miniatura do card é sempre a primeira do trade.
+      const imagens = trade.images.slice();
+      const clicada = imagens[0];
+      try {
+        const mapaFull = await getSignedUrls(imagens.map((i) => i.full));
+        // O índice tem de valer sobre a lista JÁ FILTRADA: se a 1ª assinar e a
+        // 2ª não, a 3ª deixa de ser a posição 2. Por isso a posição é anotada
+        // durante a montagem, comparando por referência, em vez de reaproveitar
+        // o índice da lista completa.
+        const lista = [];
+        let indiceNaLista = -1;
+        for (const img of imagens) {
+          const urlFull = mapaFull.get(img.full);
+          if (!urlFull) continue; // não assinou: fica de fora da navegação
+          if (img === clicada) indiceNaLista = lista.length;
+          lista.push({ url: urlFull, w: img.w, h: img.h });
+        }
+        if (indiceNaLista === -1) {
+          // A imagem clicada é justamente a que não assinou — avisar é melhor
+          // que abrir outra em silêncio, fingindo que é a que ele pediu
+          toast('Não consegui carregar esta imagem agora. Tente de novo.', 'error');
+          return;
+        }
+        abrirLightbox(lista, indiceNaLista);
+      } catch (err) {
+        toast('Não consegui abrir as imagens: ' + err.message, 'error');
+      }
+    });
+
     img.addEventListener('load', () => img.classList.add('carregada'), { once: true });
     img.addEventListener('error', async () => {
       if (jaTentou) return;
@@ -898,6 +934,54 @@ function renderModalImagens() {
       const [removida] = modalImagens.splice(indice, 1);
       if (removida.tipo === 'nova') URL.revokeObjectURL(removida.previewUrl);
       renderModalImagens();
+    });
+
+    fig.addEventListener('click', async () => {
+      // Retrato ANTES do await: `modalImagens` é o array vivo e o usuário pode
+      // remover uma miniatura no X enquanto a assinatura está em voo — iterar o
+      // array vivo pularia item ou leria índice deslocado (o mesmo defeito que
+      // derrubou o laço de upload). A imagem clicada também é guardada por
+      // referência, não por índice, pelo mesmo motivo.
+      const instantaneo = modalImagens.slice();
+      const clicada = instantaneo[indice];
+      if (!clicada) return;
+      try {
+        // UMA chamada em lote para todas as que já estão no Storage: o serviço
+        // recebe um array justamente para isso. Assinar dentro do laço seriam
+        // 10 requisições sequenciais numa operação cheia. As 'nova' ficam de
+        // fora — usam o preview local, que não precisa de assinatura.
+        const caminhos = instantaneo
+          .filter((entrada) => entrada.tipo === 'existente')
+          .map((entrada) => entrada.item.full);
+        const mapa = caminhos.length > 0 ? await getSignedUrls(caminhos) : new Map();
+
+        // Índice anotado durante a montagem, para valer sobre a lista já
+        // filtrada (ver o mesmo cuidado em hidratarMiniaturasDoGrid)
+        const lista = [];
+        let indiceNaLista = -1;
+        for (const entrada of instantaneo) {
+          let visual = null;
+          if (entrada.tipo === 'nova') {
+            // Ainda não subiu: usa o preview local. Sem w/h aqui — o arquivo
+            // original não passou pelo processamento, então a proporção exata
+            // só se conhece depois que a imagem carrega
+            visual = { url: entrada.previewUrl, w: 0, h: 0 };
+          } else {
+            const url = mapa.get(entrada.item.full);
+            if (url) visual = { url, w: entrada.item.w, h: entrada.item.h };
+          }
+          if (!visual) continue;
+          if (entrada === clicada) indiceNaLista = lista.length;
+          lista.push(visual);
+        }
+        if (indiceNaLista === -1) {
+          toast('Não consegui carregar esta imagem agora. Tente de novo.', 'error');
+          return;
+        }
+        abrirLightbox(lista, indiceNaLista);
+      } catch (err) {
+        toast('Não consegui abrir a imagem: ' + err.message, 'error');
+      }
     });
 
     DOM.tradeImagesStrip.appendChild(fig);
@@ -1235,7 +1319,16 @@ function setupEventListeners() {
     if (e.target === DOM.tradeModal && !salvandoOperacao) closeTradeModal();
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && DOM.tradeModal.classList.contains('active') && !salvandoOperacao) {
+    // Por que o modal consulta o lightbox: os dois handlers de Esc estão
+    // registrados no MESMO nó (document), então o Esc que fecha o lightbox
+    // chegaria aqui também e fecharia o modal por baixo — descartando imagens
+    // escolhidas e ainda não salvas. stopPropagation não resolve entre
+    // listeners do mesmo nó, e stopImmediatePropagation deixaria o resultado
+    // dependendo da ordem de registro. A guarda explícita é o Esc "consumido"
+    // pela camada de cima: com o lightbox aberto, o primeiro Esc fecha só ele;
+    // o segundo é que fecha o modal.
+    if (e.key === 'Escape' && DOM.tradeModal.classList.contains('active')
+        && !salvandoOperacao && !lightboxEstaAberto()) {
       closeTradeModal();
     }
   });

@@ -978,6 +978,21 @@
     </div>
   </div>
 
+  <!-- Lightbox (visualização das imagens da operação) -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-fechar" id="lightbox-close" title="Fechar (Esc)">
+      <i data-lucide="x"></i>
+    </button>
+    <button class="lightbox-nav lightbox-anterior" id="lightbox-prev" title="Anterior">
+      <i data-lucide="chevron-left"></i>
+    </button>
+    <img class="lightbox-imagem" id="lightbox-img" alt="Imagem da operação">
+    <button class="lightbox-nav lightbox-proxima" id="lightbox-next" title="Próxima">
+      <i data-lucide="chevron-right"></i>
+    </button>
+    <div class="lightbox-contador" id="lightbox-counter"></div>
+  </div>
+
   <!-- Script principal (ES Module) -->
   <script type="module" src="./app.js"></script>
 </body>
