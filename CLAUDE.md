@@ -99,8 +99,11 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   miniaturas. Exibição é sempre por **URL assinada**, pedida em lote por bloco e
   cacheada por 1 h. O upload só acontece ao **salvar** o registro: até lá o arquivo fica
   na memória, então cancelar o modal não deixa lixo no bucket. Excluir operação e
-  "Resetar Dados" limpam o Storage — se essa limpeza falhar, a exclusão acontece mesmo
-  assim e o aviso vai para o console. **O export JSON não leva as imagens**, só avisa
+  "Resetar Dados" apagam **primeiro no banco**, sempre; a limpeza do Storage só roda
+  depois, e se falhar o aviso vai só para o console — a exclusão já aconteceu de
+  qualquer jeito. A ordem é essa e não o inverso **de propósito**: apagar do Storage
+  antes deixaria, se o delete no banco falhasse, uma operação viva apontando para um
+  arquivo que já não existe mais. **O export JSON não leva as imagens**, só avisa
   quantas ficaram de fora.
 
 ## Convenções ao trabalhar aqui
