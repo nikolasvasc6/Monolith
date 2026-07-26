@@ -796,6 +796,13 @@ const MAX_IMAGENS_POR_TRADE = 10;
 let modalImagens = [];
 let imagensOriginaisDoModal = []; // para saber o que o usuário tirou na edição
 
+// Flag dedicada (não reaproveita DOM.btnSubmitModal.disabled, que também é
+// tocado por handleDeleteTrade — este pode rodar por fora do modal, pela
+// lixeira da lista, e não deve nem liberar um envio em andamento nem travar
+// um modal que nem estava enviando). Liga só em handleSaveTrade, desliga só
+// no finally dele.
+let salvandoOperacao = false;
+
 function resetModalImagens(imagensExistentes = []) {
   // Libera os object URLs das que não chegaram a subir
   modalImagens.forEach((i) => { if (i.tipo === 'nova') URL.revokeObjectURL(i.previewUrl); });
@@ -979,6 +986,20 @@ function closeTradeModal() {
   DOM.tradeForm.reset();
 }
 
+/**
+ * Liga/desliga o bloqueio de fechamento do modal durante um salvamento.
+ * Usa a flag dedicada `salvandoOperacao` (não `setSubmitLoading`/disabled de
+ * botão): `setSubmitLoading` também é chamado por `handleDeleteTrade`, que é
+ * disparável pela lixeira da lista, por fora do modal — se as guardas de
+ * fechamento dependessem dele, um delete concorrente liberaria um envio
+ * ainda em voo, e um delete com o modal fechado travaria Cancelar/X à toa.
+ */
+function bloquearFechamentoModal(bloquear) {
+  salvandoOperacao = bloquear;
+  if (DOM.btnCancelModal) DOM.btnCancelModal.disabled = bloquear;
+  if (DOM.btnCloseModalX) DOM.btnCloseModalX.disabled = bloquear;
+}
+
 async function handleSaveTrade() {
   const id = DOM.tradeIdInput.value;
   const asset = DOM.tradeAsset.value.trim().toUpperCase();
@@ -993,7 +1014,17 @@ async function handleSaveTrade() {
   }
   const pnl = type === 'stop' ? -Math.abs(rawPnl) : Math.abs(rawPnl);
 
+  // Retrato de imagensOriginaisDoModal ANTES de qualquer await: o overlay do
+  // modal só bloqueia o mouse, não o teclado — sem focus trap, um Tab até a
+  // linha de OUTRA operação no fundo + Enter roda openTradeModal() durante o
+  // envio e reescreve essa variável de módulo. Sem o retrato, a limpeza de
+  // órfãs leria os dados da operação errada e apagaria imagens dela do
+  // Storage (o mesmo problema que o snapshot de modalImagens já resolve
+  // para a lista de imagens — aqui é a variável irmã).
+  const originais = imagensOriginaisDoModal.slice();
+
   setSubmitLoading(true);
+  bloquearFechamentoModal(true);
   try {
     const images = await resolverImagensDoModal();
 
@@ -1003,7 +1034,7 @@ async function handleSaveTrade() {
       await editTrade(id, { asset, type, pnl, date, notes, images });
       // Arquivos que saíram da faixa nesta edição não têm mais dono
       const mantidos = new Set(images.map((i) => i.full));
-      const orfas = imagensOriginaisDoModal.filter((i) => !mantidos.has(i.full));
+      const orfas = originais.filter((i) => !mantidos.has(i.full));
       if (orfas.length) {
         removeTradeImages(orfas).catch((e) => console.warn('Imagem órfã não removida:', e));
       }
@@ -1013,6 +1044,7 @@ async function handleSaveTrade() {
     toast(err.message, 'error');
   } finally {
     setSubmitLoading(false);
+    bloquearFechamentoModal(false);
   }
 }
 
@@ -1143,11 +1175,13 @@ function setupEventListeners() {
   DOM.btnCancelModal.addEventListener('click', closeTradeModal);
   DOM.tradeModal.addEventListener('click', (e) => {
     // Clique no fundo não fecha durante o envio — mesmo motivo do botão
-    // Cancelar/X desabilitado: fechar no meio do upload zeraria modalImagens
-    if (e.target === DOM.tradeModal && !DOM.btnSubmitModal.disabled) closeTradeModal();
+    // Cancelar/X desabilitado: fechar no meio do upload zeraria modalImagens.
+    // Usa a flag dedicada, não DOM.btnSubmitModal.disabled (que também liga
+    // durante um handleDeleteTrade disparado por fora do modal).
+    if (e.target === DOM.tradeModal && !salvandoOperacao) closeTradeModal();
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && DOM.tradeModal.classList.contains('active') && !DOM.btnSubmitModal.disabled) {
+    if (e.key === 'Escape' && DOM.tradeModal.classList.contains('active') && !salvandoOperacao) {
       closeTradeModal();
     }
   });
@@ -1572,11 +1606,9 @@ function setSubmitLoading(loading, rotulo = 'Salvando…') {
   }
   if (DOM.btnDeleteTrade) DOM.btnDeleteTrade.disabled = loading;
   if (DOM.btnAddImage)    DOM.btnAddImage.disabled = loading || modalImagens.length >= MAX_IMAGENS_POR_TRADE;
-  // Fechar o modal durante o envio (X, Cancelar) desmontaria modalImagens
-  // no meio do upload — desabilita os dois; o backdrop/Esc é bloqueado à
-  // parte checando DOM.btnSubmitModal.disabled (setupEventListeners).
-  if (DOM.btnCancelModal) DOM.btnCancelModal.disabled = loading;
-  if (DOM.btnCloseModalX) DOM.btnCloseModalX.disabled = loading;
+  // Cancelar/X NÃO são tocados aqui: esta função também é chamada por
+  // handleDeleteTrade (disparável pela lixeira da lista, fora do modal) —
+  // ver bloquearFechamentoModal(), que usa a flag dedicada salvandoOperacao.
 }
 
 function toast(message, kind = 'info') {
