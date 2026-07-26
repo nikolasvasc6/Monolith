@@ -36,7 +36,7 @@ export async function fetchAllTradesByBlock(userId) {
   return blocks;
 }
 
-export async function insertTrade(userId, { blockIndex, position, asset, type, pnl, date, notes }) {
+export async function insertTrade(userId, { blockIndex, position, asset, type, pnl, date, notes, images }) {
   const payload = {
     user_id:     userId,
     block_index: blockIndex,
@@ -45,7 +45,8 @@ export async function insertTrade(userId, { blockIndex, position, asset, type, p
     type,
     pnl,
     trade_date:  date,
-    notes:       notes || null
+    notes:       notes || null,
+    images:      Array.isArray(images) ? images : []
   };
   const { data, error } = await supabase
     .from(TABLE)
@@ -56,7 +57,7 @@ export async function insertTrade(userId, { blockIndex, position, asset, type, p
   return rowToTrade(data);
 }
 
-export async function updateTrade(tradeId, { asset, type, pnl, date, notes, blockIndex, position }) {
+export async function updateTrade(tradeId, { asset, type, pnl, date, notes, blockIndex, position, images }) {
   const payload = {
     asset,
     type,
@@ -64,6 +65,9 @@ export async function updateTrade(tradeId, { asset, type, pnl, date, notes, bloc
     trade_date: date,
     notes: notes || null
   };
+  // Só sobrescreve se veio no update — chamada que não fala de imagem
+  // (renumeração, autocura) não pode zerar o que já está gravado
+  if (images     !== undefined) payload.images      = images;
   if (blockIndex !== undefined) payload.block_index = blockIndex;
   if (position   !== undefined) payload.position    = position;
 
@@ -130,7 +134,9 @@ export async function bulkImportTrades(userId, blocks, blockOffset = 0) {
         type:        t.type === 'stop' ? 'stop' : 'take',
         pnl:         Number(t.pnl) || 0,
         trade_date:  t.date || new Date().toISOString().slice(0, 10),
-        notes:       t.notes || null
+        notes:       t.notes || null,
+        // Backup JSON não carrega imagem (elas vivem no Storage)
+        images:      []
       });
     });
   }
@@ -169,6 +175,8 @@ function rowToTrade(row) {
     pnl:   Number(row.pnl),
     date:  row.trade_date,
     notes: row.notes || '',
+    // Linha antiga (anterior à coluna) vem como null — normaliza para lista
+    images: Array.isArray(row.images) ? row.images : [],
     blockIndex: row.block_index,
     position:   row.position
   };
