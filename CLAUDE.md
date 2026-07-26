@@ -72,10 +72,13 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   para nunca ultrapassar o risco definido.
 - **Forex além dos pares:** o seletor da Calculadora Forex também tem XAU/USD e o CFD de
   índice USTEC/Nasdaq 100 (**1 pip = 0,1 ponto do índice → $0,10 por lote**). Para esses,
-  `isForexNonCurrencyAsset()` esconde as linhas de lote mini/micro e "Unidades totais"
-  (× 100.000 é tamanho de lote de **moeda**) e tira a menção a "lote padrão". Ao adicionar
-  um ativo que não seja par de moedas, registre-o em `INDEX_CFD_SPECS` (índice, com valor
-  do pip) ou em `FX_NON_CURRENCY_ASSETS` — senão o painel volta a mostrar as unidades.
+  `isForexNonCurrencyAsset()` tira a menção a "lote padrão" no rótulo do valor do pip —
+  não existe lote de 100.000 unidades fora de par de moedas. Ao adicionar um ativo que não
+  seja par de moedas, registre-o em `INDEX_CFD_SPECS` (índice, com valor do pip) ou em
+  `FX_NON_CURRENCY_ASSETS`.
+- **O painel de resultado do Forex é enxuto de propósito:** risco máximo, valor do pip,
+  tamanho do lote e risco estimado. "Lotes mini/micro" e "Unidades totais" saíram em
+  2026-07-26 (eram o tamanho do lote com a vírgula deslocada). **Não reintroduzir.**
 
 ## Convenções ao trabalhar aqui
 

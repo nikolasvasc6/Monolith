@@ -1177,9 +1177,9 @@ function setupCalculatorsListeners() {
 // Única fonte de verdade de "este ativo é índice, não par de moedas" — cálculo e UI consultam daqui.
 const INDEX_CFD_SPECS = { USTEC: { pipValue: 0.10 } };
 
-// Ativos da Calculadora Forex que não são par de moedas: o tamanho da posição não se
-// expressa em unidades de moeda, então lote mini/micro e "unidades totais" (× 100.000)
-// não se aplicam. O ouro entra aqui por ser dimensionado em onças, não em moeda.
+// Ativos da Calculadora Forex que não são par de moedas: a posição não se dimensiona em
+// lote padrão de moeda (100.000 unidades), então o painel não fala em "lote padrão".
+// O ouro entra aqui por ser dimensionado em onças, não em moeda.
 const FX_NON_CURRENCY_ASSETS = new Set(['XAUUSD']);
 
 function isForexNonCurrencyAsset(pair) {
@@ -1206,17 +1206,12 @@ const FX_HELP_INDEX = 'Fórmula: Lotes = Risco USD ÷ (Stop em pips × Valor do 
 
 /**
  * Ajusta o painel Forex ao ativo selecionado. Fora de par de moedas (CFD de índice e
- * ouro), esconde as linhas de lote mini/micro/unidades (× 100.000 é tamanho de lote de
- * moeda — nesses ativos seria número sem sentido) e tira a menção a "lote padrão". A
- * fórmula no rodapé só muda em índice, que tem a conversão pip↔ponto. O stop continua
- * medido em pips em todos os ativos. Idempotente.
+ * ouro), tira a menção a "lote padrão" — não existe lote padrão de 100.000 unidades
+ * nesses ativos. A fórmula no rodapé só muda em índice, que tem a conversão pip↔ponto.
+ * O stop continua medido em pips em todos os ativos. Idempotente.
  */
 function applyForexAssetMode(pair) {
   const isNonCurrency = isForexNonCurrencyAsset(pair);
-  ['fx-row-mini', 'fx-row-micro', 'fx-row-units'].forEach(id => {
-    const row = document.getElementById(id);
-    if (row) row.style.display = isNonCurrency ? 'none' : 'flex';
-  });
   const pipLabel = document.getElementById('fx-pipval-label');
   if (pipLabel) pipLabel.textContent = isNonCurrency ? 'Valor por pip (1 lote)' : 'Valor por pip (1 lote padrão)';
   const help = document.getElementById('fx-help');
@@ -1250,11 +1245,6 @@ function calculateForex() {
   document.getElementById('fx-out-risk').textContent    = formatCurrency(riskAmount);
   document.getElementById('fx-out-pipval').textContent  = formatCurrency(pipValuePerLot);
   document.getElementById('fx-out-lots').textContent    = lotSize.toFixed(2);
-  if (!isForexNonCurrencyAsset(pair)) {
-    document.getElementById('fx-out-mini').textContent  = (lotSize * 10).toFixed(1);
-    document.getElementById('fx-out-micro').textContent = Math.floor(lotSize * 100).toLocaleString('pt-BR');
-    document.getElementById('fx-out-units').textContent = Math.round(lotSize * 100000).toLocaleString('pt-BR');
-  }
   document.getElementById('fx-out-actrisk').textContent = formatCurrency(actualRisk);
   // Lote zerado: com esse stop, o risco definido não paga nem o lote mínimo
   if (lotSize <= 0) toast('Risco insuficiente para 0,01 lote com esse stop.', 'error');
