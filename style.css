@@ -155,7 +155,7 @@ body {
   box-shadow: var(--shadow-primary);
 }
 
-.logo-icon i {
+.logo-icon :is(i, svg) {
   width: 20px;
   height: 20px;
 }
@@ -198,7 +198,7 @@ body {
   transition: var(--transition-fast);
 }
 
-.nav-item i {
+.nav-item :is(i, svg) {
   width: 18px;
   height: 18px;
   transition: var(--transition-fast);
@@ -215,7 +215,7 @@ body {
   box-shadow: var(--shadow-primary);
 }
 
-.nav-item.active i {
+.nav-item.active :is(i, svg) {
   color: var(--text-active);
 }
 
@@ -240,7 +240,7 @@ body {
   transition: var(--transition-fast);
 }
 
-.sidebar-menu-toggle i {
+.sidebar-menu-toggle :is(i, svg) {
   width: 18px;
   height: 18px;
 }
@@ -297,7 +297,7 @@ body {
   transition: var(--transition-fast);
 }
 
-.sidebar-menu-item i {
+.sidebar-menu-item :is(i, svg) {
   width: 16px;
   height: 16px;
 }
@@ -435,7 +435,7 @@ body:has(.modal-overlay.active) .badge-dot {
   color: var(--text-secondary);
 }
 
-.user-avatar i {
+.user-avatar :is(i, svg) {
   width: 16px;
   height: 16px;
 }
@@ -567,7 +567,7 @@ body:has(.modal-overlay.active) .badge-dot {
   flex-shrink: 0;
 }
 
-.kpi-icon-wrapper i {
+.kpi-icon-wrapper :is(i, svg) {
   width: 20px;
   height: 20px;
 }
@@ -684,7 +684,7 @@ body:has(.modal-overlay.active) .badge-dot {
   justify-content: center;
 }
 
-.chart-title-icon i {
+.chart-title-icon :is(i, svg) {
   width: 18px;
   height: 18px;
 }
@@ -766,7 +766,7 @@ body:has(.modal-overlay.active) .badge-dot {
   transition: var(--transition-fast);
 }
 
-.btn-toggle i {
+.btn-toggle :is(i, svg) {
   width: 15px;
   height: 15px;
 }
@@ -813,7 +813,7 @@ body:has(.modal-overlay.active) .badge-dot {
   cursor: not-allowed;
 }
 
-.btn-nav i {
+.btn-nav :is(i, svg) {
   width: 16px;
   height: 16px;
 }
@@ -1134,7 +1134,7 @@ body:has(.modal-overlay.active) .badge-dot {
   background-color: rgba(244, 63, 94, 0.06);
 }
 
-.btn-table-action i {
+.btn-table-action :is(i, svg) {
   width: 14px;
   height: 14px;
 }
@@ -1145,7 +1145,7 @@ body:has(.modal-overlay.active) .badge-dot {
   color: var(--text-muted);
 }
 
-.empty-table-state i {
+.empty-table-state :is(i, svg) {
   width: 36px;
   height: 36px;
   margin-bottom: 12px;
@@ -1286,7 +1286,7 @@ body:has(.modal-overlay.active) .badge-dot {
   color: var(--text-active);
 }
 
-.btn-close-modal i {
+.btn-close-modal :is(i, svg) {
   width: 18px;
   height: 18px;
 }
@@ -1360,7 +1360,7 @@ body:has(.modal-overlay.active) .badge-dot {
   letter-spacing: -0.3px;
 }
 
-.calc-card h3 i {
+.calc-card h3 :is(i, svg) {
   width: 20px;
   height: 20px;
   color: var(--color-primary-hover);
@@ -1428,8 +1428,7 @@ body:has(.modal-overlay.active) .badge-dot {
 /* Ícone dentro do input.
    Precisa casar `i` E `svg`: o Lucide troca o <i data-lucide> pelo <svg> na
    renderização, e um seletor só de `i` para de valer depois disso. */
-.input-with-icon > i:not(.risk-icon),
-.input-with-icon > svg:not(.risk-icon) {
+.input-with-icon > :is(i, svg):not(.risk-icon) {
   position: absolute;
   left: 14px;
   color: var(--text-muted);
@@ -1440,8 +1439,7 @@ body:has(.modal-overlay.active) .badge-dot {
 }
 
 /* Estilo específico para o ícone dinâmico de risco ($ ou %) */
-.input-with-icon > i.risk-icon,
-.input-with-icon > svg.risk-icon {
+.input-with-icon > :is(i, svg).risk-icon {
   position: absolute;
   left: 14px;
   color: var(--color-primary-hover); /* Destaque para o modo de risco */
@@ -1486,10 +1484,7 @@ body:has(.modal-overlay.active) .badge-dot {
 /* Muda a cor do ícone quando o input está focado.
    Vai por `:has()` porque o ícone vem ANTES do campo no markup — o `+` do
    seletor antigo pedia um irmão depois do input, que não existe. */
-.input-with-icon:has(input:focus) > i:not(.risk-icon),
-.input-with-icon:has(input:focus) > svg:not(.risk-icon),
-.input-with-icon:has(select:focus) > i:not(.risk-icon),
-.input-with-icon:has(select:focus) > svg:not(.risk-icon) {
+.input-with-icon:has(:is(input, select):focus) > :is(i, svg):not(.risk-icon) {
   color: var(--color-primary);
 }
 
@@ -1797,7 +1792,7 @@ textarea:focus {
   margin-bottom: 20px;
 }
 
-.placeholder-icon i {
+.placeholder-icon :is(i, svg) {
   width: 28px;
   height: 28px;
 }
@@ -1904,7 +1899,7 @@ textarea:focus {
   transform: scale(1.05);
 }
 
-.btn-theme-toggle i {
+.btn-theme-toggle :is(i, svg) {
   width: 16px;
   height: 16px;
 }
@@ -1961,7 +1956,7 @@ body.light-theme {
 
 /* Pequenos ajustes finos que dependem de regra adicional (não só var) */
 body.light-theme .nav-item.active,
-body.light-theme .nav-item.active i {
+body.light-theme .nav-item.active :is(i, svg) {
   color: #ffffff;
 }
 
@@ -1981,7 +1976,7 @@ body.light-theme .modal-overlay {
   background-color: rgba(15, 23, 42, 0.45);
 }
 
-body.light-theme .empty-table-state i {
+body.light-theme .empty-table-state :is(i, svg) {
   color: rgba(0, 0, 0, 0.1);
 }
 /* ==========================================================================
@@ -2113,7 +2108,7 @@ body.light-theme .plan-card .form-group select {
 }
 
 .plan-card-danger h3,
-.plan-card-danger h3 i {
+.plan-card-danger h3 :is(i, svg) {
   color: var(--color-danger);
 }
 
