@@ -1260,6 +1260,106 @@ body:has(.modal-overlay.active) .badge-dot {
   resize: vertical;
 }
 
+/* Imagens da operação — faixa de miniaturas no modal */
+.form-group-imagens {
+  flex-shrink: 0;
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+
+.imagens-faixa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.imagens-faixa:empty {
+  display: none;
+}
+
+.imagem-miniatura {
+  position: relative;
+  width: 96px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-3);
+  cursor: zoom-in;
+}
+
+.imagem-miniatura img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Enquanto a URL assinada não chega */
+.imagem-miniatura.carregando::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--surface-3), var(--surface-6), var(--surface-3));
+  animation: imagem-pulso 1.2s ease-in-out infinite;
+}
+
+@keyframes imagem-pulso {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.8; }
+}
+
+.btn-remover-imagem {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(3, 4, 7, 0.75);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: var(--transition-fast);
+}
+
+.btn-remover-imagem:hover {
+  background-color: var(--color-danger);
+}
+
+.btn-remover-imagem :is(i, svg) {
+  width: 12px;
+  height: 12px;
+}
+
+.btn-add-imagem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: var(--color-primary-hover);
+  font-family: var(--font-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: var(--transition-fast);
+}
+
+.btn-add-imagem:hover { color: var(--color-primary); }
+.btn-add-imagem:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-add-imagem :is(i, svg) {
+  width: 16px;
+  height: 16px;
+}
+
 .modal-header h3 {
   font-size: 1.25rem;
   font-weight: 700;

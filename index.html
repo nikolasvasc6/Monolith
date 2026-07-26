@@ -954,6 +954,15 @@
             <label for="trade-notes">Observações / Anotações (Opcional)</label>
             <textarea id="trade-notes" rows="3" placeholder="Descreva seu racional, contexto do trade, emoções, erros ou acertos..."></textarea>
           </div>
+
+          <div class="form-group form-group-imagens">
+            <label>Imagens da operação (até 10)</label>
+            <div class="imagens-faixa" id="trade-images-strip"></div>
+            <button type="button" class="btn-add-imagem" id="btn-add-image">
+              <i data-lucide="image-plus"></i> Adicionar imagens
+            </button>
+            <input type="file" id="trade-image-input" accept="image/png,image/jpeg,image/webp" multiple hidden>
+          </div>
         </div>
 
         <div class="modal-actions">

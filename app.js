@@ -129,6 +129,9 @@ function cacheDOM() {
   DOM.tradePnL          = document.getElementById('trade-pnl');
   DOM.tradeDate         = document.getElementById('trade-date');
   DOM.tradeNotes        = document.getElementById('trade-notes');
+  DOM.tradeImagesStrip  = document.getElementById('trade-images-strip');
+  DOM.tradeImageInput   = document.getElementById('trade-image-input');
+  DOM.btnAddImage       = document.getElementById('btn-add-image');
   DOM.btnDeleteTrade    = document.getElementById('btn-delete-trade');
   DOM.btnCancelModal    = document.getElementById('btn-cancel-modal');
   DOM.btnCloseModalX    = document.getElementById('btn-close-modal-x');
@@ -778,6 +781,76 @@ function renderDashboard() {
 }
 
 // ==========================================================================
+// IMAGENS DO MODAL
+// ==========================================================================
+const MAX_IMAGENS_POR_TRADE = 10;
+
+// Itens: { tipo: 'existente', item } — já no Storage, com caminhos
+//        { tipo: 'nova', file, previewUrl } — escolhida agora, ainda na memória
+let modalImagens = [];
+
+function resetModalImagens(imagensExistentes = []) {
+  // Libera os object URLs das que não chegaram a subir
+  modalImagens.forEach((i) => { if (i.tipo === 'nova') URL.revokeObjectURL(i.previewUrl); });
+  modalImagens = imagensExistentes.map((item) => ({ tipo: 'existente', item }));
+  renderModalImagens();
+}
+
+function renderModalImagens() {
+  if (!DOM.tradeImagesStrip) return;
+  DOM.tradeImagesStrip.innerHTML = '';
+
+  modalImagens.forEach((entrada, indice) => {
+    const fig = document.createElement('div');
+    fig.className = 'imagem-miniatura';
+    fig.innerHTML = `
+      <img alt="Imagem ${indice + 1} da operação">
+      <button type="button" class="btn-remover-imagem" title="Remover imagem">
+        <i data-lucide="x"></i>
+      </button>`;
+
+    const img = fig.querySelector('img');
+    if (entrada.tipo === 'nova') {
+      img.src = entrada.previewUrl;
+    } else {
+      fig.classList.add('carregando');
+      // A URL assinada chega na Task 6; por ora fica no estado de carregamento
+    }
+
+    fig.querySelector('.btn-remover-imagem').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const [removida] = modalImagens.splice(indice, 1);
+      if (removida.tipo === 'nova') URL.revokeObjectURL(removida.previewUrl);
+      renderModalImagens();
+    });
+
+    DOM.tradeImagesStrip.appendChild(fig);
+  });
+
+  // Chegou no teto: não dá para escolher mais
+  if (DOM.btnAddImage) {
+    DOM.btnAddImage.disabled = modalImagens.length >= MAX_IMAGENS_POR_TRADE;
+    DOM.btnAddImage.textContent = '';
+    DOM.btnAddImage.innerHTML = modalImagens.length >= MAX_IMAGENS_POR_TRADE
+      ? '<i data-lucide="image-off"></i> Limite de 10 imagens atingido'
+      : '<i data-lucide="image-plus"></i> Adicionar imagens';
+  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function adicionarImagensEscolhidas(fileList) {
+  const vagas = MAX_IMAGENS_POR_TRADE - modalImagens.length;
+  const escolhidas = Array.from(fileList || []);
+  if (escolhidas.length > vagas) {
+    toast(`Cabem só mais ${vagas} imagem(ns) nesta operação.`, 'info');
+  }
+  escolhidas.slice(0, vagas).forEach((file) => {
+    modalImagens.push({ tipo: 'nova', file, previewUrl: URL.createObjectURL(file) });
+  });
+  renderModalImagens();
+}
+
+// ==========================================================================
 // MODAL CRUD
 // ==========================================================================
 function openTradeModal(trade = null, slotIndex = null) {
@@ -790,6 +863,7 @@ function openTradeModal(trade = null, slotIndex = null) {
     DOM.tradeType.value = 'take';
     DOM.tradePnL.value = '';
     DOM.tradeNotes.value = '';
+    resetModalImagens([]);
     DOM.btnDeleteTrade.style.display = 'none';
   } else {
     DOM.modalTitle.textContent = `Editar Operação #${String(slotIndex + 1).padStart(2, '0')}`;
@@ -800,6 +874,7 @@ function openTradeModal(trade = null, slotIndex = null) {
     DOM.tradePnL.value = Math.abs(trade.pnl);
     DOM.tradeDate.value = trade.date;
     DOM.tradeNotes.value = trade.notes || '';
+    resetModalImagens(trade.images || []);
     DOM.btnDeleteTrade.style.display = 'inline-flex';
   }
   DOM.tradeModal.classList.add('active');
@@ -808,6 +883,7 @@ function openTradeModal(trade = null, slotIndex = null) {
 
 function closeTradeModal() {
   DOM.tradeModal.classList.remove('active');
+  resetModalImagens([]);
   DOM.tradeForm.reset();
 }
 
@@ -971,6 +1047,15 @@ function setupEventListeners() {
     }
   });
   DOM.tradeForm.addEventListener('submit', (e) => { e.preventDefault(); handleSaveTrade(); });
+  if (DOM.btnAddImage) {
+    DOM.btnAddImage.addEventListener('click', () => DOM.tradeImageInput.click());
+  }
+  if (DOM.tradeImageInput) {
+    DOM.tradeImageInput.addEventListener('change', (e) => {
+      adicionarImagensEscolhidas(e.target.files);
+      e.target.value = ''; // permite escolher o MESMO arquivo de novo
+    });
+  }
   DOM.btnDeleteTrade.addEventListener('click', async () => {
     const id = DOM.tradeIdInput.value;
     if (id && confirm('Deseja realmente excluir esta operação?')) {
