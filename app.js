@@ -873,32 +873,54 @@ function adicionarImagensEscolhidas(fileList) {
  * Sobe as imagens escolhidas agora e devolve a lista completa na ordem da
  * faixa. Se qualquer upload falhar, remove as que já subiram nesta rodada
  * e propaga o erro — a operação não é gravada pela metade.
+ *
+ * Duas garantias contra perda de dado (correção de revisão sobre a 1ª versão):
+ * - Só convertemos uma entrada para 'existente' (e só então descartamos
+ *   `file`/`previewUrl`) DEPOIS que TODOS os uploads da rodada tiverem
+ *   sucesso. Se o 2º de 3 falhar, as 3 entradas continuam 'nova' com o
+ *   arquivo original intacto: um novo Salvar reenvia tudo do zero, em vez
+ *   de gravar o caminho de um arquivo que o `catch` acabou de apagar do
+ *   Storage (a 1ª versão perdia o `File` e travava a operação com uma
+ *   miniatura quebrada para sempre).
+ * - O loop percorre um retrato (`snapshot`) tirado no início, não o array
+ *   vivo `modalImagens` — remover uma miniatura no meio do envio não
+ *   desloca índices nem faz o iterador pular uma entrada (que sairia como
+ *   `undefined` no retorno e viraria `null` no jsonb). Enquanto o envio
+ *   dura, a faixa ganha a classe `enviando` (pointer-events: none no CSS)
+ *   para não deixar o clique de remover acontecer no meio do caminho.
  */
 async function resolverImagensDoModal() {
   const novas = modalImagens.filter((i) => i.tipo === 'nova');
   if (novas.length === 0) return modalImagens.map((i) => i.item);
 
-  const subidasAgora = [];
+  const snapshot = [...modalImagens];
+  const subidasAgora = []; // { entrada, item } — só aplicado depois que tudo subir
+  if (DOM.tradeImagesStrip) DOM.tradeImagesStrip.classList.add('enviando');
   try {
     let feitas = 0;
-    for (const entrada of modalImagens) {
+    for (const entrada of snapshot) {
       if (entrada.tipo !== 'nova') continue;
       feitas++;
       setSubmitLoading(true, `Enviando ${feitas} de ${novas.length}…`);
       const item = await uploadTradeImage(currentUser.id, entrada.file);
-      subidasAgora.push(item);
-      // Vira 'existente' para não subir de novo se o salvamento repetir
-      entrada.tipo = 'existente';
-      entrada.item = item;
-      URL.revokeObjectURL(entrada.previewUrl);
-      delete entrada.previewUrl;
-      delete entrada.file;
+      subidasAgora.push({ entrada, item });
     }
   } catch (err) {
-    await removeTradeImages(subidasAgora).catch(() => {});
+    await removeTradeImages(subidasAgora.map((s) => s.item)).catch(() => {});
     throw err;
   } finally {
     setSubmitLoading(true);
+    if (DOM.tradeImagesStrip) DOM.tradeImagesStrip.classList.remove('enviando');
+  }
+
+  // Só chegamos aqui com a rodada inteira bem-sucedida — agora sim é seguro
+  // converter as entradas e soltar os objetos (file/previewUrl) da memória
+  for (const { entrada, item } of subidasAgora) {
+    entrada.tipo = 'existente';
+    entrada.item = item;
+    URL.revokeObjectURL(entrada.previewUrl);
+    delete entrada.previewUrl;
+    delete entrada.file;
   }
 
   return modalImagens.map((i) => i.item);
@@ -1021,8 +1043,11 @@ async function editTrade(id, fields) {
     if (idx !== -1) { foundBlock = bIdx; foundIdx = idx; break; }
   }
   if (foundBlock === null) {
-    toast('Operação não encontrada.', 'error');
-    return;
+    // Lança em vez de tratar aqui (toast + return): se voltasse em silêncio,
+    // handleSaveTrade seguiria como se o update tivesse acontecido e apagaria
+    // do Storage as imagens "órfãs" de uma operação que, no banco, nunca foi
+    // gravada — a limpeza destrutiva rodando sem gravação real ter ocorrido.
+    throw new Error('Operação não encontrada.');
   }
   const updated = await updateTrade(id, fields);
   // Mantém block/position que já estavam (não foram alterados pelo update)

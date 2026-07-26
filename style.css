@@ -1278,6 +1278,13 @@ body:has(.modal-overlay.active) .badge-dot {
   display: none;
 }
 
+/* Durante o envio (resolverImagensDoModal), bloqueia o clique de remover:
+   evita que o array vivo mude de tamanho no meio do laço de upload. */
+.imagens-faixa.enviando {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
 .imagem-miniatura {
   position: relative;
   width: 96px;
