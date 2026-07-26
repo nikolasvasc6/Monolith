@@ -65,8 +65,8 @@ export async function updateTrade(tradeId, { asset, type, pnl, date, notes, bloc
     trade_date: date,
     notes: notes || null
   };
-  // Só sobrescreve se veio no update — chamada que não fala de imagem
-  // (renumeração, autocura) não pode zerar o que já está gravado
+  // Só grava images quando veio na chamada: editTrade chama sem images
+  // ao salvar alterações no ativo/nota, e sempre passar a chave apagaria o gravado
   if (images     !== undefined) payload.images      = images;
   if (blockIndex !== undefined) payload.block_index = blockIndex;
   if (position   !== undefined) payload.position    = position;
