@@ -1043,8 +1043,12 @@ async function handleSaveTrade() {
   } catch (err) {
     toast(err.message, 'error');
   } finally {
-    setSubmitLoading(false);
+    // Desliga a flag ANTES de setSubmitLoading(false): é ela que decide, lá
+    // dentro, se este loading:false pode reabilitar "Salvar Operação" (ver
+    // o comentário em setSubmitLoading). Só desligamos aqui porque é
+    // handleSaveTrade — o dono do salvamento — quem está de fato terminando.
     bloquearFechamentoModal(false);
+    setSubmitLoading(false);
   }
 }
 
@@ -1601,8 +1605,21 @@ function showLoading(show) {
 
 function setSubmitLoading(loading, rotulo = 'Salvando…') {
   if (DOM.btnSubmitModal) {
-    DOM.btnSubmitModal.disabled = loading;
-    DOM.btnSubmitModal.textContent = loading ? rotulo : 'Salvar Operação';
+    // Enquanto salvandoOperacao for true, só quem desligou a flag (o
+    // próprio handleSaveTrade, no fim do seu try/finally) pode reabilitar
+    // este botão com loading:false. Sem essa guarda, um handleDeleteTrade
+    // concorrente (lixeira da lista, fora do modal, sem passar pela flag)
+    // chamaria setSubmitLoading(false) no seu próprio finally e devolveria
+    // "Salvar Operação" ativo com o upload de OUTRA operação ainda em voo
+    // — o usuário clicaria de novo, disparando duas rodadas de
+    // handleSaveTrade ao mesmo tempo (o mesmo arquivo sobe duas vezes; o
+    // perdedor da corrida vira órfão no Storage). Quem manda no botão
+    // durante um salvamento é o próprio salvamento, não uma exclusão que
+    // passou por perto.
+    if (loading || !salvandoOperacao) {
+      DOM.btnSubmitModal.disabled = loading;
+      DOM.btnSubmitModal.textContent = loading ? rotulo : 'Salvar Operação';
+    }
   }
   if (DOM.btnDeleteTrade) DOM.btnDeleteTrade.disabled = loading;
   if (DOM.btnAddImage)    DOM.btnAddImage.disabled = loading || modalImagens.length >= MAX_IMAGENS_POR_TRADE;
