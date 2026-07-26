@@ -1425,8 +1425,11 @@ body:has(.modal-overlay.active) .badge-dot {
   align-items: center;
 }
 
-/* Ícone dentro do input */
-.input-with-icon i:not(.risk-icon) {
+/* Ícone dentro do input.
+   Precisa casar `i` E `svg`: o Lucide troca o <i data-lucide> pelo <svg> na
+   renderização, e um seletor só de `i` para de valer depois disso. */
+.input-with-icon > i:not(.risk-icon),
+.input-with-icon > svg:not(.risk-icon) {
   position: absolute;
   left: 14px;
   color: var(--text-muted);
@@ -1437,7 +1440,8 @@ body:has(.modal-overlay.active) .badge-dot {
 }
 
 /* Estilo específico para o ícone dinâmico de risco ($ ou %) */
-.input-with-icon i.risk-icon {
+.input-with-icon > i.risk-icon,
+.input-with-icon > svg.risk-icon {
   position: absolute;
   left: 14px;
   color: var(--color-primary-hover); /* Destaque para o modo de risco */
@@ -1479,9 +1483,13 @@ body:has(.modal-overlay.active) .badge-dot {
   color: var(--text-active);
 }
 
-/* Muda a cor do ícone quando o input está focado */
-.input-with-icon input:focus + i:not(.risk-icon),
-.input-with-icon select:focus + i:not(.risk-icon) {
+/* Muda a cor do ícone quando o input está focado.
+   Vai por `:has()` porque o ícone vem ANTES do campo no markup — o `+` do
+   seletor antigo pedia um irmão depois do input, que não existe. */
+.input-with-icon:has(input:focus) > i:not(.risk-icon),
+.input-with-icon:has(input:focus) > svg:not(.risk-icon),
+.input-with-icon:has(select:focus) > i:not(.risk-icon),
+.input-with-icon:has(select:focus) > svg:not(.risk-icon) {
   color: var(--color-primary);
 }
 
