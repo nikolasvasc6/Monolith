@@ -40,6 +40,10 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 | `js/ui/auth-ui.js` | UI da tela de login/cadastro |
 | `js/services/trades.js` | CRUD + Realtime da tabela `trades` |
 | `js/services/preferences.js` | SELECT/UPDATE de `user_preferences` (tema + bloco ativo) |
+| `js/image-processing.js` | Comprime a imagem escolhida para WebP (1600px + thumb 400px), sem I/O |
+| `js/services/trade-images.js` | Upload/remoção no Storage e URLs assinadas em lote (bucket privado) |
+| `js/ui/lightbox.js` | Visualização em tela cheia das imagens da operação |
+| `tests/image-processing.test.html` | Teste da compressão — abrir no navegador servido por HTTP |
 | `style.css`, `auth.css` | Estilos, com tema dark/light |
 | `supabase/schema.sql` | Schema idempotente (tabelas, triggers, RLS, realtime) p/ colar no SQL Editor |
 
@@ -88,6 +92,16 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   $10 — o bug anterior (até 2026-07-26) era justamente um preço fixo de 1,085 que passava
   despercebido e fazia o USD/JPY reportar $921,66 por pip e o USD/CHF estourar o risco
   em 35%.
+- **Imagens da operação (até 10):** ficam no bucket **privado** `trade-images` do
+  Supabase Storage, em `{user_id}/{uuid}.webp`; a linha do trade guarda só os caminhos,
+  na coluna `images` (jsonb). São **duas versões por imagem** — `full` (1600px) para o
+  lightbox e `thumb` (400px) para o card, senão um bloco cheio baixaria ~10 MB de
+  miniaturas. Exibição é sempre por **URL assinada**, pedida em lote por bloco e
+  cacheada por 1 h. O upload só acontece ao **salvar** o registro: até lá o arquivo fica
+  na memória, então cancelar o modal não deixa lixo no bucket. Excluir operação e
+  "Resetar Dados" limpam o Storage — se essa limpeza falhar, a exclusão acontece mesmo
+  assim e o aviso vai para o console. **O export JSON não leva as imagens**, só avisa
+  quantas ficaram de fora.
 
 ## Convenções ao trabalhar aqui
 

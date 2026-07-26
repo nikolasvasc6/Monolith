@@ -1444,19 +1444,29 @@ function setupEventListeners() {
 // EXPORT / IMPORT / RESET (Cloud)
 // ==========================================================================
 function exportData() {
+  const todas = Object.values(state.blocks).flat();
+  const totalImagens = todas.reduce((soma, t) => soma + (t.images?.length || 0), 0);
+
   const payload = {
     activeBlockIndex: state.activeBlockIndex,
     blocks: state.blocks,
     userEmail: state.userEmail,
     theme: state.theme,
     plan: state.plan,
-    exportedAt: new Date().toISOString()
+    exportedAt: new Date().toISOString(),
+    // Os caminhos vão no JSON, mas os arquivos ficam no Storage: reimportar
+    // em outra conta traz as operações sem as imagens
+    imagensNaoIncluidas: totalImagens
   };
   const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
   const a = document.createElement('a');
   a.setAttribute('href', dataStr);
   a.setAttribute('download', `monolith_backup_${new Date().toISOString().split('T')[0]}.json`);
   document.body.appendChild(a); a.click(); a.remove();
+
+  if (totalImagens > 0) {
+    toast(`Backup gerado. As ${totalImagens} imagens não vão no arquivo — elas ficam na nuvem.`, 'info');
+  }
 }
 
 function importData(e) {
