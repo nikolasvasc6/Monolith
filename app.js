@@ -874,7 +874,7 @@ function adicionarImagensEscolhidas(fileList) {
  * faixa. Se qualquer upload falhar, remove as que já subiram nesta rodada
  * e propaga o erro — a operação não é gravada pela metade.
  *
- * Duas garantias contra perda de dado (correção de revisão sobre a 1ª versão):
+ * Três garantias contra perda de dado (correções de revisão sobre a 1ª versão):
  * - Só convertemos uma entrada para 'existente' (e só então descartamos
  *   `file`/`previewUrl`) DEPOIS que TODOS os uploads da rodada tiverem
  *   sucesso. Se o 2º de 3 falhar, as 3 entradas continuam 'nova' com o
@@ -882,18 +882,29 @@ function adicionarImagensEscolhidas(fileList) {
  *   de gravar o caminho de um arquivo que o `catch` acabou de apagar do
  *   Storage (a 1ª versão perdia o `File` e travava a operação com uma
  *   miniatura quebrada para sempre).
- * - O loop percorre um retrato (`snapshot`) tirado no início, não o array
- *   vivo `modalImagens` — remover uma miniatura no meio do envio não
- *   desloca índices nem faz o iterador pular uma entrada (que sairia como
- *   `undefined` no retorno e viraria `null` no jsonb). Enquanto o envio
- *   dura, a faixa ganha a classe `enviando` (pointer-events: none no CSS)
- *   para não deixar o clique de remover acontecer no meio do caminho.
+ * - Tanto o loop quanto o RETORNO usam um retrato (`snapshot`) tirado no
+ *   início, nunca o array vivo `modalImagens`. Isso cobre dois casos:
+ *   (a) remover uma miniatura no meio do envio não desloca índices nem faz
+ *   o iterador pular uma entrada (que sairia como `undefined` no retorno e
+ *   viraria `null` no jsonb); (b) fechar o modal durante o envio dispara
+ *   `resetModalImagens([])`, que zera `modalImagens` — se o retorno lesse a
+ *   variável vivo nesse momento, devolveria `[]` e apagaria as imagens já
+ *   salvas da operação (inclusive as `'existente'` que nem foram tocadas).
+ *   Como o retorno é sempre o snapshot, um reset concorrente não consegue
+ *   mais transformá-lo em lista vazia.
+ * - Enquanto o envio dura, a faixa ganha a classe `enviando` (pointer-events:
+ *   none no CSS) para não deixar o clique de remover acontecer no meio do
+ *   caminho, e os botões de fechar/cancelar o modal ficam desabilitados
+ *   (ver `setSubmitLoading`) — a defesa de UI. O snapshot é a defesa de
+ *   dado: mesmo que uma interação escape do bloqueio de UI (ex.: Enter/
+ *   Espaço num botão já focado, que `pointer-events: none` não impede),
+ *   o retorno desta função não muda.
  */
 async function resolverImagensDoModal() {
-  const novas = modalImagens.filter((i) => i.tipo === 'nova');
-  if (novas.length === 0) return modalImagens.map((i) => i.item);
+  const snapshot = [...modalImagens]; // retrato do que o usuário via ao clicar em Salvar
+  const novas = snapshot.filter((i) => i.tipo === 'nova');
+  if (novas.length === 0) return snapshot.map((i) => i.item);
 
-  const snapshot = [...modalImagens];
   const subidasAgora = []; // { entrada, item } — só aplicado depois que tudo subir
   if (DOM.tradeImagesStrip) DOM.tradeImagesStrip.classList.add('enviando');
   try {
@@ -914,16 +925,19 @@ async function resolverImagensDoModal() {
   }
 
   // Só chegamos aqui com a rodada inteira bem-sucedida — agora sim é seguro
-  // converter as entradas e soltar os objetos (file/previewUrl) da memória
+  // converter as entradas do snapshot e soltar os objetos (file/previewUrl)
   for (const { entrada, item } of subidasAgora) {
     entrada.tipo = 'existente';
     entrada.item = item;
-    URL.revokeObjectURL(entrada.previewUrl);
+    if (entrada.previewUrl) URL.revokeObjectURL(entrada.previewUrl);
     delete entrada.previewUrl;
     delete entrada.file;
   }
 
-  return modalImagens.map((i) => i.item);
+  // Vem do snapshot, não do array vivo: mesmo que o modal tenha sido
+  // fechado (ou uma miniatura removida) durante o await acima, a lista
+  // gravada é a que o usuário tinha na tela quando clicou em Salvar
+  return snapshot.map((i) => i.item);
 }
 
 // ==========================================================================
@@ -1128,10 +1142,12 @@ function setupEventListeners() {
   DOM.btnCloseModalX.addEventListener('click', closeTradeModal);
   DOM.btnCancelModal.addEventListener('click', closeTradeModal);
   DOM.tradeModal.addEventListener('click', (e) => {
-    if (e.target === DOM.tradeModal) closeTradeModal();
+    // Clique no fundo não fecha durante o envio — mesmo motivo do botão
+    // Cancelar/X desabilitado: fechar no meio do upload zeraria modalImagens
+    if (e.target === DOM.tradeModal && !DOM.btnSubmitModal.disabled) closeTradeModal();
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && DOM.tradeModal.classList.contains('active')) {
+    if (e.key === 'Escape' && DOM.tradeModal.classList.contains('active') && !DOM.btnSubmitModal.disabled) {
       closeTradeModal();
     }
   });
@@ -1556,6 +1572,11 @@ function setSubmitLoading(loading, rotulo = 'Salvando…') {
   }
   if (DOM.btnDeleteTrade) DOM.btnDeleteTrade.disabled = loading;
   if (DOM.btnAddImage)    DOM.btnAddImage.disabled = loading || modalImagens.length >= MAX_IMAGENS_POR_TRADE;
+  // Fechar o modal durante o envio (X, Cancelar) desmontaria modalImagens
+  // no meio do upload — desabilita os dois; o backdrop/Esc é bloqueado à
+  // parte checando DOM.btnSubmitModal.disabled (setupEventListeners).
+  if (DOM.btnCancelModal) DOM.btnCancelModal.disabled = loading;
+  if (DOM.btnCloseModalX) DOM.btnCloseModalX.disabled = loading;
 }
 
 function toast(message, kind = 'info') {
