@@ -550,7 +550,7 @@ function renderGridView(trades) {
           ${trade.images.length > 1 ? `<span class="slot-thumb-contador">${trade.images.length}</span>` : ''}
         </div>` : ''}
         <div class="slot-header">
-          <span class="slot-asset">${escapeHTML(trade.asset)}</span>
+          <span class="slot-asset" title="${escapeHTML(trade.asset)}">${escapeHTML(trade.asset)}</span>
           <span class="slot-type-badge ${trade.type}">${trade.type === 'take' ? 'Take' : 'Stop'}</span>
         </div>
         <div class="slot-body">

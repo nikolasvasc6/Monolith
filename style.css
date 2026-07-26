@@ -855,6 +855,15 @@ body:has(.modal-overlay.active) .badge-dot {
   position: relative;
   transition: var(--transition-normal);
   user-select: none;
+  /* Aqui, não só em .slot-has-image: sem overflow:hidden, QUALQUER card cujo
+     conteúdo não caiba no aspect-ratio cresce além dele (ex.: nome de ativo
+     comprido sem imagem, quebrando em 2 linhas no header). O invariante
+     "todos os 35 slots têm a mesma altura" só vale se essa regra estiver no
+     mesmo lugar que declara o aspect-ratio, para valer para qualquer
+     variante do card (com/sem imagem, vazio) — não só para a que motivou
+     a descoberta do problema. box-shadow/transform do hover não são
+     afetados: são pintados fora da caixa de conteúdo, não recortados. */
+  overflow: hidden;
 }
 
 /* Active empty slot (where the next trade will be added) */
@@ -933,21 +942,14 @@ body:has(.modal-overlay.active) .badge-dot {
 /* Card com print: a imagem ocupa a faixa de cima, sangrando até a borda.
    A altura do card não muda — o texto só se acomoda no que sobra.
 
-   overflow:hidden aqui é o que de fato prende a altura ao aspect-ratio: com
-   overflow visível (padrão), o navegador deixa o conteúdo crescer o card
-   além do aspect-ratio quando não cabe — e no grid real (7 colunas,
-   ~170px de card) a faixa de 46% + header/body/footer não cabem, o card
-   cresceria uns 8px a mais que o card sem imagem, quebrando a exigência de
-   mesma altura. Com overflow:hidden o navegador respeita o aspect-ratio à
-   risca e o excedente é cortado — e flex-shrink:1 na faixa (em vez do 0
-   que deixaria o excesso sobrar) garante que quem cede esses pixels é a
-   imagem, não o texto: overflow:hidden já zera o tamanho mínimo automático
-   deste item, então ele é o primeiro a ceder; header/body/footer não têm
-   overflow:hidden e preservam seu próprio mínimo de conteúdo. */
-.grid-slot.slot-has-image {
-  overflow: hidden;
-}
-
+   O overflow:hidden que prende a altura ao aspect-ratio está na regra base
+   .grid-slot (vale para todo card, com ou sem imagem — ver comentário lá).
+   Aqui só o flex-shrink:1 na faixa (em vez do 0, que deixaria o excesso
+   sobrar): garante que, faltando espaço, quem cede pixels é a imagem, não o
+   texto — .slot-thumb já tem overflow:hidden próprio, o que zera o tamanho
+   mínimo automático deste item (regra do flexbox), então ele é sempre o
+   primeiro a encolher; header/body/footer preservam o próprio mínimo de
+   conteúdo. */
 .grid-slot.slot-has-image .slot-thumb {
   margin: -12px -12px 8px;
   height: 46%;
@@ -1001,6 +1003,18 @@ body:has(.modal-overlay.active) .badge-dot {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-active);
+  /* Nome de ativo é texto livre (sem maxlength no input, ex. "Mini Índice
+     Bovespa Noturno") — sem isto, um nome comprido quebra em 2 linhas e
+     empurra a altura do header, e como o card agora tem overflow:hidden
+     (ver .grid-slot), o excesso seria cortado silenciosamente, podendo
+     esconder o rodapé (índice/data) em vez de só truncar o nome. Uma linha
+     com reticências avisa que há mais texto; min-width:0 é o que permite
+     este item flexível encolher abaixo da largura do próprio conteúdo
+     (senão o white-space:nowrap "empurra" o flex item e nada é cortado). */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .slot-type-badge {
@@ -1009,6 +1023,7 @@ body:has(.modal-overlay.active) .badge-dot {
   text-transform: uppercase;
   padding: 2px 6px;
   border-radius: 4px;
+  flex-shrink: 0;
 }
 
 .slot-type-badge.take {
