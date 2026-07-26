@@ -29,6 +29,12 @@ import {
   fetchPlan,
   savePlan
 } from './js/services/plan.js';
+import {
+  uploadTradeImage,
+  removeTradeImages,
+  getSignedUrls,
+  removeAllUserImages
+} from './js/services/trade-images.js';
 
 // ==========================================================================
 // CONSTANTES & ESTADO
@@ -788,6 +794,7 @@ const MAX_IMAGENS_POR_TRADE = 10;
 // Itens: { tipo: 'existente', item } — já no Storage, com caminhos
 //        { tipo: 'nova', file, previewUrl } — escolhida agora, ainda na memória
 let modalImagens = [];
+let imagensOriginaisDoModal = []; // para saber o que o usuário tirou na edição
 
 function resetModalImagens(imagensExistentes = []) {
   // Libera os object URLs das que não chegaram a subir
@@ -814,7 +821,19 @@ function renderModalImagens() {
       img.src = entrada.previewUrl;
     } else {
       fig.classList.add('carregando');
-      // A URL assinada chega na Task 6; por ora fica no estado de carregamento
+      const caminho = entrada.item.thumb;
+      getSignedUrls([caminho])
+        .then((mapa) => {
+          const url = mapa.get(caminho);
+          // Caminho ausente no mapa não é 'apagado': pode ser sessão expirada
+          // ou RLS negando por ora. Deixamos a miniatura no estado de
+          // carregamento em vez de tratar como erro — nunca removemos a
+          // referência por causa disso.
+          if (!url) return;
+          img.src = url;
+          img.addEventListener('load', () => fig.classList.remove('carregando'), { once: true });
+        })
+        .catch((e) => console.warn('Falha ao assinar URL da miniatura:', e));
     }
 
     fig.querySelector('.btn-remover-imagem').addEventListener('click', (e) => {
@@ -850,6 +869,41 @@ function adicionarImagensEscolhidas(fileList) {
   renderModalImagens();
 }
 
+/**
+ * Sobe as imagens escolhidas agora e devolve a lista completa na ordem da
+ * faixa. Se qualquer upload falhar, remove as que já subiram nesta rodada
+ * e propaga o erro — a operação não é gravada pela metade.
+ */
+async function resolverImagensDoModal() {
+  const novas = modalImagens.filter((i) => i.tipo === 'nova');
+  if (novas.length === 0) return modalImagens.map((i) => i.item);
+
+  const subidasAgora = [];
+  try {
+    let feitas = 0;
+    for (const entrada of modalImagens) {
+      if (entrada.tipo !== 'nova') continue;
+      feitas++;
+      setSubmitLoading(true, `Enviando ${feitas} de ${novas.length}…`);
+      const item = await uploadTradeImage(currentUser.id, entrada.file);
+      subidasAgora.push(item);
+      // Vira 'existente' para não subir de novo se o salvamento repetir
+      entrada.tipo = 'existente';
+      entrada.item = item;
+      URL.revokeObjectURL(entrada.previewUrl);
+      delete entrada.previewUrl;
+      delete entrada.file;
+    }
+  } catch (err) {
+    await removeTradeImages(subidasAgora).catch(() => {});
+    throw err;
+  } finally {
+    setSubmitLoading(true);
+  }
+
+  return modalImagens.map((i) => i.item);
+}
+
 // ==========================================================================
 // MODAL CRUD
 // ==========================================================================
@@ -864,6 +918,7 @@ function openTradeModal(trade = null, slotIndex = null) {
     DOM.tradePnL.value = '';
     DOM.tradeNotes.value = '';
     resetModalImagens([]);
+    imagensOriginaisDoModal = [];
     DOM.btnDeleteTrade.style.display = 'none';
   } else {
     DOM.modalTitle.textContent = `Editar Operação #${String(slotIndex + 1).padStart(2, '0')}`;
@@ -875,6 +930,7 @@ function openTradeModal(trade = null, slotIndex = null) {
     DOM.tradeDate.value = trade.date;
     DOM.tradeNotes.value = trade.notes || '';
     resetModalImagens(trade.images || []);
+    imagensOriginaisDoModal = (trade.images || []).slice();
     DOM.btnDeleteTrade.style.display = 'inline-flex';
   }
   DOM.tradeModal.classList.add('active');
@@ -903,10 +959,18 @@ async function handleSaveTrade() {
 
   setSubmitLoading(true);
   try {
+    const images = await resolverImagensDoModal();
+
     if (id === '') {
-      await createTrade({ asset, type, pnl, date, notes });
+      await createTrade({ asset, type, pnl, date, notes, images });
     } else {
-      await editTrade(id, { asset, type, pnl, date, notes });
+      await editTrade(id, { asset, type, pnl, date, notes, images });
+      // Arquivos que saíram da faixa nesta edição não têm mais dono
+      const mantidos = new Set(images.map((i) => i.full));
+      const orfas = imagensOriginaisDoModal.filter((i) => !mantidos.has(i.full));
+      if (orfas.length) {
+        removeTradeImages(orfas).catch((e) => console.warn('Imagem órfã não removida:', e));
+      }
     }
     closeTradeModal();
   } catch (err) {
@@ -916,7 +980,7 @@ async function handleSaveTrade() {
   }
 }
 
-async function createTrade({ asset, type, pnl, date, notes }) {
+async function createTrade({ asset, type, pnl, date, notes, images }) {
   let blockIndex = state.activeBlockIndex;
   let blockArr   = state.blocks[String(blockIndex)] || [];
 
@@ -933,7 +997,7 @@ async function createTrade({ asset, type, pnl, date, notes }) {
 
   const position = blockArr.length;
   const trade = await insertTrade(currentUser.id, {
-    blockIndex, position, asset, type, pnl, date, notes
+    blockIndex, position, asset, type, pnl, date, notes, images
   });
 
   blockArr.push(trade);
@@ -1460,12 +1524,13 @@ function showLoading(show) {
   DOM.appLoading.classList.toggle('active', !!show);
 }
 
-function setSubmitLoading(loading) {
+function setSubmitLoading(loading, rotulo = 'Salvando…') {
   if (DOM.btnSubmitModal) {
     DOM.btnSubmitModal.disabled = loading;
-    DOM.btnSubmitModal.textContent = loading ? 'Salvando…' : 'Salvar Operação';
+    DOM.btnSubmitModal.textContent = loading ? rotulo : 'Salvar Operação';
   }
   if (DOM.btnDeleteTrade) DOM.btnDeleteTrade.disabled = loading;
+  if (DOM.btnAddImage)    DOM.btnAddImage.disabled = loading || modalImagens.length >= MAX_IMAGENS_POR_TRADE;
 }
 
 function toast(message, kind = 'info') {
