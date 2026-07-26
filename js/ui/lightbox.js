@@ -16,7 +16,8 @@
 let itens = [];  // [{ url, w, h }]
 let indice = 0;
 let el = null;   // { overlay, img, contador, prev, next, fechar }
-let focoAnterior = null; // elemento que tinha o foco quando o lightbox abriu
+let focoAnterior = null;    // elemento que tinha o foco quando o lightbox abriu
+let ultimoEscTratado = null; // o último evento de Esc que ESTE módulo consumiu
 
 export function initLightbox() {
   el = {
@@ -42,20 +43,44 @@ export function initLightbox() {
 
   document.addEventListener('keydown', (e) => {
     if (!lightboxEstaAberto()) return;
-    if (e.key === 'Escape')     { e.preventDefault(); fecharLightbox(); }
+    if (e.key === 'Escape') {
+      // Marca ANTES de fechar: assim que fecharLightbox() tira a classe
+      // .active, lightboxEstaAberto() passa a responder false — quem rodar
+      // depois nesta MESMA tecla precisa de outro jeito de saber que o Esc já
+      // foi consumido aqui. Guarda só a referência do evento (um objeto,
+      // trocado a cada Esc consumido).
+      ultimoEscTratado = e;
+      e.preventDefault();
+      fecharLightbox();
+    }
     if (e.key === 'ArrowLeft')  { e.preventDefault(); mover(-1); }
     if (e.key === 'ArrowRight') { e.preventDefault(); mover(1); }
   });
 }
 
-/**
- * Quem está por baixo precisa saber se o lightbox está na frente: o handler de
- * Esc do modal da operação vive no MESMO nó (document) que o daqui, então nem
- * preventDefault nem stopPropagation impediriam o modal de fechar junto — só
- * uma guarda explícita resolve, sem depender da ordem de registro.
+/*
+ * As duas funções abaixo existem para uma coisa só: deixar quem está POR BAIXO
+ * (o modal da operação) ignorar um Esc que era do lightbox. Os dois handlers de
+ * Esc estão registrados no mesmo nó (document), onde nem preventDefault nem
+ * stopPropagation separam listeners — e usá-las em par é o que torna a guarda
+ * insensível à ordem de registro, que é o ponto:
+ *
+ * - modal registrado primeiro  → ele roda antes de o lightbox fechar, ainda vê
+ *   lightboxEstaAberto() === true;
+ * - lightbox registrado primeiro → quando o modal roda, a classe .active já
+ *   sumiu, mas lightboxTratouEsc(e) === true para AQUELE evento.
+ *
+ * Uma das duas sempre segura. Testar só uma delas dá um app que funciona hoje e
+ * quebra em silêncio no dia em que alguém reordenar duas linhas do boot,
+ * descartando as imagens não salvas do usuário.
  */
 export function lightboxEstaAberto() {
   return !!el && !!el.overlay && el.overlay.classList.contains('active');
+}
+
+/** Este Esc específico já foi consumido pelo lightbox? (identidade do evento) */
+export function lightboxTratouEsc(evento) {
+  return !!evento && evento === ultimoEscTratado;
 }
 
 export function abrirLightbox(listaDeItens, indiceInicial = 0) {

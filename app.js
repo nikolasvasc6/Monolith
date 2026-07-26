@@ -36,7 +36,7 @@ import {
   invalidateSignedUrl,
   removeAllUserImages
 } from './js/services/trade-images.js';
-import { initLightbox, abrirLightbox, lightboxEstaAberto } from './js/ui/lightbox.js';
+import { initLightbox, abrirLightbox, lightboxEstaAberto, lightboxTratouEsc } from './js/ui/lightbox.js';
 
 // ==========================================================================
 // CONSTANTES & ESTADO
@@ -1322,13 +1322,20 @@ function setupEventListeners() {
     // Por que o modal consulta o lightbox: os dois handlers de Esc estão
     // registrados no MESMO nó (document), então o Esc que fecha o lightbox
     // chegaria aqui também e fecharia o modal por baixo — descartando imagens
-    // escolhidas e ainda não salvas. stopPropagation não resolve entre
-    // listeners do mesmo nó, e stopImmediatePropagation deixaria o resultado
-    // dependendo da ordem de registro. A guarda explícita é o Esc "consumido"
-    // pela camada de cima: com o lightbox aberto, o primeiro Esc fecha só ele;
-    // o segundo é que fecha o modal.
+    // escolhidas e ainda não salvas. stopPropagation não separa listeners do
+    // mesmo nó, e stopImmediatePropagation só funcionaria se o lightbox
+    // rodasse primeiro. Efeito desejado: com o lightbox aberto, o primeiro Esc
+    // fecha só ele; o segundo é que fecha o modal.
+    //
+    // As DUAS perguntas são necessárias, porque a ordem em que os listeners
+    // rodam é a ordem em que foram registrados, e ninguém aqui deveria depender
+    // dela: se o modal roda primeiro, o lightbox ainda está aberto e
+    // lightboxEstaAberto() segura; se o lightbox roda primeiro, ele já removeu
+    // a classe .active e só lightboxTratouEsc(e) segura. Trocar a ordem de
+    // initLightbox()/setupEventListeners() no boot não pode reabrir o bug —
+    // provado com o teste rodando nas duas ordens.
     if (e.key === 'Escape' && DOM.tradeModal.classList.contains('active')
-        && !salvandoOperacao && !lightboxEstaAberto()) {
+        && !salvandoOperacao && !lightboxEstaAberto() && !lightboxTratouEsc(e)) {
       closeTradeModal();
     }
   });
