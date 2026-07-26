@@ -1,0 +1,97 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Teste — image-processing</title>
+<style>
+  body { font: 14px/1.5 monospace; padding: 24px; background: #0c0f17; color: #e2e8f0; }
+  .ok   { color: #10b981; }
+  .fail { color: #f43f5e; }
+  h1 { font-size: 16px; }
+</style>
+<h1>image-processing</h1>
+<div id="saida"></div>
+<script type="module">
+  import { processImageFile, MAX_INPUT_BYTES } from '../js/image-processing.js';
+
+  const saida = document.getElementById('saida');
+  let falhas = 0;
+
+  function conta(nome, condicao, detalhe = '') {
+    const li = document.createElement('div');
+    li.className = condicao ? 'ok' : 'fail';
+    li.textContent = `${condicao ? 'PASSOU' : 'FALHOU'} — ${nome}${detalhe ? ' :: ' + detalhe : ''}`;
+    saida.appendChild(li);
+    if (!condicao) falhas++;
+  }
+
+  // Gera um File de imagem sintética com as dimensões pedidas
+  async function imagemFalsa(w, h, tipo = 'image/png', nome = 'grafico.png') {
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#10b981'; ctx.fillRect(0, h / 2, w, 4); // "candle"
+    const blob = await new Promise(r => cv.toBlob(r, tipo));
+    return new File([blob], nome, { type: tipo });
+  }
+
+  async function erroDe(promessa) {
+    try { await promessa; return null; } catch (e) { return e.message; }
+  }
+
+  // 1. Imagem grande encolhe para 1600 (full) e 400 (thumb), virando WebP
+  {
+    const r = await processImageFile(await imagemFalsa(3000, 2000));
+    conta('full encolhe para 1600 de aresta maior', r.full.w === 1600 && r.full.h === 1067,
+          `${r.full.w}x${r.full.h}`);
+    conta('thumb encolhe para 400 de aresta maior', r.thumb.w === 400 && r.thumb.h === 267,
+          `${r.thumb.w}x${r.thumb.h}`);
+    conta('as duas versões saem em WebP',
+          r.full.blob.type === 'image/webp' && r.thumb.blob.type === 'image/webp',
+          `${r.full.blob.type} / ${r.thumb.blob.type}`);
+    conta('thumb é bem mais leve que a full', r.thumb.blob.size < r.full.blob.size,
+          `${r.thumb.blob.size} < ${r.full.blob.size}`);
+  }
+
+  // 2. Imagem menor que o alvo NÃO é ampliada
+  {
+    const r = await processImageFile(await imagemFalsa(300, 200));
+    conta('full não amplia imagem pequena', r.full.w === 300 && r.full.h === 200,
+          `${r.full.w}x${r.full.h}`);
+    conta('thumb não amplia imagem pequena', r.thumb.w === 300 && r.thumb.h === 200,
+          `${r.thumb.w}x${r.thumb.h}`);
+  }
+
+  // 3. Imagem em retrato usa a ALTURA como aresta maior
+  {
+    const r = await processImageFile(await imagemFalsa(1000, 3000));
+    conta('retrato limita pela altura', r.full.h === 1600 && r.full.w === 533,
+          `${r.full.w}x${r.full.h}`);
+  }
+
+  // 4. Arquivo que não é imagem é recusado com mensagem em pt-BR
+  {
+    const txt = new File(['isto não é imagem'], 'nota.txt', { type: 'text/plain' });
+    const msg = await erroDe(processImageFile(txt));
+    conta('recusa arquivo que não é imagem', msg !== null && /imagem/i.test(msg), String(msg));
+  }
+
+  // 5. HEIC é recusado com mensagem própria (o navegador não decodifica)
+  {
+    const heic = new File([new Uint8Array(10)], 'IMG_0001.heic', { type: 'image/heic' });
+    const msg = await erroDe(processImageFile(heic));
+    conta('recusa HEIC com dica de conversão', msg !== null && /heic/i.test(msg), String(msg));
+  }
+
+  // 6. Arquivo acima do teto é recusado ANTES de decodificar
+  {
+    const gordo = new File([new Uint8Array(MAX_INPUT_BYTES + 1)], 'enorme.png', { type: 'image/png' });
+    const msg = await erroDe(processImageFile(gordo));
+    conta('recusa arquivo acima de 15 MB', msg !== null && /15 MB/.test(msg), String(msg));
+  }
+
+  const resumo = document.createElement('h1');
+  resumo.className = falhas === 0 ? 'ok' : 'fail';
+  resumo.textContent = falhas === 0 ? 'TUDO PASSOU' : `${falhas} FALHA(S)`;
+  resumo.id = 'resumo';
+  saida.appendChild(resumo);
+</script>
