@@ -1422,6 +1422,10 @@ body:has(.modal-overlay.active) .badge-dot {
   inset: 0;
   background: linear-gradient(90deg, var(--surface-3), var(--surface-6), var(--surface-3));
   animation: imagem-pulso 1.2s ease-in-out infinite;
+  /* O pseudo-elemento cobre a miniatura inteira, inclusive o botão de remover,
+     que fica atrás dele na ordem de pintura. Sem isto, uma miniatura presa em
+     "carregando" não pode ser removida com o mouse. */
+  pointer-events: none;
 }
 
 @keyframes imagem-pulso {

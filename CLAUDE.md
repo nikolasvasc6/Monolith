@@ -112,6 +112,15 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 - **Todo texto de UI e mensagens de erro em pt-BR.**
 - **Toda I/O de dados passa pelos serviços** (`js/services/*`) — não chame `supabase`
   diretamente do `app.js`.
+- **Estado mutável de módulo lido depois de um `await` precisa de retrato antes do `try`.**
+  Foi o defeito mais caro deste app: cinco perdas de dado graves na feature de imagens,
+  todas do mesmo formato — `modalImagens`, `imagensOriginaisDoModal` e índices de
+  `state.blocks` lidos depois da espera, quando o usuário (ou o Realtime, que **substitui**
+  `state.blocks` inteiro) já tinha mudado aquilo. Vale para qualquer fluxo assíncrono aqui:
+  tire o retrato antes do primeiro `await` e trabalhe sobre ele; para achar um registro
+  depois da espera, **refaça a busca por `id`**, nunca reaproveite índice. E **nunca apague
+  arquivo do Storage antes de o estado de destino estar confirmado no banco** — arquivo
+  órfão incomoda menos que operação viva apontando para arquivo que não existe mais.
 - **snake_case no banco ↔ camelCase no app:** o banco usa `block_index`/`trade_date`; o app
   usa `blockIndex`/`date`. A ponte é a função `rowToTrade()` em `js/services/trades.js` —
   ao adicionar/renomear um campo, atualize os **dois lados**.

@@ -32,7 +32,11 @@ export async function uploadTradeImage(userId, file) {
   try {
     await subir(caminhoThumb, thumb.blob);
   } catch (err) {
-    await supabase.storage.from(BUCKET).remove([caminhoFull]).catch(() => {});
+    // O erro que sobe é o do upload da thumb, não o da limpeza — mas a falha
+    // da limpeza precisa deixar rastro: é o único sinal de que nasceu um
+    // órfão, e sem ele um bucket inflado não tem como ser diagnosticado.
+    await supabase.storage.from(BUCKET).remove([caminhoFull])
+      .catch((e) => console.warn('Órfã não removida após falha no envio da miniatura:', caminhoFull, e));
     throw err;
   }
 
@@ -83,7 +87,11 @@ export async function getSignedUrls(paths) {
   if (error) throw new Error('Falha ao carregar as imagens: ' + error.message);
 
   for (const item of data || []) {
-    if (!item.signedUrl) continue; // arquivo sumiu do bucket
+    // Sem signedUrl NÃO significa "arquivo apagado": pode ser sessão expirada
+    // ou RLS negando agora. Esta distinção é invariante do app — a ausência de
+    // um caminho neste Map nunca pode ser usada para apagar a referência
+    // gravada no jsonb, senão uma sessão vencida apagaria imagens boas.
+    if (!item.signedUrl) continue;
     cacheUrls.set(item.path, { url: item.signedUrl, expiraEm: agora + TTL_SEGUNDOS * 1000 });
     resultado.set(item.path, item.signedUrl);
   }
@@ -93,6 +101,16 @@ export async function getSignedUrls(paths) {
 /** Força a próxima leitura a pedir URL nova (expirou, ou o arquivo mudou). */
 export function invalidateSignedUrl(path) {
   cacheUrls.delete(path);
+}
+
+/**
+ * Esvazia o cache inteiro — para o logout. As URLs assinadas continuam
+ * válidas no servidor por até 1 h depois de emitidas, então guardá-las em
+ * memória depois que o usuário saiu não tem serventia e mantém links vivos
+ * para o conteúdo dele numa sessão que já acabou.
+ */
+export function clearSignedUrlCache() {
+  cacheUrls.clear();
 }
 
 /**

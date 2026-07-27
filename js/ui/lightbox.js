@@ -99,7 +99,9 @@ export function fecharLightbox() {
   if (!el || !el.overlay) return;
   el.overlay.classList.remove('active');
   el.overlay.inert = true; // tira o foco de dentro antes de devolvê-lo
-  el.img.src = '';
+  // removeAttribute, não src = '': string vazia resolve para a URL da própria
+  // página, que o navegador então baixa como se fosse imagem e falha
+  el.img.removeAttribute('src');
   el.img.style.aspectRatio = '';
   itens = [];
   // Devolve o foco a quem abriu, se ainda estiver na página

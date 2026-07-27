@@ -34,9 +34,16 @@ import {
   removeTradeImages,
   getSignedUrls,
   invalidateSignedUrl,
-  removeAllUserImages
+  removeAllUserImages,
+  clearSignedUrlCache
 } from './js/services/trade-images.js';
-import { initLightbox, abrirLightbox, lightboxEstaAberto, lightboxTratouEsc } from './js/ui/lightbox.js';
+import {
+  initLightbox,
+  abrirLightbox,
+  fecharLightbox,
+  lightboxEstaAberto,
+  lightboxTratouEsc
+} from './js/ui/lightbox.js';
 
 // ==========================================================================
 // CONSTANTES & ESTADO
@@ -259,6 +266,14 @@ function countTradesInState() {
 }
 
 function teardownAuthenticatedApp() {
+  // O modal e o lightbox são IRMÃOS de #app-shell no HTML, então esconder o
+  // shell na volta para a tela de auth não os fecha: ficariam por cima do
+  // login, com os objectURL das imagens escolhidas vazando até o reload — e
+  // um Salvar ali dispararia erro, porque currentUser já é null.
+  fecharLightbox();
+  closeTradeModal();
+  // URLs assinadas do usuário que saiu não servem para o próximo
+  clearSignedUrlCache();
   unsubscribeRealtime(realtimeChan);
   realtimeChan = null;
   currentUser  = null;
@@ -920,10 +935,16 @@ function renderModalImagens() {
         .then((mapa) => {
           const url = mapa.get(caminho);
           // Caminho ausente no mapa não é 'apagado': pode ser sessão expirada
-          // ou RLS negando por ora. Deixamos a miniatura no estado de
-          // carregamento em vez de tratar como erro — nunca removemos a
-          // referência por causa disso.
-          if (!url) return;
+          // ou RLS negando por ora. Nunca removemos a referência por causa
+          // disso — mas também não deixamos a miniatura pulsando para sempre:
+          // o estado de carregamento sai (senão o overlay animado cobre o
+          // botão de remover e a imagem fica impossível de tirar da faixa) e
+          // o motivo vai para o console.
+          if (!url) {
+            fig.classList.remove('carregando');
+            console.warn('Sem URL assinada para a miniatura (sessão expirada ou acesso negado):', caminho);
+            return;
+          }
           img.src = url;
           img.addEventListener('load', () => fig.classList.remove('carregando'), { once: true });
         })
@@ -1059,7 +1080,10 @@ async function resolverImagensDoModal() {
       subidasAgora.push({ entrada, item });
     }
   } catch (err) {
-    await removeTradeImages(subidasAgora.map((s) => s.item)).catch(() => {});
+    // Propaga o erro original do envio, mas registra a falha da limpeza: sem
+    // este aviso, as imagens desta rodada ficam no bucket sem dono e sem pista
+    await removeTradeImages(subidasAgora.map((s) => s.item))
+      .catch((e) => console.warn('Imagens desta rodada não removidas após falha no envio:', e));
     throw err;
   } finally {
     setSubmitLoading(true);
@@ -1233,11 +1257,14 @@ async function createTrade({ asset, type, pnl, date, notes, images, riskReward }
 }
 
 async function editTrade(id, fields) {
-  // Localiza o trade no estado para preservar blockIndex/position
-  let foundBlock = null, foundIdx = -1;
+  // Confere que a operação existe no estado ANTES de gravar. A posição achada
+  // aqui é descartável e por isso não é guardada: o Realtime substitui
+  // state.blocks inteiro (ver setupRealtime), então um índice colhido agora
+  // pode apontar para outra operação depois do await — ver a busca refeita
+  // mais abaixo.
+  let foundBlock = null;
   for (const [bIdx, list] of Object.entries(state.blocks)) {
-    const idx = list.findIndex(t => t.id === id);
-    if (idx !== -1) { foundBlock = bIdx; foundIdx = idx; break; }
+    if (list.some(t => t.id === id)) { foundBlock = bIdx; break; }
   }
   if (foundBlock === null) {
     // Lança em vez de tratar aqui (toast + return): se voltasse em silêncio,
@@ -1247,11 +1274,22 @@ async function editTrade(id, fields) {
     throw new Error('Operação não encontrada.');
   }
   const updated = await updateTrade(id, fields);
-  // Mantém block/position que já estavam (não foram alterados pelo update)
-  state.blocks[foundBlock][foundIdx] = {
-    ...state.blocks[foundBlock][foundIdx],
-    ...updated
-  };
+
+  // Busca REFEITA depois do await, e por id — não por índice guardado antes.
+  // Um evento de Realtime (outra aba, outro dispositivo, ou o eco da própria
+  // escrita) troca o objeto state.blocks durante a espera; um índice antigo
+  // apontaria para uma operação vizinha, que seria sobrescrita com os dados
+  // desta — card duplicado na tela e outro sumido, até o próximo evento.
+  // Se a operação já não estiver no estado, o Realtime que a removeu tem a
+  // versão mais nova: não há o que reconciliar aqui.
+  for (const lista of Object.values(state.blocks)) {
+    const idx = lista.findIndex(t => t.id === id);
+    if (idx === -1) continue;
+    // `updated` vem de rowToTrade e traz blockIndex/position do banco, que é
+    // a verdade; por ser o último spread, é ele quem vence — de propósito.
+    lista[idx] = { ...lista[idx], ...updated };
+    break;
+  }
   renderApp();
 }
 
@@ -1531,17 +1569,24 @@ async function resetApp() {
   showLoading(true);
   try {
     await deleteAllTrades(currentUser.id);
+
+    // A purga vem logo depois do delete, ANTES de updatePreferences: as duas
+    // operações seguintes podem falhar, e se a purga estivesse atrás delas o
+    // usuário ficaria com o banco zerado e o bucket cheio — sem nenhuma
+    // operação restante que apontasse para esses arquivos, ou seja, sem como
+    // limpá-los depois pelo app.
+    // Ela também não vem ANTES do delete, pelo mesmo motivo da exclusão de uma
+    // operação: se a limpeza rodasse primeiro e o delete falhasse, sobrariam
+    // operações vivas apontando para arquivos já apagados.
+    // O .catch garante que uma falha na limpeza não vire o toast de erro do
+    // reset — órfão no bucket é o mal menor, e vai só para o console.
+    await removeAllUserImages(currentUser.id)
+      .catch((e) => console.warn('Imagens não removidas no reset:', e));
+
     await updatePreferences(currentUser.id, { activeBlockIndex: 1 });
     state.blocks = { '1': [] };
     state.activeBlockIndex = 1;
     renderApp();
-
-    // Depois de o banco já estar zerado, pelo mesmo motivo do Step 1: se a
-    // limpeza rodasse antes e o delete falhasse, sobrariam operações vivas
-    // apontando para arquivos já apagados. O .catch aqui dentro garante que
-    // uma falha na limpeza não vire o toast de erro do reset — só console.warn.
-    await removeAllUserImages(currentUser.id)
-      .catch((e) => console.warn('Imagens não removidas no reset:', e));
 
     toast('Banco de dados redefinido.', 'success');
   } catch (err) {
@@ -1811,6 +1856,10 @@ function showLoading(show) {
 }
 
 function setSubmitLoading(loading, rotulo = 'Salvando…') {
+  // Ligar controle é sempre permitido; soltar, só quando não há salvamento
+  // em voo — ou quando é o próprio salvamento que está soltando (ele desliga
+  // salvandoOperacao antes de chamar com loading:false).
+  const podeSoltar = loading || !salvandoOperacao;
   if (DOM.btnSubmitModal) {
     // Enquanto salvandoOperacao for true, só quem desligou a flag (o
     // próprio handleSaveTrade, no fim do seu try/finally) pode reabilitar
@@ -1823,13 +1872,21 @@ function setSubmitLoading(loading, rotulo = 'Salvando…') {
     // perdedor da corrida vira órfão no Storage). Quem manda no botão
     // durante um salvamento é o próprio salvamento, não uma exclusão que
     // passou por perto.
-    if (loading || !salvandoOperacao) {
+    if (podeSoltar) {
       DOM.btnSubmitModal.disabled = loading;
       DOM.btnSubmitModal.textContent = loading ? rotulo : 'Salvar Operação';
     }
   }
-  if (DOM.btnDeleteTrade) DOM.btnDeleteTrade.disabled = loading;
-  if (DOM.btnAddImage)    DOM.btnAddImage.disabled = loading || modalImagens.length >= MAX_IMAGENS_POR_TRADE;
+  // Os outros dois obedecem à MESMA guarda, e não por simetria: reabilitar
+  // "Adicionar imagens" no meio de um envio deixa o usuário escolher um
+  // arquivo que já não entra no snapshot tirado por resolverImagensDoModal —
+  // ele seria descartado em silêncio, com o objectURL revogado no fechamento.
+  // E "Excluir" reaberto durante o envio permite apagar a operação que está
+  // sendo gravada.
+  if (podeSoltar) {
+    if (DOM.btnDeleteTrade) DOM.btnDeleteTrade.disabled = loading;
+    if (DOM.btnAddImage)    DOM.btnAddImage.disabled = loading || modalImagens.length >= MAX_IMAGENS_POR_TRADE;
+  }
   // Cancelar/X NÃO são tocados aqui: esta função também é chamada por
   // handleDeleteTrade (disparável pela lixeira da lista, fora do modal) —
   // ver bloquearFechamentoModal(), que usa a flag dedicada salvandoOperacao.
