@@ -1117,6 +1117,27 @@ async function resolverImagensDoModal() {
 // ==========================================================================
 // MODAL CRUD
 // ==========================================================================
+/**
+ * Ajusta o campo de valor ao tipo escolhido. No 0x0 o resultado é sempre 0,00 —
+ * o campo trava para não existir empate com número. O que o usuário já tinha
+ * digitado fica no dataset e volta quando ele sai do 0x0; sem isso, mexer no
+ * seletor sem querer apagaria o valor.
+ *
+ * Idempotente de propósito: o valor só é guardado na PRIMEIRA travada
+ * (`!disabled`), senão chamar duas vezes seguidas salvaria o "0" por cima do
+ * número real e o usuário nunca mais o veria.
+ */
+function aplicarModoResultado(tipo) {
+  if (tipo === 'zero') {
+    if (!DOM.tradePnL.disabled) DOM.tradePnL.dataset.valorAntesDoZero = DOM.tradePnL.value;
+    DOM.tradePnL.value = '0';
+    DOM.tradePnL.disabled = true;
+  } else if (DOM.tradePnL.disabled) {
+    DOM.tradePnL.value = DOM.tradePnL.dataset.valorAntesDoZero ?? '';
+    DOM.tradePnL.disabled = false;
+  }
+}
+
 function openTradeModal(trade = null, slotIndex = null) {
   if (trade === null) {
     DOM.modalTitle.textContent = `Registrar Operação #${String(slotIndex + 1).padStart(2, '0')}`;
@@ -1147,6 +1168,12 @@ function openTradeModal(trade = null, slotIndex = null) {
     imagensOriginaisDoModal = (trade.images || []).slice();
     DOM.btnDeleteTrade.style.display = 'inline-flex';
   }
+  // `form.reset()` não desfaz `disabled` nem limpa dataset: sem este
+  // destravamento, fechar o modal num 0x0 deixaria o campo travado na próxima
+  // operação, e o valor guardado vazaria de uma operação para a outra.
+  DOM.tradePnL.disabled = false;
+  delete DOM.tradePnL.dataset.valorAntesDoZero;
+  aplicarModoResultado(DOM.tradeType.value);
   DOM.tradeModal.classList.add('active');
   DOM.tradeAsset.focus();
 }
@@ -1187,7 +1214,8 @@ async function handleSaveTrade() {
   const rrDigitado = DOM.tradeRR.validity?.badInput === true;
   const riskReward = rrBruto === '' ? null : parseFloat(rrBruto);
 
-  if (!asset || isNaN(rawPnl) || !date) {
+  // No 0x0 o valor não é digitado — vem travado em 0 —, então não é obrigatório
+  if (!asset || !date || (type !== 'zero' && isNaN(rawPnl))) {
     toast('Preencha todos os campos obrigatórios.', 'error');
     return;
   }
@@ -1199,7 +1227,10 @@ async function handleSaveTrade() {
     toast('O risco/retorno deve ser um número entre 0,1 e 999. Deixe em branco se não quiser informar.', 'error');
     return;
   }
-  const pnl = type === 'stop' ? -Math.abs(rawPnl) : Math.abs(rawPnl);
+  // 0x0 é sempre 0; nos outros, o tipo é que dá o sinal do valor absoluto digitado
+  const pnl = type === 'zero' ? 0
+            : type === 'stop' ? -Math.abs(rawPnl)
+            : Math.abs(rawPnl);
 
   // Retrato de imagensOriginaisDoModal ANTES de qualquer await: o overlay do
   // modal só bloqueia o mouse, não o teclado — sem focus trap, um Tab até a
@@ -1422,6 +1453,7 @@ function setupEventListeners() {
     }
   });
   DOM.tradeForm.addEventListener('submit', (e) => { e.preventDefault(); handleSaveTrade(); });
+  DOM.tradeType.addEventListener('change', () => aplicarModoResultado(DOM.tradeType.value));
   if (DOM.btnAddImage) {
     DOM.btnAddImage.addEventListener('click', () => DOM.tradeImageInput.click());
   }
