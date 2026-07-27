@@ -575,7 +575,6 @@ function renderGridView(trades) {
           <div class="slot-pnl">${trade.pnl >= 0 ? '+' : ''} ${formatCurrency(trade.pnl)}</div>
         </div>
         <div class="slot-footer">
-          <span class="slot-index">#${String(i + 1).padStart(2, '0')}</span>
           <span class="slot-date">${formatDateBR(trade.date)}</span>
         </div>
       `;

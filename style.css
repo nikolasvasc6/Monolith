@@ -1029,7 +1029,7 @@ body:has(.modal-overlay.active) .badge-dot {
      Bovespa Noturno") — sem isto, um nome comprido quebra em 2 linhas e
      empurra a altura do header, e como o card agora tem overflow:hidden
      (ver .grid-slot), o excesso seria cortado silenciosamente, podendo
-     esconder o rodapé (índice/data) em vez de só truncar o nome. Uma linha
+     esconder o rodapé (a data) em vez de só truncar o nome. Uma linha
      com reticências avisa que há mais texto; min-width:0 é o que permite
      este item flexível encolher abaixo da largura do próprio conteúdo
      (senão o white-space:nowrap "empurra" o flex item e nada é cortado). */
@@ -1065,12 +1065,6 @@ body:has(.modal-overlay.active) .badge-dot {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-}
-
-.slot-index {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  font-weight: 600;
 }
 
 .slot-date {
