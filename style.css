@@ -60,6 +60,12 @@
      referência — a proporção do card (216:259) e a da faixa de imagem
      (216:141) saem do mesmo print. */
   --largura-card-trade: 216px;
+  --gap-card-trade: 12px;
+  /* Teto de colunas do bloco. 5 é escolha de layout, não consequência da tela:
+     o bloco tem 35 operações, então 5 colunas fecham 7 linhas exatas, sem
+     sobra na última. Vira um max-width no .trades-grid — o card NÃO estica
+     para preencher a faixa; a sobra vira margem. */
+  --colunas-card-trade: 5;
 
   /* Shadow & Blur */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -846,14 +852,23 @@ body:has(.modal-overlay.active) .badge-dot {
   /* Largura FIXA de 216px por card, e não um número fixo de colunas em 1fr.
      Com `repeat(5, 1fr)` o card esticava junto com a janela — em 1920 cada um
      ia a 307px de largura por 368 de altura, e o bloco virava uma parede de
-     cards enormes. Agora quem manda é a largura do card (a mesma do print de
-     referência); o `auto-fill` decide quantas cabem — medido: 6 colunas em
-     1920, 5 em 1600, 4 em 1366 —, o que dispensa breakpoint de coluna, e o
-     `justify-content` devolve a sobra às margens em vez de inchar o card. */
+     cards enormes. Aqui quem manda é a largura do card (a mesma do print de
+     referência) e o `auto-fill` decide quantas cabem; o `justify-content`
+     devolve a sobra às margens em vez de inchar o card.
+
+     O teto de 5 colunas vem do max-width abaixo, NÃO de um `repeat(5, ...)`:
+     travar a largura da faixa mantém o card em 216px, enquanto fixar a
+     contagem de colunas o faria esticar de novo. Sem esse teto o auto-fill
+     abria 6 colunas em 1920 (e mais em telas maiores), deixando o bloco de 35
+     com uma última linha pela metade. Com 5, são 7 linhas cheias. */
   grid-template-columns: repeat(auto-fill, minmax(0, var(--largura-card-trade)));
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 40px;
+  gap: var(--gap-card-trade);
+  max-width: calc(
+    var(--colunas-card-trade) * var(--largura-card-trade) +
+    (var(--colunas-card-trade) - 1) * var(--gap-card-trade)
+  );
+  margin: 0 auto 40px;
 }
 
 /* Individual grid slots */
@@ -2064,8 +2079,10 @@ textarea:focus {
    ========================================================================== */
 /* O .trades-grid não tem degrau por número de colunas em breakpoint nenhum: o
    `auto-fill` da regra base já reduz as colunas sozinho conforme a largura, e
-   um degrau desses só voltaria a esticar o card. O único ajuste é o de ≤1100px
-   logo abaixo, e ele mexe na largura do card, não na contagem de colunas. */
+   um degrau desses só voltaria a esticar o card. O teto de 5 colunas da regra
+   base também não é degrau — é um max-width único, que vale em toda largura e
+   só chega a morder acima de ~1180px de faixa útil. O único ajuste aqui é o de
+   ≤1100px logo abaixo, e ele mexe na largura do card, não na contagem. */
 
 @media (max-width: 1100px) {
   .kpi-grid {

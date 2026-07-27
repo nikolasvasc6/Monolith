@@ -124,6 +124,13 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   janela (em 1920 ia a 307×368) e o bloco virava uma parede de cards enormes. Abaixo de
   1100px a coluna volta a ser fluida, porque aí a largura fixa desperdiçaria faixas
   inteiras. **Não reintroduza degrau de número de colunas por breakpoint.**
+- **O grid para em 5 colunas, e o teto é um `max-width`, não um `repeat(5, ...)`.**
+  São 35 operações por bloco, então 5 colunas fecham **7 linhas cheias**, sem última
+  linha pela metade — daí o número. O teto sai de `--colunas-card-trade` e vale em
+  qualquer tela (medido: 5 colunas tanto em 1920 quanto em 2560; sem ele o `auto-fill`
+  abria 6 em 1920). Travar a **largura da faixa** é o que preserva o card em 216px:
+  fixar a *contagem de colunas* o faria esticar de novo, que é o defeito de jul/2026.
+  Se um dia `TRADES_PER_BLOCK` mudar, revise o 5 junto — os dois números andam casados.
 - **Todo texto de UI e mensagens de erro em pt-BR.**
 - **Toda I/O de dados passa pelos serviços** (`js/services/*`) — não chame `supabase`
   diretamente do `app.js`.
