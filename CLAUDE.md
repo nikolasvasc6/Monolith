@@ -50,7 +50,7 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 ## Modelo de dados (Postgres / Supabase)
 
 - **`trades`** — `id` (uuid), `user_id`, `block_index` (≥1), `position` (0–34), `asset`,
-  `type` (`'take'` | `'stop'`), `pnl` `numeric(18,2)`, `trade_date`, `notes`,
+  `type` (`'take'` | `'stop'` | `'zero'`), `pnl` `numeric(18,2)`, `trade_date`, `notes`,
   `images` (jsonb, no máximo 10 — ver "Imagens da operação" abaixo),
   `risk_reward` (`numeric(6,2)`, **nullable**: guarda só o lado do retorno, normalizado
   para risco 1, então `3` é 3:1; nulo quer dizer "não informado", nunca zero), timestamps.
@@ -70,10 +70,18 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   Posições são contíguas (0..n-1): excluir renumera as seguintes no banco, e a autocura
   no carregamento (`healBlockLayout`) reflui excedentes de blocos com mais de 35 para o
   bloco seguinte. Importar entra sempre **depois** do último bloco usado.
-- **`take` / `stop`:** `take` = lucro (pnl positivo), `stop` = prejuízo (pnl gravado
-  negativo). No modal o usuário digita o **valor absoluto**; o sinal vem do tipo.
+- **`take` / `stop` / `zero`:** `take` = lucro (pnl positivo), `stop` = prejuízo (pnl
+  gravado negativo), `zero` = **0x0**, operação encerrada no preço de entrada, com pnl
+  sempre 0. No modal o usuário digita o **valor absoluto**; o sinal vem do tipo. No 0x0 o
+  campo de valor **trava em 0,00**, e o que estava digitado volta se ele trocar o tipo de
+  novo (guardado em `dataset.valorAntesDoZero`) — `form.reset()` não desfaz `disabled`,
+  então `openTradeModal` destrava sempre antes de reaplicar o modo.
 - **KPIs:** operações registradas, resultado acumulado, win rate, média por operação. O
-  gráfico é a **soma acumulada** do P&L do bloco.
+  gráfico é a **soma acumulada** do P&L do bloco. O **0x0 fica fora do denominador do win
+  rate** (`takes ÷ (total − zeros)`) — empate não é acerto nem erro —, mas continua
+  contando nas operações registradas e na média por operação, porque ocupou um slot do
+  bloco. Bloco sem nenhuma operação decidida mostra `—`, não `0%`, e saldo/média
+  exatamente zero são rotulados "neutro", sem cor.
 - **Calculadoras de risco** (não persistem nada): Forex (lote por pip), Futuros EUA/CME,
   B3 (WIN/IND/WDO/DOL) e BTC CFD. Todas dimensionam a posição **arredondando para baixo**
   para nunca ultrapassar o risco definido.
