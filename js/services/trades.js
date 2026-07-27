@@ -73,9 +73,11 @@ export async function updateTrade(tradeId, { asset, type, pnl, date, notes, bloc
   if (images     !== undefined) payload.images      = images;
   if (blockIndex !== undefined) payload.block_index = blockIndex;
   if (position   !== undefined) payload.position    = position;
-  // Mesmo guard do images, e pela mesma razão: renumeração e autocura chamam
-  // sem falar de R:R, e passar a chave sempre apagaria o que já está gravado.
-  // Aqui `null` é valor legítimo — é como o usuário limpa o campo
+  // Mesmo guard do images: quem não fala de R:R não pode apagar o que está
+  // gravado. Hoje o único chamador é editTrade, que sempre passa o campo (a
+  // renumeração e a autocura usam updateTradePlacements, não esta função) —
+  // o guard é defesa para o próximo chamador, não para um caso atual.
+  // `null` aqui é valor legítimo: é como o usuário limpa o campo.
   if (riskReward !== undefined) payload.risk_reward = normalizaRiskReward(riskReward);
 
   const { data, error } = await supabase

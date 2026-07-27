@@ -948,14 +948,26 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label for="trade-rr">Risco / Retorno (opcional)</label>
-                <div class="input-with-icon input-with-sufixo">
-                  <i data-lucide="target"></i>
-                  <input type="number" step="0.1" min="0.1" max="999" id="trade-rr" placeholder="Ex: 3">
-                  <span class="input-sufixo" aria-hidden="true">: 1</span>
-                </div>
+            </div>
+
+            <!-- Fora dos .form-row de propósito: acima de 1000px eles viram
+                 display:contents e este campo entra na mesma fileira dos
+                 outros quatro; abaixo disso, como filho direto, ocupa a
+                 largura inteira em vez de sobrar meia coluna vazia ao lado. -->
+            <div class="form-group form-group-rr">
+              <label for="trade-rr">Risco / Retorno (opcional)</label>
+              <div class="input-with-icon input-with-sufixo">
+                <i data-lucide="target"></i>
+                <!-- step de 0.01 porque a coluna é numeric(6,2) e R:R de
+                     1,75:1 ou 2,25:1 são comuns; com step de 0.1 o navegador
+                     recusaria esses valores antes de o app ver o formulário -->
+                <input type="number" step="0.01" min="0.1" max="999" id="trade-rr"
+                       placeholder="Ex: 3" aria-describedby="trade-rr-ajuda">
+                <span class="input-sufixo" aria-hidden="true">: 1</span>
               </div>
+              <span id="trade-rr-ajuda" class="sr-only">
+                Informe apenas o lado do retorno; o risco é sempre 1. Por exemplo, 3 significa 3 para 1.
+              </span>
             </div>
           </div>
 

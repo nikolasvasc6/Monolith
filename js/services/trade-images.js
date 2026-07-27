@@ -35,8 +35,13 @@ export async function uploadTradeImage(userId, file) {
     // O erro que sobe é o do upload da thumb, não o da limpeza — mas a falha
     // da limpeza precisa deixar rastro: é o único sinal de que nasceu um
     // órfão, e sem ele um bucket inflado não tem como ser diagnosticado.
-    await supabase.storage.from(BUCKET).remove([caminhoFull])
-      .catch((e) => console.warn('Órfã não removida após falha no envio da miniatura:', caminhoFull, e));
+    // ATENÇÃO: o SDK do Storage RESOLVE com { data, error } e nunca rejeita —
+    // até falha de rede vem dentro de `error`. Um .catch() aqui seria código
+    // morto e a falha voltaria a ser engolida em silêncio.
+    const { error: erroLimpeza } = await supabase.storage.from(BUCKET).remove([caminhoFull]);
+    if (erroLimpeza) {
+      console.warn('Órfã não removida após falha no envio da miniatura:', caminhoFull, erroLimpeza);
+    }
     throw err;
   }
 

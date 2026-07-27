@@ -1020,7 +1020,6 @@ body:has(.modal-overlay.active) .badge-dot {
   min-width: 0;
 }
 
-
 .slot-body {
   margin: 8px 0;
 }
@@ -1311,7 +1310,7 @@ body:has(.modal-overlay.active) .badge-dot {
 @media (min-width: 1000px) {
   .modal-fields {
     display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr 0.75fr;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr 0.9fr;
     gap: 0 16px;
   }
   /* As linhas somem como caixa e seus campos entram direto no grid acima */
@@ -1334,9 +1333,22 @@ body:has(.modal-overlay.active) .badge-dot {
 /* Sufixo fixo ": 1" do campo de R:R — o usuário digita só o lado do retorno.
    É decoração: fica fora do fluxo e some para leitor de tela (aria-hidden),
    já que a label do campo sozinha não deixa dúvida do que preencher. */
+/* Escondido na tela, disponível para leitor de tela */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .input-with-sufixo .input-sufixo {
   position: absolute;
-  right: 14px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
@@ -1348,7 +1360,7 @@ body:has(.modal-overlay.active) .badge-dot {
 /* Abre espaço para o sufixo e esconde as setinhas do input number, que
    roubariam justamente esse canto */
 .input-with-sufixo input[type="number"] {
-  padding-right: 42px;
+  padding-right: 32px;
   -moz-appearance: textfield;
   appearance: textfield;
 }

@@ -50,7 +50,10 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 ## Modelo de dados (Postgres / Supabase)
 
 - **`trades`** — `id` (uuid), `user_id`, `block_index` (≥1), `position` (0–34), `asset`,
-  `type` (`'take'` | `'stop'`), `pnl` `numeric(18,2)`, `trade_date`, `notes`, timestamps.
+  `type` (`'take'` | `'stop'`), `pnl` `numeric(18,2)`, `trade_date`, `notes`,
+  `images` (jsonb, no máximo 10 — ver "Imagens da operação" abaixo),
+  `risk_reward` (`numeric(6,2)`, **nullable**: guarda só o lado do retorno, normalizado
+  para risco 1, então `3` é 3:1; nulo quer dizer "não informado", nunca zero), timestamps.
   Índice **único** em `(user_id, block_index, position)` — garante no banco o limite de
   35 por bloco (estado defasado de outra aba/dispositivo não consegue gravar uma 36ª).
 - **`user_preferences`** — `user_id` (PK), `active_block_index`, `theme` (`'dark'`|`'light'`),
@@ -112,6 +115,11 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 - **Todo texto de UI e mensagens de erro em pt-BR.**
 - **Toda I/O de dados passa pelos serviços** (`js/services/*`) — não chame `supabase`
   diretamente do `app.js`.
+- **Chamada ao SDK do Storage devolve `{ data, error }` e nunca rejeita** — inclusive em
+  falha de rede, que vem dentro de `error`. Um `.catch()` nela é **código morto** e a
+  falha some sem rastro; desestruture `error` e trate. Prefira passar pelos wrappers de
+  `js/services/trade-images.js`, que convertem em `throw` — foi ao chamar o Storage cru
+  que um log de órfã virou linha morta.
 - **Estado mutável de módulo lido depois de um `await` precisa de retrato antes do `try`.**
   Foi o defeito mais caro deste app: cinco perdas de dado graves na feature de imagens,
   todas do mesmo formato — `modalImagens`, `imagensOriginaisDoModal` e índices de

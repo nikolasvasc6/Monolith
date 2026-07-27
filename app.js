@@ -1011,7 +1011,12 @@ function renderModalImagens() {
 
   // Chegou no teto: não dá para escolher mais
   if (DOM.btnAddImage) {
-    DOM.btnAddImage.disabled = modalImagens.length >= MAX_IMAGENS_POR_TRADE;
+    // salvandoOperacao entra aqui, e não só em setSubmitLoading: esta função
+    // roda a partir do X de remover miniatura, alcançável por teclado mesmo
+    // com pointer-events:none. Sem a flag, remover uma miniatura durante o
+    // envio reabriria "Adicionar imagens", e o arquivo escolhido nessa janela
+    // ficaria fora do snapshot — descartado em silêncio.
+    DOM.btnAddImage.disabled = salvandoOperacao || modalImagens.length >= MAX_IMAGENS_POR_TRADE;
     DOM.btnAddImage.textContent = '';
     DOM.btnAddImage.innerHTML = modalImagens.length >= MAX_IMAGENS_POR_TRADE
       ? '<i data-lucide="image-off"></i> Limite de 10 imagens atingido'
@@ -1076,6 +1081,10 @@ async function resolverImagensDoModal() {
       if (entrada.tipo !== 'nova') continue;
       feitas++;
       setSubmitLoading(true, `Enviando ${feitas} de ${novas.length}…`);
+      // Um logout em outra aba zera currentUser no meio do laço; sem isto o
+      // que chegaria ao toast seria um TypeError em inglês, vindo de dentro
+      // do serviço, no lugar de uma frase que explica o que houve
+      if (!currentUser) throw new Error('Sua sessão foi encerrada. A operação não foi salva.');
       const item = await uploadTradeImage(currentUser.id, entrada.file);
       subidasAgora.push({ entrada, item });
     }
@@ -1171,12 +1180,20 @@ async function handleSaveTrade() {
   const date = DOM.tradeDate.value;
   const notes = DOM.tradeNotes.value.trim();
   // Campo opcional: em branco vira null. O serviço normaliza de novo, mas
-  // avisar aqui é o que dá mensagem de campo em vez de erro do Postgres
+  // avisar aqui é o que dá mensagem de campo em vez de erro do Postgres.
+  // Atenção: input[type=number] devolve '' também para conteúdo que ele não
+  // consegue interpretar ("2.", "3e"), e aí o vazio seria confundido com
+  // "não quis informar" — por isso o aviso separado logo abaixo.
   const rrBruto = DOM.tradeRR.value.trim();
-  const riskReward = rrBruto === '' ? null : parseFloat(rrBruto.replace(',', '.'));
+  const rrDigitado = DOM.tradeRR.validity?.badInput === true;
+  const riskReward = rrBruto === '' ? null : parseFloat(rrBruto);
 
   if (!asset || isNaN(rawPnl) || !date) {
     toast('Preencha todos os campos obrigatórios.', 'error');
+    return;
+  }
+  if (rrDigitado) {
+    toast('O risco/retorno não parece um número. Use só o lado do retorno, como 3 ou 2,5.', 'error');
     return;
   }
   if (riskReward !== null && (!Number.isFinite(riskReward) || riskReward <= 0 || riskReward > 999)) {
@@ -1570,6 +1587,13 @@ async function resetApp() {
   try {
     await deleteAllTrades(currentUser.id);
 
+    // A tela limpa aqui, antes da purga: são duas linhas síncronas que não
+    // podem falhar, e deixá-las para depois faria o diário seguir populado
+    // durante a purga paginada inteira, parecendo travado.
+    state.blocks = { '1': [] };
+    state.activeBlockIndex = 1;
+    renderApp();
+
     // A purga vem logo depois do delete, ANTES de updatePreferences: as duas
     // operações seguintes podem falhar, e se a purga estivesse atrás delas o
     // usuário ficaria com o banco zerado e o bucket cheio — sem nenhuma
@@ -1584,9 +1608,6 @@ async function resetApp() {
       .catch((e) => console.warn('Imagens não removidas no reset:', e));
 
     await updatePreferences(currentUser.id, { activeBlockIndex: 1 });
-    state.blocks = { '1': [] };
-    state.activeBlockIndex = 1;
-    renderApp();
 
     toast('Banco de dados redefinido.', 'success');
   } catch (err) {
@@ -1842,7 +1863,10 @@ function formatDateBR(s) {
 function formatRR(valor) {
   const n = Number(valor);
   if (!Number.isFinite(n)) return '';
-  return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, '').replace('.', ',');
+  // /0+$/ e não /0$/: um único replace deixaria "3,0" se o toFixed terminasse
+  // em dois zeros. Hoje é inalcançável (tudo passa pelo arredondamento de 2
+  // casas), mas o custo de blindar é um caractere.
+  return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace('.', ',');
 }
 
 function escapeHTML(str) {
