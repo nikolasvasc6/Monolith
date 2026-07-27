@@ -486,13 +486,19 @@ function computeStats(trades) {
   const count = trades.length;
   const accumulated = trades.reduce((s, t) => s + t.pnl, 0);
   const winTrades = trades.filter(t => t.pnl > 0).length;
-  const winRate = count > 0 ? Math.round((winTrades / count) * 100) : 0;
+  // O 0x0 não é acerto nem erro: sai do denominador do win rate, mas segue
+  // contando nas operações registradas e na média por operação — ele ocupou
+  // um slot do bloco e foi uma operação executada.
+  const zeroTrades = trades.filter(t => t.type === 'zero').length;
+  const decided = count - zeroTrades;
+  // null, não 0: bloco sem operação decidida não tem taxa de acerto para mostrar
+  const winRate = decided > 0 ? Math.round((winTrades / decided) * 100) : null;
   const average = count > 0 ? (accumulated / count) : 0;
-  return { count, accumulated, winTrades, winRate, average };
+  return { count, accumulated, winTrades, zeroTrades, decided, winRate, average };
 }
 
 function updateKPIs(trades) {
-  const { count, accumulated, winTrades, winRate, average } = computeStats(trades);
+  const { count, accumulated, winTrades, decided, winRate, average } = computeStats(trades);
 
   DOM.valRegistered.textContent = count;
   DOM.subRegistered.textContent = `/ 35 no bloco`;
@@ -508,7 +514,13 @@ function updateKPIs(trades) {
     DOM.valAccumulated.textContent = formatCurrency(accumulated);
     DOM.valAccumulated.className = 'kpi-value';
     DOM.indAccumulated.textContent = 'Sem operações';
-  } else if (accumulated >= 0) {
+  } else if (accumulated === 0) {
+    // Bloco fechado exatamente no zero — com 0x0 no jogo isso acontece de
+    // verdade, e chamar de "positivo" (verde) seria mentira
+    DOM.valAccumulated.textContent = formatCurrency(accumulated);
+    DOM.valAccumulated.className = 'kpi-value';
+    DOM.indAccumulated.textContent = 'Saldo neutro';
+  } else if (accumulated > 0) {
     DOM.valAccumulated.textContent = formatCurrencySigned(accumulated);
     DOM.valAccumulated.className = 'kpi-value pnl-positive';
     DOM.indAccumulated.textContent = 'Saldo positivo';
@@ -520,9 +532,9 @@ function updateKPIs(trades) {
     DOM.kpiAccumulatedCard.classList.add('loss-trend');
   }
 
-  DOM.valWinrate.textContent = `${winRate}%`;
-  if (count > 0) {
-    DOM.indWinrate.textContent = `${winTrades} de ${count} vitoriosos`;
+  DOM.valWinrate.textContent = winRate === null ? '—' : `${winRate}%`;
+  if (decided > 0) {
+    DOM.indWinrate.textContent = `${winTrades} de ${decided} vitoriosos`;
     if (winRate >= 50) DOM.kpiWinrateCard.classList.add('win-trend');
   } else {
     DOM.indWinrate.textContent = 'Taxa de acerto do bloco';
@@ -533,7 +545,11 @@ function updateKPIs(trades) {
     DOM.valAverage.textContent = formatCurrency(average);
     DOM.valAverage.className = 'kpi-value';
     DOM.indAverage.textContent = 'Média de lucro/prejuízo';
-  } else if (average >= 0) {
+  } else if (average === 0) {
+    DOM.valAverage.textContent = formatCurrency(average);
+    DOM.valAverage.className = 'kpi-value';
+    DOM.indAverage.textContent = 'Média neutra';
+  } else if (average > 0) {
     DOM.valAverage.textContent = formatCurrencySigned(average);
     DOM.valAverage.className = 'kpi-value pnl-positive';
     DOM.indAverage.textContent = 'Média positiva';
@@ -546,10 +562,11 @@ function updateKPIs(trades) {
   }
 
   DOM.summaryTradesCount.textContent = count;
-  DOM.summaryWinrate.textContent = `${winRate}%`;
+  DOM.summaryWinrate.textContent = winRate === null ? '—' : `${winRate}%`;
   DOM.summaryPL.textContent = formatCurrency(accumulated);
-  DOM.summaryPL.className = accumulated >= 0 ? 'pnl-positive' : 'pnl-negative';
-  if (count === 0) DOM.summaryPL.className = '';
+  DOM.summaryPL.className = accumulated > 0 ? 'pnl-positive'
+                          : accumulated < 0 ? 'pnl-negative'
+                          : '';
 }
 
 function renderGridView(trades) {
@@ -820,7 +837,7 @@ function getAllTrades() {
 function renderDashboard() {
   if (!domReady) return;
   const trades = getAllTrades();
-  const { count, accumulated, winTrades, winRate, average } = computeStats(trades);
+  const { count, accumulated, winTrades, decided, winRate, average } = computeStats(trades);
 
   // Cards de KPI da conta
   const totalBlocks = Math.max(1, Object.keys(state.blocks).length);
@@ -836,7 +853,13 @@ function renderDashboard() {
     DOM.dashValAccumulated.textContent = formatCurrency(accumulated);
     DOM.dashValAccumulated.className = 'kpi-value';
     DOM.dashIndAccumulated.textContent = 'Sem operações';
-  } else if (accumulated >= 0) {
+  } else if (accumulated === 0) {
+    // Bloco fechado exatamente no zero — com 0x0 no jogo isso acontece de
+    // verdade, e chamar de "positivo" (verde) seria mentira
+    DOM.dashValAccumulated.textContent = formatCurrency(accumulated);
+    DOM.dashValAccumulated.className = 'kpi-value';
+    DOM.dashIndAccumulated.textContent = 'Saldo neutro';
+  } else if (accumulated > 0) {
     DOM.dashValAccumulated.textContent = formatCurrencySigned(accumulated);
     DOM.dashValAccumulated.className = 'kpi-value pnl-positive';
     DOM.dashIndAccumulated.textContent = 'Saldo positivo';
@@ -848,9 +871,9 @@ function renderDashboard() {
     DOM.dashKpiAccumulatedCard.classList.add('loss-trend');
   }
 
-  DOM.dashValWinrate.textContent = `${winRate}%`;
-  if (count > 0) {
-    DOM.dashIndWinrate.textContent = `${winTrades} de ${count} vitoriosos`;
+  DOM.dashValWinrate.textContent = winRate === null ? '—' : `${winRate}%`;
+  if (decided > 0) {
+    DOM.dashIndWinrate.textContent = `${winTrades} de ${decided} vitoriosos`;
     if (winRate >= 50) DOM.dashKpiWinrateCard.classList.add('win-trend');
   } else {
     DOM.dashIndWinrate.textContent = 'Taxa de acerto da conta';
@@ -861,7 +884,11 @@ function renderDashboard() {
     DOM.dashValAverage.textContent = formatCurrency(average);
     DOM.dashValAverage.className = 'kpi-value';
     DOM.dashIndAverage.textContent = 'Média de lucro/prejuízo';
-  } else if (average >= 0) {
+  } else if (average === 0) {
+    DOM.dashValAverage.textContent = formatCurrency(average);
+    DOM.dashValAverage.className = 'kpi-value';
+    DOM.dashIndAverage.textContent = 'Média neutra';
+  } else if (average > 0) {
     DOM.dashValAverage.textContent = formatCurrencySigned(average);
     DOM.dashValAverage.className = 'kpi-value pnl-positive';
     DOM.dashIndAverage.textContent = 'Média positiva';
@@ -875,9 +902,11 @@ function renderDashboard() {
 
   // Resumo do card do gráfico
   DOM.dashSummaryTradesCount.textContent = count;
-  DOM.dashSummaryWinrate.textContent = `${winRate}%`;
+  DOM.dashSummaryWinrate.textContent = winRate === null ? '—' : `${winRate}%`;
   DOM.dashSummaryPL.textContent = formatCurrency(accumulated);
-  DOM.dashSummaryPL.className = count === 0 ? '' : (accumulated >= 0 ? 'pnl-positive' : 'pnl-negative');
+  DOM.dashSummaryPL.className = accumulated > 0 ? 'pnl-positive'
+                              : accumulated < 0 ? 'pnl-negative'
+                              : '';
 
   // Canvas em seção oculta tem tamanho 0 — só desenha com a aba visível;
   // a troca de aba chama renderDashboard() de novo.
