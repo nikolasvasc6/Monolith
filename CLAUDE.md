@@ -76,6 +76,11 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   campo de valor **trava em 0,00**, e o que estava digitado volta se ele trocar o tipo de
   novo (guardado em `dataset.valorAntesDoZero`) — `form.reset()` não desfaz `disabled`,
   então `openTradeModal` destrava sempre antes de reaplicar o modo.
+  **No card do grid o 0x0 mostra o rótulo `0 x 0` no lugar do valor** — `$0.00` se lê como
+  um resultado medido, e o empate é ausência de resultado. **Na tabela o valor continua**
+  (`$0.00`, em neutro), porque lá a coluna *Tipo* já carrega o `0x0` e repetir o rótulo na
+  coluna de resultado deixaria a linha dizendo a mesma coisa duas vezes. (Decisão do
+  Nikolas, 2026-07-27 — o design original mandava só apagar a cor do valor no card.)
 - **KPIs:** operações registradas, resultado acumulado, win rate, média por operação. O
   gráfico é a **soma acumulada** do P&L do bloco. O **0x0 fica fora do denominador do win
   rate** (`takes ÷ (total − zeros)`) — empate não é acerto nem erro —, mas continua

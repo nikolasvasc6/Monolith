@@ -593,7 +593,10 @@ function renderGridView(trades) {
         </div>
         <div class="slot-body">
           ${trade.riskReward ? `<div class="slot-rr">RR: ${formatRR(trade.riskReward)}:1</div>` : ''}
-          <div class="slot-pnl">${trade.type === 'zero' ? '' : trade.pnl >= 0 ? '+' : ''} ${formatCurrency(trade.pnl)}</div>
+          <!-- No 0x0 o card mostra o rótulo, não o valor: "$0.00" se lê como
+               um resultado medido, e o empate é ausência de resultado. Na
+               tabela o valor continua, porque lá a coluna Tipo já diz 0x0. -->
+          <div class="slot-pnl">${trade.type === 'zero' ? '0 x 0' : `${trade.pnl >= 0 ? '+' : ''} ${formatCurrency(trade.pnl)}`}</div>
         </div>
         <div class="slot-footer">
           <span class="slot-date">${formatDateBR(trade.date)}</span>
