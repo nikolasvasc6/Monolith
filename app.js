@@ -553,7 +553,6 @@ function renderGridView(trades) {
         </div>` : ''}
         <div class="slot-header">
           <span class="slot-asset" title="${escapeHTML(trade.asset)}">${escapeHTML(trade.asset)}</span>
-          <span class="slot-type-badge ${trade.type}">${trade.type === 'take' ? 'Take' : 'Stop'}</span>
         </div>
         <div class="slot-body">
           <div class="slot-pnl">${trade.pnl >= 0 ? '+' : ''} ${formatCurrency(trade.pnl)}</div>

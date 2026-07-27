@@ -1020,24 +1020,6 @@ body:has(.modal-overlay.active) .badge-dot {
   min-width: 0;
 }
 
-.slot-type-badge {
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-
-.slot-type-badge.take {
-  background-color: rgba(16, 185, 129, 0.12);
-  color: #34d399;
-}
-
-.slot-type-badge.stop {
-  background-color: rgba(244, 63, 94, 0.12);
-  color: #fb7185;
-}
 
 .slot-body {
   margin: 8px 0;
@@ -2151,14 +2133,6 @@ body.light-theme .nav-item.active :is(i, svg) {
 
 body.light-theme .calc-result-row.highlight strong {
   color: #1d4ed8;
-}
-
-body.light-theme .slot-type-badge.take {
-  color: #059669;
-}
-
-body.light-theme .slot-type-badge.stop {
-  color: #e11d48;
 }
 
 body.light-theme .modal-overlay {
