@@ -26,7 +26,7 @@ create table if not exists public.trades (
   block_index integer not null default 1 check (block_index >= 1),
   position    integer not null default 0 check (position >= 0 and position < 35),
   asset       text not null,
-  type        text not null check (type in ('take','stop')),
+  type        text not null check (type in ('take','stop','zero')),
   pnl         numeric(18,2) not null,
   trade_date  date not null,
   notes       text,
@@ -284,3 +284,15 @@ alter table public.trades
 alter table public.trades drop constraint if exists trades_risk_reward_valido;
 alter table public.trades add constraint trades_risk_reward_valido
   check (risk_reward is null or (risk_reward > 0 and risk_reward <= 999));
+
+-- ----------------------------------------------------------------------------
+-- 10. Resultado 0x0 (zero a zero)
+--     'zero' = operação encerrada no preço de entrada, com pnl sempre 0.
+--     A constraint do type nasce inline no create table lá em cima (o Postgres
+--     a nomeia trades_type_check), e `create table if not exists` não roda de
+--     novo em quem já tem a tabela — por isso o valor novo só chega aos bancos
+--     existentes por este alter. Em banco novo os dois dizem a mesma coisa.
+-- ----------------------------------------------------------------------------
+alter table public.trades drop constraint if exists trades_type_check;
+alter table public.trades add constraint trades_type_check
+  check (type in ('take','stop','zero'));

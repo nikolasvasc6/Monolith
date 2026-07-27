@@ -9,6 +9,10 @@ import { supabase } from '../supabase-client.js';
 
 const TABLE = 'trades';
 
+// Espelha o check `trades_type_check` do banco: tipo fora desta lista derrubaria
+// o insert inteiro do lote no Postgres
+const TIPOS_VALIDOS = new Set(['take', 'stop', 'zero']);
+
 /**
  * Busca TODOS os trades do usuário autenticado, agrupados por block_index.
  * Retorna o mesmo formato usado pelo app legado:
@@ -135,13 +139,16 @@ export async function bulkImportTrades(userId, blocks, blockOffset = 0) {
   const rows = [];
   for (const [blockIdx, list] of Object.entries(blocks || {})) {
     list.forEach((t, position) => {
+      // Tipo desconhecido (arquivo antigo ou adulterado) cai em take, como sempre
+      const tipo = TIPOS_VALIDOS.has(t.type) ? t.type : 'take';
       rows.push({
         user_id:     userId,
         block_index: Number(blockIdx) + blockOffset,
         position,
         asset:       String(t.asset || '').toUpperCase().slice(0, 64),
-        type:        t.type === 'stop' ? 'stop' : 'take',
-        pnl:         Number(t.pnl) || 0,
+        type:        tipo,
+        // 0x0 é sempre zero: JSON adulterado não cria empate de R$ 300
+        pnl:         tipo === 'zero' ? 0 : (Number(t.pnl) || 0),
         trade_date:  t.date || new Date().toISOString().slice(0, 10),
         notes:       t.notes || null,
         // Backup JSON não carrega imagem (elas vivem no Storage)
