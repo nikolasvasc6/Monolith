@@ -268,3 +268,19 @@ create policy "trade_images_delete_own"
   on storage.objects for delete
   using (bucket_id = 'trade-images'
          and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- ----------------------------------------------------------------------------
+-- 9. Risco/retorno da operação (R:R)
+--    Guarda só o lado do retorno, normalizado para risco 1: o valor 3
+--    significa 3:1. É numeric para permitir 2,5:1 e para dar média depois.
+--    Nullable de propósito: as operações cadastradas antes desta coluna não
+--    têm esse dado, e o campo é opcional também nas novas.
+-- ----------------------------------------------------------------------------
+alter table public.trades
+  add column if not exists risk_reward numeric(6,2);
+
+-- Zero ou negativo não é R:R; o teto evita erro de digitação virar "RR: 5000:1".
+-- Aceita null porque o campo é opcional.
+alter table public.trades drop constraint if exists trades_risk_reward_valido;
+alter table public.trades add constraint trades_risk_reward_valido
+  check (risk_reward is null or (risk_reward > 0 and risk_reward <= 999));

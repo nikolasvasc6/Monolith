@@ -137,6 +137,7 @@ function cacheDOM() {
   DOM.tradePnL          = document.getElementById('trade-pnl');
   DOM.tradeDate         = document.getElementById('trade-date');
   DOM.tradeNotes        = document.getElementById('trade-notes');
+  DOM.tradeRR           = document.getElementById('trade-rr');
   DOM.tradeImagesStrip  = document.getElementById('trade-images-strip');
   DOM.tradeImageInput   = document.getElementById('trade-image-input');
   DOM.btnAddImage       = document.getElementById('btn-add-image');
@@ -555,6 +556,7 @@ function renderGridView(trades) {
           <span class="slot-asset" title="${escapeHTML(trade.asset)}">${escapeHTML(trade.asset)}</span>
         </div>
         <div class="slot-body">
+          ${trade.riskReward ? `<div class="slot-rr">RR: ${formatRR(trade.riskReward)}:1</div>` : ''}
           <div class="slot-pnl">${trade.pnl >= 0 ? '+' : ''} ${formatCurrency(trade.pnl)}</div>
         </div>
         <div class="slot-footer">
@@ -1093,6 +1095,7 @@ function openTradeModal(trade = null, slotIndex = null) {
     DOM.tradeType.value = 'take';
     DOM.tradePnL.value = '';
     DOM.tradeNotes.value = '';
+    DOM.tradeRR.value = '';
     resetModalImagens([]);
     imagensOriginaisDoModal = [];
     DOM.btnDeleteTrade.style.display = 'none';
@@ -1105,6 +1108,9 @@ function openTradeModal(trade = null, slotIndex = null) {
     DOM.tradePnL.value = Math.abs(trade.pnl);
     DOM.tradeDate.value = trade.date;
     DOM.tradeNotes.value = trade.notes || '';
+    // Operação sem R:R (antiga ou deixada em branco) abre com o campo vazio,
+    // não com 0 — vazio é o que o usuário digitaria para dizer "não sei"
+    DOM.tradeRR.value = trade.riskReward ?? '';
     resetModalImagens(trade.images || []);
     imagensOriginaisDoModal = (trade.images || []).slice();
     DOM.btnDeleteTrade.style.display = 'inline-flex';
@@ -1140,9 +1146,17 @@ async function handleSaveTrade() {
   const rawPnl = parseFloat(DOM.tradePnL.value);
   const date = DOM.tradeDate.value;
   const notes = DOM.tradeNotes.value.trim();
+  // Campo opcional: em branco vira null. O serviço normaliza de novo, mas
+  // avisar aqui é o que dá mensagem de campo em vez de erro do Postgres
+  const rrBruto = DOM.tradeRR.value.trim();
+  const riskReward = rrBruto === '' ? null : parseFloat(rrBruto.replace(',', '.'));
 
   if (!asset || isNaN(rawPnl) || !date) {
     toast('Preencha todos os campos obrigatórios.', 'error');
+    return;
+  }
+  if (riskReward !== null && (!Number.isFinite(riskReward) || riskReward <= 0 || riskReward > 999)) {
+    toast('O risco/retorno deve ser um número entre 0,1 e 999. Deixe em branco se não quiser informar.', 'error');
     return;
   }
   const pnl = type === 'stop' ? -Math.abs(rawPnl) : Math.abs(rawPnl);
@@ -1162,9 +1176,9 @@ async function handleSaveTrade() {
     const images = await resolverImagensDoModal();
 
     if (id === '') {
-      await createTrade({ asset, type, pnl, date, notes, images });
+      await createTrade({ asset, type, pnl, date, notes, images, riskReward });
     } else {
-      await editTrade(id, { asset, type, pnl, date, notes, images });
+      await editTrade(id, { asset, type, pnl, date, notes, images, riskReward });
       // Arquivos que saíram da faixa nesta edição não têm mais dono
       const mantidos = new Set(images.map((i) => i.full));
       const orfas = originais.filter((i) => !mantidos.has(i.full));
@@ -1185,7 +1199,7 @@ async function handleSaveTrade() {
   }
 }
 
-async function createTrade({ asset, type, pnl, date, notes, images }) {
+async function createTrade({ asset, type, pnl, date, notes, images, riskReward }) {
   let blockIndex = state.activeBlockIndex;
   let blockArr   = state.blocks[String(blockIndex)] || [];
 
@@ -1202,7 +1216,7 @@ async function createTrade({ asset, type, pnl, date, notes, images }) {
 
   const position = blockArr.length;
   const trade = await insertTrade(currentUser.id, {
-    blockIndex, position, asset, type, pnl, date, notes, images
+    blockIndex, position, asset, type, pnl, date, notes, images, riskReward
   });
 
   blockArr.push(trade);
@@ -1773,6 +1787,17 @@ function formatDateBR(s) {
   if (!s) return '';
   const p = s.split('-');
   return p.length === 3 ? `${p[2]}/${p[1]}` : s;
+}
+
+/**
+ * Risco/retorno para exibição: 3 vira "3", 2.5 vira "2,5".
+ * Sem casa decimal quando é inteiro — "RR: 3,00:1" é ruído, e vírgula em vez
+ * de ponto porque o resto da interface é pt-BR.
+ */
+function formatRR(valor) {
+  const n = Number(valor);
+  if (!Number.isFinite(n)) return '';
+  return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, '').replace('.', ',');
 }
 
 function escapeHTML(str) {

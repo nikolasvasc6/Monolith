@@ -1025,6 +1025,17 @@ body:has(.modal-overlay.active) .badge-dot {
   margin: 8px 0;
 }
 
+/* Risco/retorno planejado da operação. Cor neutra de propósito: é uma
+   característica do plano, não do resultado — pintar de verde num stop
+   diria a coisa errada, e competiria com o P&L, que é quem carrega o sinal. */
+.slot-rr {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
 .slot-pnl {
   font-size: 1.1rem;
   font-weight: 800;
@@ -1294,17 +1305,58 @@ body:has(.modal-overlay.active) .badge-dot {
   flex-shrink: 0;
 }
 
-/* Em tela larga os 4 campos ficam numa linha só, sobrando altura para as notas */
+/* Em tela larga os 5 campos ficam numa linha só, sobrando altura para as notas.
+   As colunas não são iguais de propósito: o ativo é texto livre e precisa de
+   folga; o R:R é um número de 1 a 3 dígitos e não justifica a mesma largura. */
 @media (min-width: 1000px) {
   .modal-fields {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1.4fr 1fr 1fr 1fr 0.75fr;
     gap: 0 16px;
   }
   /* As linhas somem como caixa e seus campos entram direto no grid acima */
   .modal-fields .form-row {
     display: contents;
   }
+  /* Cada campo é um item independente do grid, então uma label que quebra em
+     duas linhas (P&L, Risco/Retorno) empurraria só o input dela para baixo e
+     desalinharia a fileira. O grid já estica todos os campos à mesma altura;
+     empurrar o conteúdo para o fim faz os inputs pousarem na mesma linha
+     de base, sem depender de quantas linhas cada label ocupa — por isso
+     aqui, e não um min-height chutado na label. */
+  .modal-fields .form-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+}
+
+/* Sufixo fixo ": 1" do campo de R:R — o usuário digita só o lado do retorno.
+   É decoração: fica fora do fluxo e some para leitor de tela (aria-hidden),
+   já que a label do campo sozinha não deixa dúvida do que preencher. */
+.input-with-sufixo .input-sufixo {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Abre espaço para o sufixo e esconde as setinhas do input number, que
+   roubariam justamente esse canto */
+.input-with-sufixo input[type="number"] {
+  padding-right: 42px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.input-with-sufixo input[type="number"]::-webkit-outer-spin-button,
+.input-with-sufixo input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* Observações esticam para preencher a altura sobrando */

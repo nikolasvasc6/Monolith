@@ -36,7 +36,7 @@ export async function fetchAllTradesByBlock(userId) {
   return blocks;
 }
 
-export async function insertTrade(userId, { blockIndex, position, asset, type, pnl, date, notes, images }) {
+export async function insertTrade(userId, { blockIndex, position, asset, type, pnl, date, notes, images, riskReward }) {
   const payload = {
     user_id:     userId,
     block_index: blockIndex,
@@ -46,7 +46,10 @@ export async function insertTrade(userId, { blockIndex, position, asset, type, p
     pnl,
     trade_date:  date,
     notes:       notes || null,
-    images:      Array.isArray(images) ? images : []
+    images:      Array.isArray(images) ? images : [],
+    // Campo opcional: qualquer coisa que não seja número positivo vira null,
+    // senão a constraint do banco recusaria a linha inteira
+    risk_reward: normalizaRiskReward(riskReward)
   };
   const { data, error } = await supabase
     .from(TABLE)
@@ -57,7 +60,7 @@ export async function insertTrade(userId, { blockIndex, position, asset, type, p
   return rowToTrade(data);
 }
 
-export async function updateTrade(tradeId, { asset, type, pnl, date, notes, blockIndex, position, images }) {
+export async function updateTrade(tradeId, { asset, type, pnl, date, notes, blockIndex, position, images, riskReward }) {
   const payload = {
     asset,
     type,
@@ -70,6 +73,10 @@ export async function updateTrade(tradeId, { asset, type, pnl, date, notes, bloc
   if (images     !== undefined) payload.images      = images;
   if (blockIndex !== undefined) payload.block_index = blockIndex;
   if (position   !== undefined) payload.position    = position;
+  // Mesmo guard do images, e pela mesma razão: renumeração e autocura chamam
+  // sem falar de R:R, e passar a chave sempre apagaria o que já está gravado.
+  // Aqui `null` é valor legítimo — é como o usuário limpa o campo
+  if (riskReward !== undefined) payload.risk_reward = normalizaRiskReward(riskReward);
 
   const { data, error } = await supabase
     .from(TABLE)
@@ -136,7 +143,10 @@ export async function bulkImportTrades(userId, blocks, blockOffset = 0) {
         trade_date:  t.date || new Date().toISOString().slice(0, 10),
         notes:       t.notes || null,
         // Backup JSON não carrega imagem (elas vivem no Storage)
-        images:      []
+        images:      [],
+        // O R:R vai no backup, mas é normalizado na volta: arquivo antigo não
+        // tem o campo, e um valor estragado no JSON não pode derrubar o lote
+        risk_reward: normalizaRiskReward(t.riskReward)
       });
     });
   }
@@ -167,6 +177,21 @@ export function unsubscribeRealtime(channel) {
 }
 
 // ---------- helpers ----------
+/**
+ * Devolve o R:R pronto para o banco, ou null quando não há valor utilizável.
+ * O campo é opcional, então "não informado" é null — nunca 0, que no domínio
+ * significaria retorno zero. O teto de 999 espelha a constraint
+ * `trades_risk_reward_valido`: barrar aqui dá mensagem de campo em vez de
+ * derrubar o insert inteiro no Postgres.
+ */
+function normalizaRiskReward(valor) {
+  if (valor === null || valor === undefined || valor === '') return null;
+  const n = Number(valor);
+  if (!Number.isFinite(n) || n <= 0 || n > 999) return null;
+  // 2 casas: é o que numeric(6,2) guarda, e evita 3.0000000000000004
+  return Math.round(n * 100) / 100;
+}
+
 function rowToTrade(row) {
   return {
     id:    row.id,
@@ -177,6 +202,11 @@ function rowToTrade(row) {
     notes: row.notes || '',
     // Linha antiga (anterior à coluna) vem como null — normaliza para lista
     images: Array.isArray(row.images) ? row.images : [],
+    // R:R é opcional: null quando não informado, e assim continua (não vira 0,
+    // que significaria "risco/retorno zero" em vez de "não sei")
+    riskReward: row.risk_reward === null || row.risk_reward === undefined
+      ? null
+      : Number(row.risk_reward),
     blockIndex: row.block_index,
     position:   row.position
   };
