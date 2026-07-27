@@ -55,6 +55,12 @@
   --slot-empty-border: rgba(255, 255, 255, 0.16);
   --slot-empty-text: #64748b;
 
+  /* Largura do card do diário: é ela que define quantas colunas cabem no grid
+     (ver .trades-grid), e não o contrário. 216px é a medida do print de
+     referência — a proporção do card (216:259) e a da faixa de imagem
+     (216:141) saem do mesmo print. */
+  --largura-card-trade: 216px;
+
   /* Shadow & Blur */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -837,10 +843,15 @@ body:has(.modal-overlay.active) .badge-dot {
 
 .trades-grid {
   display: grid;
-  /* 5 colunas (não 7): a proporção do card é fixa, então o que muda com o
-     número de colunas é o tamanho do print em pixels — com 7 ele fica pequeno
-     demais para conferir o setup sem abrir o lightbox. */
-  grid-template-columns: repeat(5, 1fr);
+  /* Largura FIXA de 216px por card, e não um número fixo de colunas em 1fr.
+     Com `repeat(5, 1fr)` o card esticava junto com a janela — em 1920 cada um
+     ia a 307px de largura por 368 de altura, e o bloco virava uma parede de
+     cards enormes. Agora quem manda é a largura do card (a mesma do print de
+     referência); o `auto-fill` decide quantas cabem — medido: 6 colunas em
+     1920, 5 em 1600, 4 em 1366 —, o que dispensa breakpoint de coluna, e o
+     `justify-content` devolve a sobra às margens em vez de inchar o card. */
+  grid-template-columns: repeat(auto-fill, minmax(0, var(--largura-card-trade)));
+  justify-content: center;
   gap: 12px;
   margin-bottom: 40px;
 }
@@ -2057,22 +2068,25 @@ textarea:focus {
 /* ==========================================================================
    RESPONSIVE DESIGN (BREAKPOINTS)
    ========================================================================== */
-@media (max-width: 1400px) {
-  .trades-grid {
-    /* Base já é 5 — este degrau existia para reduzir de 7 para 5 e virou
-       redundante com a Task 7b. Mantido como degrau próprio (4 colunas) em
-       vez de removido, porque sem ele o pulo de 5 para 3 (degrau seguinte)
-       ficaria brusco demais nessa faixa de largura. */
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
+/* O .trades-grid não tem degrau por número de colunas em breakpoint nenhum: o
+   `auto-fill` da regra base já reduz as colunas sozinho conforme a largura, e
+   um degrau desses só voltaria a esticar o card. O único ajuste é o de ≤1100px
+   logo abaixo, e ele mexe na largura do card, não na contagem de colunas. */
 
 @media (max-width: 1100px) {
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  /* Daqui para baixo o card deixa de ter largura fixa e passa a preencher a
+     linha. Motivo: com pouco espaço, os 216px fixos desperdiçam faixas
+     inteiras — em 1024px de janela cabiam só 2 colunas e sobravam 111px de
+     margem de cada lado, espaço que dava para uma terceira. Com `1fr` a sobra
+     vira largura de card, e o crescimento é limitado por construção: assim que
+     a coluna passaria de ~2x o mínimo, o auto-fill encaixa mais uma no lugar.
+     O card fica entre 160px e ~245px (o teto é 160 + 172/nº de colunas, então
+     só chega perto disso nas duas colunas do celular). */
   .trades-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
 }
 
@@ -2094,9 +2108,6 @@ textarea:focus {
   .kpi-grid {
     grid-template-columns: 1fr;
   }
-  .trades-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .form-row {
     grid-template-columns: 1fr;
     gap: 0;
@@ -2112,9 +2123,9 @@ textarea:focus {
 }
 
 @media (max-width: 480px) {
-  .trades-grid {
-    grid-template-columns: 1fr;
-  }
+  /* O .trades-grid não aparece aqui de propósito: o degrau de ≤1100px já
+     deixou a coluna fluida, e no celular ela cai naturalmente para duas por
+     linha. Fixar 1 coluna aqui daria um card enorme, do tamanho da tela. */
   .control-bar {
     flex-direction: column;
     gap: 16px;

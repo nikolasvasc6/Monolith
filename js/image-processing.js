@@ -1,18 +1,27 @@
 /**
  * Compressão de imagem no navegador — sem I/O, sem Supabase, sem dependência.
  * Recebe o File que o usuário escolheu e devolve duas versões WebP:
- * `full` (1600px) para o lightbox e `thumb` (400px) para o card do grid.
+ * `full` (1600px) para o lightbox e `thumb` (900px) para o card do grid.
  *
  * Por que duas: um bloco cheio tem 35 cards. Com a versão grande em cada
- * miniatura, abrir um bloco baixaria ~10 MB; com a thumb, ~1 MB.
+ * miniatura, abrir um bloco baixaria ~6 MB; com a thumb, ~2 MB.
  */
 
 export const MAX_INPUT_BYTES = 15 * 1024 * 1024; // 15 MB
 export const FULL_MAX_EDGE  = 1600;
-export const THUMB_MAX_EDGE = 400;
+/* 900, não 400: a faixa do card tem 216px de largura CSS e usa object-fit:
+   cover, então um print 16:9 é renderizado a ~251px de largura — que em tela
+   com DPR 2 (retina, ou escala 150% do Windows) são ~500px de verdade. Com
+   400 a miniatura era AMPLIADA para caber, e o gráfico de velas saía borrado.
+   900 cobre DPR 2 com folga e ainda pesa ~1/3 da full. */
+export const THUMB_MAX_EDGE = 900;
 
 const QUALIDADE_FULL  = 0.82;
-const QUALIDADE_THUMB = 0.70;
+/* Mesma qualidade da full: linha fina de candle e texto de gráfico são o pior
+   caso do WebP com perdas, e a 0.70 os artefatos apareciam no card mesmo com
+   resolução sobrando. O ganho de peso não compensava — quem segura o tamanho
+   da miniatura é a resolução, não a compressão. */
+const QUALIDADE_THUMB = 0.82;
 
 export async function processImageFile(file) {
   validarEntrada(file);

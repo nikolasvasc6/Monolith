@@ -98,8 +98,14 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 - **Imagens da operação (até 10):** ficam no bucket **privado** `trade-images` do
   Supabase Storage, em `{user_id}/{uuid}.webp`; a linha do trade guarda só os caminhos,
   na coluna `images` (jsonb). São **duas versões por imagem** — `full` (1600px) para o
-  lightbox e `thumb` (400px) para o card, senão um bloco cheio baixaria ~10 MB de
-  miniaturas. Exibição é sempre por **URL assinada**, pedida em lote por bloco e
+  lightbox e `thumb` (900px, mesma qualidade da full) para o card, senão um bloco cheio
+  baixaria a `full` 35 vezes. A thumb foi **400px/q0.70 até jul/2026** e saía borrada no
+  card: com `object-fit: cover`, a faixa de 216px do card renderiza a imagem a ~251px
+  CSS, que numa tela DPR 2 são ~500px reais — a de 400 era ampliada para caber. Ao mexer
+  na largura do card (`--largura-card-trade`), refaça essa conta: quem define a
+  resolução mínima da thumb é a largura do card vezes o DPR, não o tamanho do arquivo
+  original. **Imagem já enviada mantém a thumb com que foi criada** — melhorar o alvo só
+  vale para envios novos. Exibição é sempre por **URL assinada**, pedida em lote por bloco e
   cacheada por 1 h. O upload só acontece ao **salvar** o registro: até lá o arquivo fica
   na memória, então cancelar o modal não deixa lixo no bucket. Excluir operação e
   "Resetar Dados" apagam **primeiro no banco**, sempre; a limpeza do Storage só roda
@@ -112,6 +118,12 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 ## Convenções ao trabalhar aqui
 
 - **Mantenha vanilla JS + ES Modules, sem framework e sem build** (compatível com GitHub Pages).
+- **O card do diário tem largura fixa (`--largura-card-trade`, 216px), não coluna `1fr`.**
+  Quem decide quantas colunas o grid tem é quantos cards cabem (`auto-fill`), e a sobra
+  vira margem — não largura de card. Com `repeat(N, 1fr)` o card esticava junto com a
+  janela (em 1920 ia a 307×368) e o bloco virava uma parede de cards enormes. Abaixo de
+  1100px a coluna volta a ser fluida, porque aí a largura fixa desperdiçaria faixas
+  inteiras. **Não reintroduza degrau de número de colunas por breakpoint.**
 - **Todo texto de UI e mensagens de erro em pt-BR.**
 - **Toda I/O de dados passa pelos serviços** (`js/services/*`) — não chame `supabase`
   diretamente do `app.js`.

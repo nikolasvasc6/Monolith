@@ -10,7 +10,7 @@
 <h1>image-processing</h1>
 <div id="saida"></div>
 <script type="module">
-  import { processImageFile, MAX_INPUT_BYTES } from '../js/image-processing.js';
+  import { processImageFile, MAX_INPUT_BYTES, FULL_MAX_EDGE, THUMB_MAX_EDGE } from '../js/image-processing.js';
 
   const saida = document.getElementById('saida');
   let falhas = 0;
@@ -38,12 +38,17 @@
     try { await promessa; return null; } catch (e) { return e.message; }
   }
 
-  // 1. Imagem grande encolhe para 1600 (full) e 400 (thumb), virando WebP
+  // 1. Imagem grande encolhe para a aresta de cada versão, virando WebP.
+  //    Os alvos vêm das constantes, não de números crus: mudar FULL/THUMB_MAX_EDGE
+  //    não deve quebrar um teste que só quer saber se o redimensionamento acertou.
   {
     const r = await processImageFile(await imagemFalsa(3000, 2000));
-    conta('full encolhe para 1600 de aresta maior', r.full.w === 1600 && r.full.h === 1067,
+    const alturaEsperada = (aresta) => Math.round(2000 * (aresta / 3000));
+    conta(`full encolhe para ${FULL_MAX_EDGE} de aresta maior`,
+          r.full.w === FULL_MAX_EDGE && r.full.h === alturaEsperada(FULL_MAX_EDGE),
           `${r.full.w}x${r.full.h}`);
-    conta('thumb encolhe para 400 de aresta maior', r.thumb.w === 400 && r.thumb.h === 267,
+    conta(`thumb encolhe para ${THUMB_MAX_EDGE} de aresta maior`,
+          r.thumb.w === THUMB_MAX_EDGE && r.thumb.h === alturaEsperada(THUMB_MAX_EDGE),
           `${r.thumb.w}x${r.thumb.h}`);
     conta('as duas versões saem em WebP',
           r.full.blob.type === 'image/webp' && r.thumb.blob.type === 'image/webp',
