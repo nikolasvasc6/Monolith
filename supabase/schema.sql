@@ -296,3 +296,12 @@ alter table public.trades add constraint trades_risk_reward_valido
 alter table public.trades drop constraint if exists trades_type_check;
 alter table public.trades add constraint trades_type_check
   check (type in ('take','stop','zero'));
+
+-- A invariante "0x0 tem pnl exatamente 0" era garantida só no app. Precisa
+-- viver no banco porque computeStats mistura dois eixos de propósito
+-- diferentes (winTrades usa pnl > 0, decided usa type): uma linha zero com
+-- pnl != 0 entraria em winTrades e sairia de decided ao mesmo tempo. Seguro
+-- em banco existente — ainda não há nenhuma linha zero.
+alter table public.trades drop constraint if exists trades_zero_sem_valor;
+alter table public.trades add constraint trades_zero_sem_valor
+  check (type <> 'zero' or pnl = 0);

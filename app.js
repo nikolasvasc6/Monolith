@@ -708,7 +708,7 @@ function renderListView(trades) {
     const tr = document.createElement('tr');
     tr.classList.add('table-row-clickable');
     const ehZero    = trade.type === 'zero';
-    const pnlClass  = ehZero ? 'pnl-neutro' : trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+    const pnlClass  = ehZero ? 'pnl-neutral' : trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
     const typeLabel = ehZero ? '0x0' : trade.type === 'take' ? 'Take' : 'Stop';
     const typeClass = ehZero ? 'type-zero' : trade.type === 'take' ? 'pnl-positive' : 'pnl-negative';
     tr.innerHTML = `
@@ -753,9 +753,24 @@ function renderChart(canvas, trades, opts = {}) {
     data.push(Number(currentSum.toFixed(2)));
   });
 
-  const isPositive = currentSum >= 0;
-  const colorPrimary = isPositive ? '#10b981' : '#f43f5e';
-  const colorGradientStart = isPositive ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.25)';
+  const isPositive = currentSum > 0;
+  const isNegative = currentSum < 0;
+  let colorPrimary, colorGradientStart;
+  if (isPositive) {
+    colorPrimary = '#10b981';
+    colorGradientStart = 'rgba(16, 185, 129, 0.25)';
+  } else if (isNegative) {
+    colorPrimary = '#f43f5e';
+    colorGradientStart = 'rgba(244, 63, 94, 0.25)';
+  } else {
+    // Acumulado exatamente 0: nem lucro nem prejuízo — mesmo neutro do card
+    // e da tabela (--text-secondary), não verde. Lido em document.body (não
+    // document.documentElement): quem recebe a classe `light-theme` e a
+    // sobrescrita da variável é o <body>, igual ao `isLight` logo abaixo.
+    const neutralColor = getComputedStyle(document.body).getPropertyValue('--text-secondary').trim();
+    colorPrimary = neutralColor;
+    colorGradientStart = `color-mix(in srgb, ${neutralColor} 25%, transparent)`;
+  }
   const colorGradientEnd   = 'rgba(244, 63, 94, 0.0)';
 
   const ctx = canvas.getContext('2d');
@@ -816,7 +831,7 @@ function renderChart(canvas, trades, opts = {}) {
           borderColor: tooltipBorder, borderWidth: 1, padding: 10, displayColors: false,
           callbacks: {
             title: (c) => c[0].dataIndex === 0 ? startLabel : `Operação #${c[0].dataIndex}`,
-            label: (c) => { const v = c.raw; return `Acumulado: ${v >= 0 ? '+' : ''}${formatCurrency(v)}`; }
+            label: (c) => { const v = c.raw; return `Acumulado: ${v > 0 ? '+' : ''}${formatCurrency(v)}`; }
           }
         }
       },
@@ -1192,7 +1207,11 @@ function openTradeModal(trade = null, slotIndex = null) {
     DOM.tradeSlotInput.value = slotIndex !== null ? slotIndex : '';
     DOM.tradeAsset.value = trade.asset;
     DOM.tradeType.value = trade.type;
-    DOM.tradePnL.value = Math.abs(trade.pnl);
+    // No 0x0 o pnl gravado é sempre 0 — abrir com "0" no campo vira o
+    // "0" salvo em dataset.valorAntesDoZero na primeira troca de tipo, e
+    // salvar sem digitar nada criaria um take de R$ 0,00 (o próprio estado
+    // ambíguo que a feature existe para eliminar). Vazio é o correto aqui.
+    DOM.tradePnL.value = trade.type === 'zero' ? '' : Math.abs(trade.pnl);
     DOM.tradeDate.value = trade.date;
     DOM.tradeNotes.value = trade.notes || '';
     // Operação sem R:R (antiga ou deixada em branco) abre com o campo vazio,

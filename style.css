@@ -740,7 +740,7 @@ body:has(.modal-overlay.active) .badge-dot {
 }
 /* 0x0: nem lucro nem prejuízo. Sai de --text-secondary, que já existe nos dois
    temas — o neutro acompanha dark e light sem cor nova no arquivo. */
-.pnl-neutro {
+.pnl-neutral {
   color: var(--text-secondary) !important;
 }
 
@@ -1749,10 +1749,17 @@ body:has(.modal-overlay.active) .badge-dot {
 }
 
 /* Estado de Hover nos inputs (passar o mouse) */
-.input-with-icon input:hover,
+.input-with-icon input:hover:not(:disabled),
 .input-with-icon select:hover {
   border-color: rgba(255, 255, 255, 0.35);
   background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Campo travado (ex.: valor do 0x0): mesmo padrão de .btn-add-imagem:disabled
+   — cor apagada e cursor de bloqueado, para não parecer editável. */
+.input-with-icon input:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
 }
 
 /* Estado de Foco nos inputs (quando clica para digitar) */
@@ -1779,7 +1786,15 @@ body.light-theme .input-with-icon select {
   color: #0f172a;
 }
 
-body.light-theme .input-with-icon input:hover,
+/* A regra de cor #0f172a acima tem mais especificidade que
+   `.input-with-icon input:disabled` (2 classes + 2 elementos contra 1 classe
+   + 1 pseudo-classe + 1 elemento) e venceria sem este reforço — o campo
+   travado ficaria com a MESMA cor do habilitado no tema claro. Medido. */
+body.light-theme .input-with-icon input:disabled {
+  color: var(--text-muted);
+}
+
+body.light-theme .input-with-icon input:hover:not(:disabled),
 body.light-theme .input-with-icon select:hover {
   border-color: #94a3b8;
   background-color: #f8fafc;
