@@ -576,7 +576,11 @@ function renderGridView(trades) {
     const slotEl = document.createElement('div');
     if (trade) {
       const temImagem = Array.isArray(trade.images) && trade.images.length > 0;
-      slotEl.className = `grid-slot slot-filled ${trade.pnl >= 0 ? 'slot-win' : 'slot-loss'}`
+      // O 0x0 vem antes do teste de sinal: pnl 0 passaria por "win"
+      const classeResultado = trade.type === 'zero' ? 'slot-zero'
+                            : trade.pnl >= 0        ? 'slot-win'
+                            : 'slot-loss';
+      slotEl.className = `grid-slot slot-filled ${classeResultado}`
                        + (temImagem ? ' slot-has-image' : '');
       slotEl.innerHTML = `
         ${temImagem ? `
@@ -589,7 +593,7 @@ function renderGridView(trades) {
         </div>
         <div class="slot-body">
           ${trade.riskReward ? `<div class="slot-rr">RR: ${formatRR(trade.riskReward)}:1</div>` : ''}
-          <div class="slot-pnl">${trade.pnl >= 0 ? '+' : ''} ${formatCurrency(trade.pnl)}</div>
+          <div class="slot-pnl">${trade.type === 'zero' ? '' : trade.pnl >= 0 ? '+' : ''} ${formatCurrency(trade.pnl)}</div>
         </div>
         <div class="slot-footer">
           <span class="slot-date">${formatDateBR(trade.date)}</span>
@@ -703,15 +707,16 @@ function renderListView(trades) {
   trades.forEach((trade, index) => {
     const tr = document.createElement('tr');
     tr.classList.add('table-row-clickable');
-    const pnlClass = trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-    const typeLabel = trade.type === 'take' ? 'Take' : 'Stop';
-    const typeClass = trade.type === 'take' ? 'pnl-positive' : 'pnl-negative';
+    const ehZero    = trade.type === 'zero';
+    const pnlClass  = ehZero ? 'pnl-neutro' : trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+    const typeLabel = ehZero ? '0x0' : trade.type === 'take' ? 'Take' : 'Stop';
+    const typeClass = ehZero ? 'type-zero' : trade.type === 'take' ? 'pnl-positive' : 'pnl-negative';
     tr.innerHTML = `
       <td class="table-index">#${String(index + 1).padStart(2, '0')}</td>
       <td class="table-asset">${escapeHTML(trade.asset)}</td>
       <td class="table-type ${typeClass}">${typeLabel}</td>
       <td>${formatDateBR(trade.date)}</td>
-      <td class="table-pnl ${pnlClass}">${trade.pnl >= 0 ? '+' : ''}${formatCurrency(trade.pnl)}</td>
+      <td class="table-pnl ${pnlClass}">${ehZero ? '' : trade.pnl >= 0 ? '+' : ''}${formatCurrency(trade.pnl)}</td>
       <td class="table-notes" title="${escapeHTML(trade.notes || '')}">${escapeHTML(trade.notes || '-')}</td>
       <td>
         <div class="table-actions">

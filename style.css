@@ -738,6 +738,11 @@ body:has(.modal-overlay.active) .badge-dot {
 .pnl-negative {
   color: var(--color-danger) !important;
 }
+/* 0x0: nem lucro nem prejuízo. Sai de --text-secondary, que já existe nos dois
+   temas — o neutro acompanha dark e light sem cor nova no arquivo. */
+.pnl-neutro {
+  color: var(--text-secondary) !important;
+}
 
 .chart-wrapper {
   position: relative;
@@ -1113,6 +1118,17 @@ body:has(.modal-overlay.active) .badge-dot {
   color: var(--color-danger);
 }
 
+.grid-slot.slot-zero {
+  background-color: var(--bg-card-hover);
+  border: 1px solid var(--border-color);
+}
+.grid-slot.slot-zero:hover {
+  border-color: var(--border-hover);
+}
+.grid-slot.slot-zero .slot-pnl {
+  color: var(--text-secondary);
+}
+
 /* ==========================================================================
    LIST VIEW (TABELA DE TRADES)
    ========================================================================== */
@@ -1182,6 +1198,10 @@ body:has(.modal-overlay.active) .badge-dot {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.table-type.type-zero {
+  color: var(--text-secondary);
 }
 
 .table-pnl {
