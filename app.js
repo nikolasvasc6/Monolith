@@ -49,7 +49,9 @@ import {
   inicializarOcultacao,
   alternarOculto,
   escreverValor,
-  aplicarOcultacao
+  aplicarOcultacao,
+  MASCARA,
+  MASCARA_CURTA
 } from './js/ui/ocultar-valores.js';
 
 // ==========================================================================
@@ -776,8 +778,11 @@ function renderChart(canvas, trades, opts = {}) {
     data.push(Number(currentSum.toFixed(2)));
   });
 
-  const isPositive = currentSum > 0;
-  const isNegative = currentSum < 0;
+  // Com os valores ocultos a linha vai de neutro: verde/vermelho diria o
+  // resultado do bloco sem precisar de número nenhum.
+  const oculto = estaOculto();
+  const isPositive = !oculto && currentSum > 0;
+  const isNegative = !oculto && currentSum < 0;
   let colorPrimary, colorGradientStart;
   if (isPositive) {
     colorPrimary = '#10b981';
@@ -854,13 +859,17 @@ function renderChart(canvas, trades, opts = {}) {
           borderColor: tooltipBorder, borderWidth: 1, padding: 10, displayColors: false,
           callbacks: {
             title: (c) => c[0].dataIndex === 0 ? startLabel : `Operação #${c[0].dataIndex}`,
-            label: (c) => { const v = c.raw; return `Acumulado: ${v > 0 ? '+' : ''}${formatCurrency(v)}`; }
+            label: (c) => {
+              if (estaOculto()) return `Acumulado: ${MASCARA}`;
+              const v = c.raw;
+              return `Acumulado: ${v > 0 ? '+' : ''}${formatCurrency(v)}`;
+            }
           }
         }
       },
       scales: {
         x: { grid: { color: gridColorX, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 10 } } },
-        y: { grid: { color: gridColorY, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 10 }, callback: (v) => formatCurrency(v) } }
+        y: { grid: { color: gridColorY, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 10 }, callback: (v) => estaOculto() ? MASCARA_CURTA : formatCurrency(v) } }
       }
     }
   });
