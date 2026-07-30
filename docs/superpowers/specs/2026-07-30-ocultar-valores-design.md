@@ -126,11 +126,15 @@ A classe `valores-ocultos` no `<body>` é aplicada no mesmo ponto em que
 
 ### Gráfico (Chart.js)
 
-Os callbacks leem `valoresOcultos` no momento da chamada, então alternar o modo pede só
-`chart.update()` — não recriar a instância:
-
 - tick do eixo Y: `(v) => valoresOcultos ? '•••' : formatCurrency(v)`
 - tooltip: `Acumulado: •••••` quando ativo
+- **cor da linha:** `renderChart` hoje escolhe verde ou vermelho pelo acumulado do bloco.
+  Linha vermelha é a mesma frase que "Saldo negativo", dita em cor — no modo oculto ela
+  vai do mesmo neutro que o caso de acumulado zero já usa
+
+Como a cor da linha faz parte da construção da instância, e não de um callback, alternar
+o modo **recria** os gráficos em vez de dar `chart.update()`. É o que `renderApp()` já faz
+a cada render, e é o caminho que o toggle de tema usa desde sempre.
 
 A curva permanece desenhada. Ela mostra a forma da evolução, não a escala — sem eixo Y
 não há como ler valor a partir dela.
@@ -165,5 +169,6 @@ trocar de página. `title` e `aria-label` acompanham o estado: "Ocultar valores"
 | Realtime chega de outra aba com o modo ativo | Re-render mantém tudo mascarado |
 | Bloco de saldo negativo, modo ativo | Nada de vermelho: KPI neutro, card sem brilho `loss-trend` |
 | Modo ativo, trocar tema | Máscara segue neutra no tema claro |
+| Bloco negativo, modo ativo, no gráfico | Linha cinza, não vermelha |
 | Modo ativo, passar o mouse no gráfico | Tooltip mascarado, eixo Y em `•••` |
 | Modo ativo, exportar JSON | Arquivo com os valores reais |
