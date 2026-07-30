@@ -157,6 +157,15 @@ trocar de página. `title` e `aria-label` acompanham o estado: "Ocultar valores"
 - **Calculadoras** — números de um cálculo em andamento, com os dados de entrada na tela
 - **Modal de operação** — para registrar ou editar é preciso ver o campo
 - **Export JSON** — arquivo, não tela; ocultar ali seria corromper o dado
+- **Miniaturas dos prints no grid.** Com o modo ativo, o card mascara o valor mas continua
+  exibindo a miniatura do screenshot da plataforma, que costuma ter o P&L escrito nela.
+  Decisão do Nikolas em 2026-07-30: fica como está — o modo protege o texto da interface,
+  não o conteúdo das imagens que o usuário anexou.
+- **Stop diário ($) e Stop semanal ($) do Plano operacional** — campos de formulário
+  editáveis, mesma razão que já deixa o modal de operação de fora: para editar é preciso ver.
+- **Sincronização entre abas.** Duas abas do app abertas não compartilham o estado do
+  modo: ocultar numa deixa a outra à mostra. O caso real da feature é a aba na sua frente
+  — limitação conhecida, não defeito.
 
 ## Casos de teste
 
