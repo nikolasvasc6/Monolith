@@ -2241,6 +2241,27 @@ textarea:focus {
 }
 
 /* ==========================================================================
+   MODO OCULTO — cor é valor
+   Bolinha verde diz "estou no lucro" sem dizer quanto: a máscara sai neutra,
+   e o realce de tendência do card fica suspenso. Precisa ser CSS: updateKPIs
+   reescreve className a cada render e apagaria qualquer ajuste feito em JS.
+   ========================================================================== */
+body.valores-ocultos :is(.kpi-value, .slot-pnl, .table-pnl):is(.pnl-positive, .pnl-negative),
+body.valores-ocultos :is(#summary-pl, #dash-summary-pl) {
+  color: var(--text-secondary) !important;
+}
+
+body.valores-ocultos .kpi-card:is(.win-trend, .loss-trend) {
+  border-left-color: var(--border-color);
+}
+
+body.valores-ocultos .kpi-card:is(.win-trend, .loss-trend) .kpi-icon-wrapper {
+  color: var(--text-secondary);
+  background-color: var(--surface-2);
+  border-color: var(--border-color);
+}
+
+/* ==========================================================================
    LIGHT THEME — Override de variáveis (todo o resto adapta automaticamente)
    ========================================================================== */
 body.light-theme {
