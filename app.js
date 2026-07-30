@@ -1520,12 +1520,42 @@ function setupEventListeners() {
   });
   DOM.btnCloseModalX.addEventListener('click', closeTradeModal);
   DOM.btnCancelModal.addEventListener('click', closeTradeModal);
-  DOM.tradeModal.addEventListener('click', (e) => {
+  // Fechar pelo fundo exige que o gesto tenha COMEÇADO e TERMINADO no fundo.
+  // O `e.target` do click sozinho não responde isso: quando o mousedown e o
+  // mouseup caem em elementos diferentes, o click é disparado no ancestral
+  // comum dos dois — e num arraste que sai do textarea de observações para
+  // fora do card esse ancestral é o próprio overlay. Medido no Chrome antes do
+  // conserto: selecionar texto nas observações e soltar o botão fora do modal
+  // fechava o modal e jogava fora o que estava preenchido; o sentido inverso
+  // (começar no fundo, soltar dentro do card) fechava igual.
+  //
+  // Com as duas flags, checar `e.target` no click vira redundância: down e up
+  // no próprio overlay só produzem click com target no overlay.
+  let gestoComecouNoFundo = false;
+  let gestoTerminouNoFundo = false;
+  DOM.tradeModal.addEventListener('mousedown', (e) => {
+    gestoComecouNoFundo = e.target === DOM.tradeModal;
+    // Todo gesto novo nasce sem "terminou". Sem esta linha, um arraste que o
+    // navegador transforma em drag nativo (a partir de uma imagem, por
+    // exemplo) não entrega mouseup nem click, e a flag do gesto ANTERIOR
+    // sobreviveria para um click de teclado (Enter num botão daqui de dentro,
+    // que borbulha até o overlay) fechar o modal do nada.
+    gestoTerminouNoFundo = false;
+  });
+  DOM.tradeModal.addEventListener('mouseup', (e) => {
+    gestoTerminouNoFundo = e.target === DOM.tradeModal;
+  });
+  DOM.tradeModal.addEventListener('click', () => {
+    const fechaPeloFundo = gestoComecouNoFundo && gestoTerminouNoFundo;
+    // Zera sempre, inclusive quando não fecha: um gesto abandonado (soltar o
+    // botão fora da janela) não pode deixar a flag armada para o próximo.
+    gestoComecouNoFundo = false;
+    gestoTerminouNoFundo = false;
     // Clique no fundo não fecha durante o envio — mesmo motivo do botão
     // Cancelar/X desabilitado: fechar no meio do upload zeraria modalImagens.
     // Usa a flag dedicada, não DOM.btnSubmitModal.disabled (que também liga
     // durante um handleDeleteTrade disparado por fora do modal).
-    if (e.target === DOM.tradeModal && !salvandoOperacao) closeTradeModal();
+    if (fechaPeloFundo && !salvandoOperacao) closeTradeModal();
   });
   document.addEventListener('keydown', (e) => {
     // Por que o modal consulta o lightbox: os dois handlers de Esc estão

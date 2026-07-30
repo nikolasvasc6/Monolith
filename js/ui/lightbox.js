@@ -36,9 +36,34 @@ export function initLightbox() {
   el.prev.addEventListener('click', () => mover(-1));
   el.next.addEventListener('click', () => mover(1));
 
-  // Clique no fundo (não na imagem nem nos botões) fecha
-  el.overlay.addEventListener('click', (e) => {
-    if (e.target === el.overlay) fecharLightbox();
+  // Clique no fundo (não na imagem nem nos botões) fecha — mas só quando o
+  // gesto COMEÇOU e TERMINOU no fundo. O `e.target` do click sozinho não
+  // responde isso: com mousedown e mouseup em elementos diferentes, o click vai
+  // para o ancestral comum dos dois, que aqui é sempre o próprio overlay (a
+  // imagem, os botões e o contador são filhos diretos dele). Medido no Chrome
+  // antes do conserto: arrastar a partir do contador e soltar no fundo fechava
+  // o lightbox. Mesmo defeito que o modal da operação tinha em app.js.
+  let gestoComecouNoFundo = false;
+  let gestoTerminouNoFundo = false;
+  el.overlay.addEventListener('mousedown', (e) => {
+    gestoComecouNoFundo = e.target === el.overlay;
+    // Todo gesto novo nasce sem "terminou". Arrastar a partir da imagem vira
+    // drag nativo do navegador (medido: só o mousedown chega ao DOM, nunca o
+    // mouseup nem o click), então sem esta linha a flag de um gesto abandonado
+    // ficaria armada para o próximo click — inclusive o de teclado, que sobe
+    // dos botões daqui até o overlay.
+    gestoTerminouNoFundo = false;
+  });
+  el.overlay.addEventListener('mouseup', (e) => {
+    gestoTerminouNoFundo = e.target === el.overlay;
+  });
+  el.overlay.addEventListener('click', () => {
+    const fechaPeloFundo = gestoComecouNoFundo && gestoTerminouNoFundo;
+    // Zera sempre: gesto abandonado (soltar o botão fora da janela) não pode
+    // deixar a flag armada para o clique seguinte.
+    gestoComecouNoFundo = false;
+    gestoTerminouNoFundo = false;
+    if (fechaPeloFundo) fecharLightbox();
   });
 
   document.addEventListener('keydown', (e) => {
