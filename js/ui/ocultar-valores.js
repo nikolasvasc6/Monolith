@@ -27,16 +27,42 @@ export function estaOculto() {
   return oculto;
 }
 
+/**
+ * localStorage pode lançar SecurityError em contexto com armazenamento
+ * bloqueado (ex.: cookies de terceiros desabilitados, modo privado de
+ * alguns navegadores). inicializarOcultacao() roda no DOMContentLoaded,
+ * antes de initAuthUI() e setupEventListeners() — um throw aqui derrubaria
+ * o boot inteiro antes do login aparecer. Por isso lê/grava sempre por
+ * dentro de um try: sem acesso ao storage, degrada para "modo visível, sem
+ * persistir" — o modo ainda funciona nesta sessão, só não sobrevive a um
+ * reload.
+ */
+function lerPreferencia() {
+  try {
+    return localStorage.getItem(CHAVE) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function gravarPreferencia(valor) {
+  try {
+    if (valor) localStorage.setItem(CHAVE, '1');
+    else       localStorage.removeItem(CHAVE);
+  } catch {
+    // Sem storage disponível: o modo segue ativo em memória, só não persiste.
+  }
+}
+
 /** Lê a preferência gravada e aplica. Chamar uma vez, antes do primeiro render. */
 export function inicializarOcultacao() {
-  definirOculto(localStorage.getItem(CHAVE) === '1');
+  definirOculto(lerPreferencia());
   return oculto;
 }
 
 export function definirOculto(valor) {
   oculto = Boolean(valor);
-  if (oculto) localStorage.setItem(CHAVE, '1');
-  else        localStorage.removeItem(CHAVE);
+  gravarPreferencia(oculto);
   document.body.classList.toggle('valores-ocultos', oculto);
 }
 
