@@ -802,12 +802,16 @@ function renderChart(canvas, trades, opts = {}) {
   const colorGradientEnd   = 'rgba(244, 63, 94, 0.0)';
 
   const ctx = canvas.getContext('2d');
-  const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+  // Altura do gradiente vem do CSS (--altura-grafico, o mesmo do .chart-wrapper):
+  // se ele terminar antes do fim do canvas, a faixa restante fica sem cor nenhuma.
+  // Lida da variável, e não de canvas.clientHeight, porque a página do gráfico pode
+  // estar oculta na hora do render (altura 0) — aí o gradiente degeneraria.
+  const alturaGrafico = parseFloat(getComputedStyle(document.body).getPropertyValue('--altura-grafico')) || 380;
+  const gradient = ctx.createLinearGradient(0, 0, 0, alturaGrafico);
   gradient.addColorStop(0, colorGradientStart);
   gradient.addColorStop(1, colorGradientEnd);
 
   const isLight = document.body.classList.contains('light-theme');
-  const gridColorX = isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.02)';
   const gridColorY = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
   const tickColor = isLight ? '#4b5563' : '#64748b';
   const tooltipBg = isLight ? '#ffffff' : '#111622';
@@ -842,8 +846,12 @@ function renderChart(canvas, trades, opts = {}) {
       borderColor: colorPrimary, borderWidth: 2,
       pointBackgroundColor: colorPrimary,
       pointBorderColor: pointBorderColor, pointBorderWidth: 2,
-      pointRadius: labels.length > 20 ? 2 : 4,
-      pointHoverRadius: 6, tension: 0.35,
+      // Ponto invisível em repouso (decisão estética): a linha limpa lê melhor que
+      // 35 bolinhas empilhadas. Não muda a interação — com `intersect: false` e
+      // `mode: 'index'` o tooltip e o crosshair são pegos pela coluna do X, não
+      // pelo ponto; o ponto reaparece só sob o cursor, marcando qual operação é.
+      pointRadius: 0,
+      pointHoverRadius: 5, tension: 0.35,
       fill: true, backgroundColor: gradient
     }] },
     plugins: [crosshairPlugin],
@@ -868,7 +876,10 @@ function renderChart(canvas, trades, opts = {}) {
         }
       },
       scales: {
-        x: { grid: { color: gridColorX, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 10 } } },
+        // Sem grade vertical (decisão estética): quem dá referência de leitura é a
+        // grade horizontal, do valor acumulado. Os rótulos do X continuam, e a
+        // vertical que importa — a do crosshair — aparece sob o cursor.
+        x: { grid: { display: false, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 10 } } },
         y: { grid: { color: gridColorY, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 10 }, callback: (v) => estaOculto() ? MASCARA_CURTA : formatCurrency(v) } }
       }
     }

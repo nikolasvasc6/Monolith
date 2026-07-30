@@ -67,6 +67,12 @@
      para preencher a faixa; a sobra vira margem. */
   --colunas-card-trade: 5;
 
+  /* Altura da área do gráfico de performance (.chart-wrapper). É a fonte única:
+     o gradiente do preenchimento é criado em JS com esta mesma altura
+     (renderChart, em app.js) — gradiente mais curto que o canvas deixaria a
+     faixa de baixo sem preenchimento nenhum. Mudou aqui, muda lá junto. */
+  --altura-grafico: 380px;
+
   /* Shadow & Blur */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -746,7 +752,7 @@ body:has(.modal-overlay.active) .badge-dot {
 
 .chart-wrapper {
   position: relative;
-  height: 250px;
+  height: var(--altura-grafico);
   width: 100%;
 }
 
