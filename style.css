@@ -408,10 +408,12 @@ body {
   100% { transform: scale(0.9); opacity: 0.6; }
 }
 
-/* Com um modal aberto, pausa o pulse: um elemento animando sob o
-   backdrop-filter do overlay obriga o navegador a reprocessar o desfoque da
-   tela inteira a cada frame, o que trava a digitação no modal. Sem efeito
-   visual — o ponto fica atrás do vidro desfocado e escurecido. */
+/* Com um modal aberto, pausa o pulse. Nasceu para o backdrop-filter que o
+   .modal-overlay tinha — um elemento animando sob o desfoque obrigava o
+   navegador a reprocessar a tela inteira a cada frame, e a digitação no modal
+   travava. Esse desfoque saiu (ver .modal-overlay), mas a regra fica: uma
+   animação infinita rodando atrás de um modal é trabalho sem ninguém para ver,
+   e o ponto está coberto pelo escurecimento de qualquer jeito. */
 body:has(.modal-overlay.active) .badge-dot {
   animation-play-state: paused;
 }
@@ -1285,8 +1287,14 @@ body:has(.modal-overlay.active) .badge-dot {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(3, 4, 7, 0.7);
-  backdrop-filter: blur(8px);
+  /* Sem backdrop-filter, e o escurecimento é que separa do fundo. Um desfoque
+     de tela inteira aqui obriga o navegador a reprocessar a tela a cada quadro
+     da abertura: medido, a transição saía em ~6 quadros no lugar de ~18 (≈20fps),
+     e a chegada do modal se lia como atraso. Baixar o raio não adianta (2px
+     custou o mesmo que 8px), nem prender o vidro numa camada própria atrás do
+     card — só tirar. Atrás de um escurecimento de 85% o desfoque quase não
+     aparecia. Vale o mesmo para .lightbox-overlay, que ainda tem o seu. */
+  background-color: rgba(3, 4, 7, 0.85);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -1294,7 +1302,7 @@ body:has(.modal-overlay.active) .badge-dot {
   padding: 32px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .modal-overlay.active {
@@ -1314,7 +1322,7 @@ body:has(.modal-overlay.active) .badge-dot {
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   transform: translateY(20px);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   padding: 32px 36px;
   /* Coluna: cabeçalho fixo, corpo rolável, ações fixas no rodapé */
   display: flex;
@@ -2332,7 +2340,9 @@ body.light-theme .calc-result-row.highlight strong {
 }
 
 body.light-theme .modal-overlay {
-  background-color: rgba(15, 23, 42, 0.45);
+  /* Mais opaco desde que o overlay perdeu o desfoque: era o blur que segurava
+     a leitura do conteúdo por trás, e 45% sozinho deixava o fundo competindo. */
+  background-color: rgba(15, 23, 42, 0.6);
 }
 
 body.light-theme .empty-table-state :is(i, svg) {
