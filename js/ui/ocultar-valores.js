@@ -78,13 +78,19 @@ export function escreverValor(el, texto) {
   el.textContent = oculto ? MASCARA : texto;
 }
 
+/** Escreve a máscara (ou o valor real) num elemento que já carrega `data-valor-real`. */
+function mascarar(el) {
+  el.textContent = oculto ? MASCARA : el.dataset.valorReal;
+}
+
 /**
  * Reaplica o estado atual em tudo que carrega `data-valor-real` dentro da
- * raiz. Para HTML montado por template string, que não passou por
- * escreverValor.
+ * raiz — inclusive a própria raiz, se for ela quem carrega o atributo (ex.:
+ * um card sensível passado direto, sem wrapper). `document` não tem
+ * `dataset`, daí o acesso opcional. Para HTML montado por template string,
+ * que não passou por escreverValor.
  */
 export function aplicarOcultacao(raiz = document) {
-  raiz.querySelectorAll('[data-valor-real]').forEach((el) => {
-    el.textContent = oculto ? MASCARA : el.dataset.valorReal;
-  });
+  if (raiz.dataset?.valorReal !== undefined) mascarar(raiz);
+  raiz.querySelectorAll('[data-valor-real]').forEach(mascarar);
 }
