@@ -43,7 +43,9 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 | `js/image-processing.js` | Comprime a imagem escolhida para WebP (1600px + thumb 400px), sem I/O |
 | `js/services/trade-images.js` | Upload/remoção no Storage e URLs assinadas em lote (bucket privado) |
 | `js/ui/lightbox.js` | Visualização em tela cheia das imagens da operação |
+| `js/ui/ocultar-valores.js` | Modo privacidade: máscara `•••••` sobre os valores sensíveis, estado no `localStorage` |
 | `tests/image-processing.test.html` | Teste da compressão — abrir no navegador servido por HTTP |
+| `tests/ocultar-valores.test.html` | Teste da máscara de valores — abrir no navegador servido por HTTP |
 | `style.css`, `auth.css` | Estilos, com tema dark/light |
 | `supabase/schema.sql` | Schema idempotente (tabelas, triggers, RLS, realtime) p/ colar no SQL Editor |
 
@@ -127,6 +129,20 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   antes deixaria, se o delete no banco falhasse, uma operação viva apontando para um
   arquivo que já não existe mais. **O export JSON não leva as imagens**, só avisa
   quantas ficaram de fora.
+- **Ocultar valores (modo privacidade):** o botão de olho no Diário e no Dashboard troca
+  todo valor sensível das duas páginas por `•••••` — acumulado, win rate, média, os
+  indicadores (`Saldo positivo`, `3 de 5 vitoriosos`), o resumo do gráfico, o eixo Y e o
+  tooltip, o valor do card e a coluna de resultado da tabela. **"Operações registradas"
+  e "Trades: N" ficam visíveis**: dizem quanto do bloco foi preenchido, não como você
+  foi, e são o que permite continuar usando o app com os valores fechados. **Cor é
+  valor** — no modo ativo a máscara sai neutra, o realce `win-trend`/`loss-trend` do card
+  fica suspenso e a linha do gráfico vai de cinza; a supressão é CSS sob
+  `body.valores-ocultos` porque `updateKPIs` reescreve `className` a cada render.
+  **A cor take/stop dos 35 cards do grid permanece**, e isso é deliberado: neutralizar
+  tudo vira uma parede cinza ilegível. O modo esconde **o quanto**, não **o se** — quem
+  olhar de perto conta acertos e erros. Fica no `localStorage`
+  (`monolith:valores-ocultos`), **não** no `user_preferences`: privacidade é propriedade
+  de onde você está, não de quem você é. Calculadoras, modal e export JSON ficam fora.
 
 ## Convenções ao trabalhar aqui
 
@@ -164,6 +180,12 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 - **snake_case no banco ↔ camelCase no app:** o banco usa `block_index`/`trade_date`; o app
   usa `blockIndex`/`date`. A ponte é a função `rowToTrade()` em `js/services/trades.js` —
   ao adicionar/renomear um campo, atualize os **dois lados**.
+- **Valor sensível novo na tela nasce por `escreverValor()`** (`js/ui/ocultar-valores.js`),
+  nunca por `el.textContent =`. Em HTML de template string, emita
+  `data-valor-real="${escapeHTML(texto)}"` e chame `aplicarOcultacao(container)` ao final
+  do render. **A fonte da verdade é o atributo, jamais o texto que está na tela:** mascarar
+  lendo o `textContent` grava `•••••` por cima do valor real na segunda passada e o número
+  se perde até o próximo fetch — foi por isso que a máscara nasceu idempotente.
 
 ## Segurança / cuidados
 
