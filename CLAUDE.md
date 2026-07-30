@@ -139,10 +139,14 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   fica suspenso e a linha do gráfico vai de cinza; a supressão é CSS sob
   `body.valores-ocultos` porque `updateKPIs` reescreve `className` a cada render.
   **A cor take/stop dos 35 cards do grid permanece**, e isso é deliberado: neutralizar
-  tudo vira uma parede cinza ilegível. O modo esconde **o quanto**, não **o se** — quem
-  olhar de perto conta acertos e erros. Fica no `localStorage`
+  tudo vira uma parede cinza ilegível. Como **"Operações registradas" continua visível**
+  junto dos cards coloridos, o win rate é **dedutível por contagem** (verdes ÷ (verdes +
+  vermelhos)), não uma estimativa — o que o modo de fato fecha é **a magnitude**:
+  acumulado, média, valor de cada operação. Fica no `localStorage`
   (`monolith:valores-ocultos`), **não** no `user_preferences`: privacidade é propriedade
   de onde você está, não de quem você é. Calculadoras, modal e export JSON ficam fora.
+  **Limitação conhecida:** duas abas abertas não sincronizam o estado do modo entre si —
+  ocultar numa deixa a outra à mostra.
 
 ## Convenções ao trabalhar aqui
 
