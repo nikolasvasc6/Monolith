@@ -112,6 +112,46 @@
     conta('inicializar devolve false sem a chave', inicializarOcultacao() === false);
   }
 
+  // 8. aplicarOcultacao(raiz) só mexe no que está dentro da raiz passada —
+  //    é o contrato que renderGridView/renderListView usam de verdade
+  {
+    definirOculto(false);
+    const container = document.createElement('div');
+    const dentro = elemento();
+    escreverValor(dentro, '$ 100,00');
+    container.appendChild(dentro);
+    document.body.appendChild(container);
+
+    const fora = elemento();
+    escreverValor(fora, '$ 200,00');
+    document.body.appendChild(fora);
+
+    definirOculto(true);
+    aplicarOcultacao(container);
+    conta('elemento dentro da raiz é mascarado', dentro.textContent === MASCARA, dentro.textContent);
+    conta('elemento fora da raiz não é tocado', fora.textContent === '$ 200,00', fora.textContent);
+
+    container.remove();
+    fora.remove();
+    definirOculto(false);
+  }
+
+  // 9. A própria raiz é mascarada quando é ela quem carrega data-valor-real
+  //    (correção nº 1: querySelectorAll não casa com o elemento raiz)
+  {
+    definirOculto(false);
+    const raizSensivel = elemento();
+    escreverValor(raizSensivel, '$ 300,00');
+    document.body.appendChild(raizSensivel);
+
+    definirOculto(true);
+    aplicarOcultacao(raizSensivel);
+    conta('a raiz com data-valor-real nela mesma é mascarada', raizSensivel.textContent === MASCARA, raizSensivel.textContent);
+
+    raizSensivel.remove();
+    definirOculto(false);
+  }
+
   // Restaura a preferência real do usuário
   if (preferenciaOriginal === null) localStorage.removeItem(CHAVE);
   else localStorage.setItem(CHAVE, preferenciaOriginal);
