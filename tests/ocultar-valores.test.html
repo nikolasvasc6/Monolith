@@ -1,0 +1,124 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Teste — ocultar-valores</title>
+<style>
+  body { font: 14px/1.5 monospace; padding: 24px; background: #0c0f17; color: #e2e8f0; }
+  .ok   { color: #10b981; }
+  .fail { color: #f43f5e; }
+  h1 { font-size: 16px; }
+</style>
+<h1>ocultar-valores</h1>
+<div id="saida"></div>
+<script type="module">
+  import {
+    MASCARA, estaOculto, definirOculto, alternarOculto,
+    escreverValor, aplicarOcultacao, inicializarOcultacao
+  } from '../js/ui/ocultar-valores.js';
+
+  const saida = document.getElementById('saida');
+  let falhas = 0;
+
+  function conta(nome, condicao, detalhe = '') {
+    const li = document.createElement('div');
+    li.className = condicao ? 'ok' : 'fail';
+    li.textContent = `${condicao ? 'PASSOU' : 'FALHOU'} — ${nome}${detalhe ? ' :: ' + detalhe : ''}`;
+    saida.appendChild(li);
+    if (!condicao) falhas++;
+  }
+
+  // O teste roda na mesma origem do app: guardar e restaurar a preferência
+  // real do usuário, senão abrir o teste muda o estado do Monolith no navegador.
+  const CHAVE = 'monolith:valores-ocultos';
+  const preferenciaOriginal = localStorage.getItem(CHAVE);
+
+  function elemento(texto = '') {
+    const el = document.createElement('span');
+    el.textContent = texto;
+    return el;
+  }
+
+  // 1. Visível: escreverValor põe o texto real e registra a fonte da verdade
+  {
+    definirOculto(false);
+    const el = elemento();
+    escreverValor(el, '$ 1.234,00');
+    conta('visível mostra o valor real', el.textContent === '$ 1.234,00', el.textContent);
+    conta('guarda o valor real no dataset', el.dataset.valorReal === '$ 1.234,00', el.dataset.valorReal);
+  }
+
+  // 2. Oculto: escreverValor mascara mas continua guardando o real
+  {
+    definirOculto(true);
+    const el = elemento();
+    escreverValor(el, '$ 1.234,00');
+    conta('oculto mostra a máscara', el.textContent === MASCARA, el.textContent);
+    conta('oculto ainda guarda o valor real', el.dataset.valorReal === '$ 1.234,00', el.dataset.valorReal);
+  }
+
+  // 3. aplicarOcultacao é idempotente — o defeito que ela existe para evitar é
+  //    ler o texto da tela como se fosse o valor real e gravar a máscara por cima
+  {
+    definirOculto(false);
+    const el = elemento();
+    escreverValor(el, '+$ 500,00');
+    definirOculto(true);
+    document.body.appendChild(el);
+    aplicarOcultacao();
+    aplicarOcultacao();
+    aplicarOcultacao();
+    conta('mascarar 3 vezes seguidas não perde o valor', el.dataset.valorReal === '+$ 500,00', el.dataset.valorReal);
+    definirOculto(false);
+    aplicarOcultacao();
+    conta('desocultar devolve o valor real', el.textContent === '+$ 500,00', el.textContent);
+    el.remove();
+  }
+
+  // 4. Elemento sem data-valor-real não é tocado
+  {
+    definirOculto(true);
+    const el = elemento('4');
+    document.body.appendChild(el);
+    aplicarOcultacao();
+    conta('valor não sensível fica intacto', el.textContent === '4', el.textContent);
+    el.remove();
+  }
+
+  // 5. Persistência e classe no <body>
+  {
+    definirOculto(true);
+    conta('grava a preferência no localStorage', localStorage.getItem(CHAVE) === '1', String(localStorage.getItem(CHAVE)));
+    conta('marca o body', document.body.classList.contains('valores-ocultos'));
+    definirOculto(false);
+    conta('apaga a preferência ao desocultar', localStorage.getItem(CHAVE) === null, String(localStorage.getItem(CHAVE)));
+    conta('desmarca o body', !document.body.classList.contains('valores-ocultos'));
+  }
+
+  // 6. alternarOculto inverte e devolve o novo estado
+  {
+    definirOculto(false);
+    const novo = alternarOculto();
+    conta('alternar devolve o novo estado', novo === true, String(novo));
+    conta('alternar muda estaOculto()', estaOculto() === true, String(estaOculto()));
+    alternarOculto();
+    conta('alternar de novo volta ao visível', estaOculto() === false, String(estaOculto()));
+  }
+
+  // 7. inicializarOcultacao lê o que está gravado
+  {
+    localStorage.setItem(CHAVE, '1');
+    conta('inicializar devolve true com a chave gravada', inicializarOcultacao() === true);
+    conta('inicializar aplica a classe no body', document.body.classList.contains('valores-ocultos'));
+    localStorage.removeItem(CHAVE);
+    conta('inicializar devolve false sem a chave', inicializarOcultacao() === false);
+  }
+
+  // Restaura a preferência real do usuário
+  if (preferenciaOriginal === null) localStorage.removeItem(CHAVE);
+  else localStorage.setItem(CHAVE, preferenciaOriginal);
+  definirOculto(preferenciaOriginal === '1');
+
+  const resumo = document.createElement('h1');
+  resumo.textContent = falhas === 0 ? 'TUDO PASSOU' : `${falhas} FALHA(S)`;
+  resumo.className = falhas === 0 ? 'ok' : 'fail';
+  saida.appendChild(resumo);
+</script>
