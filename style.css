@@ -2246,7 +2246,7 @@ textarea:focus {
    e o realce de tendência do card fica suspenso. Precisa ser CSS: updateKPIs
    reescreve className a cada render e apagaria qualquer ajuste feito em JS.
    ========================================================================== */
-body.valores-ocultos :is(.kpi-value, .slot-pnl, .table-pnl):is(.pnl-positive, .pnl-negative),
+body.valores-ocultos :is(.kpi-value, .table-pnl):is(.pnl-positive, .pnl-negative),
 body.valores-ocultos :is(#summary-pl, #dash-summary-pl) {
   color: var(--text-secondary) !important;
 }
