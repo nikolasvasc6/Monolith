@@ -2208,6 +2208,38 @@ textarea:focus {
   height: 16px;
 }
 
+/* Botão de ocultar valores — quadrado, alinhado ao "Nova operação" ao lado */
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-ocultar-valores {
+  background-color: var(--surface-2);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-ocultar-valores:hover {
+  background-color: var(--surface-6);
+  color: var(--text-active);
+  border-color: var(--border-hover);
+}
+
+.btn-ocultar-valores :is(i, svg) {
+  width: 18px;
+  height: 18px;
+}
+
 /* ==========================================================================
    LIGHT THEME — Override de variáveis (todo o resto adapta automaticamente)
    ========================================================================== */

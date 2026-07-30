@@ -44,6 +44,12 @@ import {
   lightboxEstaAberto,
   lightboxTratouEsc
 } from './js/ui/lightbox.js';
+import {
+  estaOculto,
+  inicializarOcultacao,
+  alternarOculto,
+  escreverValor
+} from './js/ui/ocultar-valores.js';
 
 // ==========================================================================
 // CONSTANTES & ESTADO
@@ -161,6 +167,8 @@ function cacheDOM() {
   DOM.fileImportInput   = document.getElementById('file-import-input');
   DOM.btnResetApp       = document.getElementById('btn-reset-app');
   DOM.btnThemeToggle    = document.getElementById('btn-theme-toggle');
+  DOM.btnOcultarValores     = document.getElementById('btn-ocultar-valores');
+  DOM.btnOcultarValoresDash = document.getElementById('btn-ocultar-valores-dash');
   DOM.btnLogout         = document.getElementById('btn-logout');
   DOM.planForm          = document.getElementById('plan-form');
   DOM.btnSavePlan       = document.getElementById('btn-save-plan');
@@ -172,6 +180,10 @@ function cacheDOM() {
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', async () => {
   cacheDOM();
+  // Antes de qualquer render: senão o valor aparece por um instante e só
+  // depois é mascarado — o vazamento que o modo existe para evitar.
+  inicializarOcultacao();
+  atualizarBotoesOcultar();
   domReady = true;
   initAuthUI();
   setupEventListeners();
@@ -511,59 +523,59 @@ function updateKPIs(trades) {
 
   DOM.indAccumulated.className = 'kpi-indicator';
   if (count === 0) {
-    DOM.valAccumulated.textContent = formatCurrency(accumulated);
+    escreverValor(DOM.valAccumulated, formatCurrency(accumulated));
     DOM.valAccumulated.className = 'kpi-value';
-    DOM.indAccumulated.textContent = 'Sem operações';
+    escreverValor(DOM.indAccumulated, 'Sem operações');
   } else if (accumulated === 0) {
     // Bloco fechado exatamente no zero — com 0x0 no jogo isso acontece de
     // verdade, e chamar de "positivo" (verde) seria mentira
-    DOM.valAccumulated.textContent = formatCurrency(accumulated);
+    escreverValor(DOM.valAccumulated, formatCurrency(accumulated));
     DOM.valAccumulated.className = 'kpi-value';
-    DOM.indAccumulated.textContent = 'Saldo neutro';
+    escreverValor(DOM.indAccumulated, 'Saldo neutro');
   } else if (accumulated > 0) {
-    DOM.valAccumulated.textContent = formatCurrencySigned(accumulated);
+    escreverValor(DOM.valAccumulated, formatCurrencySigned(accumulated));
     DOM.valAccumulated.className = 'kpi-value pnl-positive';
-    DOM.indAccumulated.textContent = 'Saldo positivo';
+    escreverValor(DOM.indAccumulated, 'Saldo positivo');
     DOM.kpiAccumulatedCard.classList.add('win-trend');
   } else {
-    DOM.valAccumulated.textContent = formatCurrencySigned(accumulated);
+    escreverValor(DOM.valAccumulated, formatCurrencySigned(accumulated));
     DOM.valAccumulated.className = 'kpi-value pnl-negative';
-    DOM.indAccumulated.textContent = 'Saldo negativo';
+    escreverValor(DOM.indAccumulated, 'Saldo negativo');
     DOM.kpiAccumulatedCard.classList.add('loss-trend');
   }
 
-  DOM.valWinrate.textContent = winRate === null ? '—' : `${winRate}%`;
+  escreverValor(DOM.valWinrate, winRate === null ? '—' : `${winRate}%`);
   if (decided > 0) {
-    DOM.indWinrate.textContent = `${winTrades} de ${decided} vitoriosos`;
+    escreverValor(DOM.indWinrate, `${winTrades} de ${decided} vitoriosos`);
     if (winRate >= 50) DOM.kpiWinrateCard.classList.add('win-trend');
   } else {
-    DOM.indWinrate.textContent = 'Taxa de acerto do bloco';
+    escreverValor(DOM.indWinrate, 'Taxa de acerto do bloco');
   }
 
   DOM.indAverage.className = 'kpi-indicator';
   if (count === 0) {
-    DOM.valAverage.textContent = formatCurrency(average);
+    escreverValor(DOM.valAverage, formatCurrency(average));
     DOM.valAverage.className = 'kpi-value';
-    DOM.indAverage.textContent = 'Média de lucro/prejuízo';
+    escreverValor(DOM.indAverage, 'Média de lucro/prejuízo');
   } else if (average === 0) {
-    DOM.valAverage.textContent = formatCurrency(average);
+    escreverValor(DOM.valAverage, formatCurrency(average));
     DOM.valAverage.className = 'kpi-value';
-    DOM.indAverage.textContent = 'Média neutra';
+    escreverValor(DOM.indAverage, 'Média neutra');
   } else if (average > 0) {
-    DOM.valAverage.textContent = formatCurrencySigned(average);
+    escreverValor(DOM.valAverage, formatCurrencySigned(average));
     DOM.valAverage.className = 'kpi-value pnl-positive';
-    DOM.indAverage.textContent = 'Média positiva';
+    escreverValor(DOM.indAverage, 'Média positiva');
     DOM.kpiAverageCard.classList.add('win-trend');
   } else {
-    DOM.valAverage.textContent = formatCurrencySigned(average);
+    escreverValor(DOM.valAverage, formatCurrencySigned(average));
     DOM.valAverage.className = 'kpi-value pnl-negative';
-    DOM.indAverage.textContent = 'Média negativa';
+    escreverValor(DOM.indAverage, 'Média negativa');
     DOM.kpiAverageCard.classList.add('loss-trend');
   }
 
   DOM.summaryTradesCount.textContent = count;
-  DOM.summaryWinrate.textContent = winRate === null ? '—' : `${winRate}%`;
-  DOM.summaryPL.textContent = formatCurrency(accumulated);
+  escreverValor(DOM.summaryWinrate, winRate === null ? '—' : `${winRate}%`);
+  escreverValor(DOM.summaryPL, formatCurrency(accumulated));
   DOM.summaryPL.className = accumulated > 0 ? 'pnl-positive'
                           : accumulated < 0 ? 'pnl-negative'
                           : '';
@@ -873,60 +885,60 @@ function renderDashboard() {
 
   DOM.dashIndAccumulated.className = 'kpi-indicator';
   if (count === 0) {
-    DOM.dashValAccumulated.textContent = formatCurrency(accumulated);
+    escreverValor(DOM.dashValAccumulated, formatCurrency(accumulated));
     DOM.dashValAccumulated.className = 'kpi-value';
-    DOM.dashIndAccumulated.textContent = 'Sem operações';
+    escreverValor(DOM.dashIndAccumulated, 'Sem operações');
   } else if (accumulated === 0) {
     // Bloco fechado exatamente no zero — com 0x0 no jogo isso acontece de
     // verdade, e chamar de "positivo" (verde) seria mentira
-    DOM.dashValAccumulated.textContent = formatCurrency(accumulated);
+    escreverValor(DOM.dashValAccumulated, formatCurrency(accumulated));
     DOM.dashValAccumulated.className = 'kpi-value';
-    DOM.dashIndAccumulated.textContent = 'Saldo neutro';
+    escreverValor(DOM.dashIndAccumulated, 'Saldo neutro');
   } else if (accumulated > 0) {
-    DOM.dashValAccumulated.textContent = formatCurrencySigned(accumulated);
+    escreverValor(DOM.dashValAccumulated, formatCurrencySigned(accumulated));
     DOM.dashValAccumulated.className = 'kpi-value pnl-positive';
-    DOM.dashIndAccumulated.textContent = 'Saldo positivo';
+    escreverValor(DOM.dashIndAccumulated, 'Saldo positivo');
     DOM.dashKpiAccumulatedCard.classList.add('win-trend');
   } else {
-    DOM.dashValAccumulated.textContent = formatCurrencySigned(accumulated);
+    escreverValor(DOM.dashValAccumulated, formatCurrencySigned(accumulated));
     DOM.dashValAccumulated.className = 'kpi-value pnl-negative';
-    DOM.dashIndAccumulated.textContent = 'Saldo negativo';
+    escreverValor(DOM.dashIndAccumulated, 'Saldo negativo');
     DOM.dashKpiAccumulatedCard.classList.add('loss-trend');
   }
 
-  DOM.dashValWinrate.textContent = winRate === null ? '—' : `${winRate}%`;
+  escreverValor(DOM.dashValWinrate, winRate === null ? '—' : `${winRate}%`);
   if (decided > 0) {
-    DOM.dashIndWinrate.textContent = `${winTrades} de ${decided} vitoriosos`;
+    escreverValor(DOM.dashIndWinrate, `${winTrades} de ${decided} vitoriosos`);
     if (winRate >= 50) DOM.dashKpiWinrateCard.classList.add('win-trend');
   } else {
-    DOM.dashIndWinrate.textContent = 'Taxa de acerto da conta';
+    escreverValor(DOM.dashIndWinrate, 'Taxa de acerto da conta');
   }
 
   DOM.dashIndAverage.className = 'kpi-indicator';
   if (count === 0) {
-    DOM.dashValAverage.textContent = formatCurrency(average);
+    escreverValor(DOM.dashValAverage, formatCurrency(average));
     DOM.dashValAverage.className = 'kpi-value';
-    DOM.dashIndAverage.textContent = 'Média de lucro/prejuízo';
+    escreverValor(DOM.dashIndAverage, 'Média de lucro/prejuízo');
   } else if (average === 0) {
-    DOM.dashValAverage.textContent = formatCurrency(average);
+    escreverValor(DOM.dashValAverage, formatCurrency(average));
     DOM.dashValAverage.className = 'kpi-value';
-    DOM.dashIndAverage.textContent = 'Média neutra';
+    escreverValor(DOM.dashIndAverage, 'Média neutra');
   } else if (average > 0) {
-    DOM.dashValAverage.textContent = formatCurrencySigned(average);
+    escreverValor(DOM.dashValAverage, formatCurrencySigned(average));
     DOM.dashValAverage.className = 'kpi-value pnl-positive';
-    DOM.dashIndAverage.textContent = 'Média positiva';
+    escreverValor(DOM.dashIndAverage, 'Média positiva');
     DOM.dashKpiAverageCard.classList.add('win-trend');
   } else {
-    DOM.dashValAverage.textContent = formatCurrencySigned(average);
+    escreverValor(DOM.dashValAverage, formatCurrencySigned(average));
     DOM.dashValAverage.className = 'kpi-value pnl-negative';
-    DOM.dashIndAverage.textContent = 'Média negativa';
+    escreverValor(DOM.dashIndAverage, 'Média negativa');
     DOM.dashKpiAverageCard.classList.add('loss-trend');
   }
 
   // Resumo do card do gráfico
   DOM.dashSummaryTradesCount.textContent = count;
-  DOM.dashSummaryWinrate.textContent = winRate === null ? '—' : `${winRate}%`;
-  DOM.dashSummaryPL.textContent = formatCurrency(accumulated);
+  escreverValor(DOM.dashSummaryWinrate, winRate === null ? '—' : `${winRate}%`);
+  escreverValor(DOM.dashSummaryPL, formatCurrency(accumulated));
   DOM.dashSummaryPL.className = accumulated > 0 ? 'pnl-positive'
                               : accumulated < 0 ? 'pnl-negative'
                               : '';
@@ -1583,6 +1595,9 @@ function setupEventListeners() {
   // Tema
   DOM.btnThemeToggle.addEventListener('click', toggleTheme);
 
+  DOM.btnOcultarValores.addEventListener('click', alternarValoresOcultos);
+  DOM.btnOcultarValoresDash.addEventListener('click', alternarValoresOcultos);
+
   // Logout
   if (DOM.btnLogout) {
     DOM.btnLogout.addEventListener('click', async () => {
@@ -1726,6 +1741,33 @@ function applyTheme(theme) {
     if (btn) { btn.innerHTML = '<i data-lucide="sun"></i>'; btn.title = 'Alternar para Tema Claro'; }
   }
   if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ==========================================================================
+// OCULTAR VALORES
+// ==========================================================================
+/** Ícone e rótulo dizem a AÇÃO, não o estado: com valores à mostra, a ação é ocultar. */
+function atualizarBotoesOcultar() {
+  const oculto = estaOculto();
+  const icone  = oculto ? 'eye' : 'eye-off';
+  const rotulo = oculto ? 'Mostrar valores' : 'Ocultar valores';
+  [DOM.btnOcultarValores, DOM.btnOcultarValoresDash].forEach((btn) => {
+    if (!btn) return;
+    btn.innerHTML = `<i data-lucide="${icone}"></i>`;
+    btn.title = rotulo;
+    btn.setAttribute('aria-label', rotulo);
+  });
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+/**
+ * Um re-render completo, como o toggle de tema faz: além dos textos, os
+ * gráficos precisam nascer de novo (a cor da linha e o eixo Y mudam com o modo).
+ */
+function alternarValoresOcultos() {
+  alternarOculto();
+  atualizarBotoesOcultar();
+  renderApp();
 }
 
 // ==========================================================================
