@@ -2261,6 +2261,10 @@ body.valores-ocultos .kpi-card:is(.win-trend, .loss-trend) .kpi-icon-wrapper {
   border-color: var(--border-color);
 }
 
+body.valores-ocultos .grid-slot:is(.slot-win, .slot-loss) .slot-pnl {
+  color: var(--text-secondary);
+}
+
 /* ==========================================================================
    LIGHT THEME — Override de variáveis (todo o resto adapta automaticamente)
    ========================================================================== */
