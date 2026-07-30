@@ -48,7 +48,8 @@ import {
   estaOculto,
   inicializarOcultacao,
   alternarOculto,
-  escreverValor
+  escreverValor,
+  aplicarOcultacao
 } from './js/ui/ocultar-valores.js';
 
 // ==========================================================================
@@ -592,6 +593,9 @@ function renderGridView(trades) {
       const classeResultado = trade.type === 'zero' ? 'slot-zero'
                             : trade.pnl >= 0        ? 'slot-win'
                             : 'slot-loss';
+      const textoPnl = trade.type === 'zero'
+        ? '0 x 0'
+        : `${trade.pnl >= 0 ? '+' : ''} ${formatCurrency(trade.pnl)}`;
       slotEl.className = `grid-slot slot-filled ${classeResultado}`
                        + (temImagem ? ' slot-has-image' : '');
       slotEl.innerHTML = `
@@ -608,7 +612,7 @@ function renderGridView(trades) {
           <!-- No 0x0 o card mostra o rótulo, não o valor: "$0.00" se lê como
                um resultado medido, e o empate é ausência de resultado. Na
                tabela o valor continua, porque lá a coluna Tipo já diz 0x0. -->
-          <div class="slot-pnl">${trade.type === 'zero' ? '0 x 0' : `${trade.pnl >= 0 ? '+' : ''} ${formatCurrency(trade.pnl)}`}</div>
+          <div class="slot-pnl" data-valor-real="${escapeHTML(textoPnl)}">${textoPnl}</div>
         </div>
         <div class="slot-footer">
           <span class="slot-date">${formatDateBR(trade.date)}</span>
@@ -631,6 +635,8 @@ function renderGridView(trades) {
     }
     DOM.gridContainer.appendChild(slotEl);
   }
+  // Os cards nascem de template string, sem passar por escreverValor
+  aplicarOcultacao(DOM.gridContainer);
   hidratarMiniaturasDoGrid(trades);
 }
 
@@ -726,12 +732,13 @@ function renderListView(trades) {
     const pnlClass  = ehZero ? 'pnl-neutral' : trade.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
     const typeLabel = ehZero ? '0x0' : trade.type === 'take' ? 'Take' : 'Stop';
     const typeClass = ehZero ? 'type-zero' : trade.type === 'take' ? 'pnl-positive' : 'pnl-negative';
+    const textoPnl = `${ehZero ? '' : trade.pnl >= 0 ? '+' : ''}${formatCurrency(trade.pnl)}`;
     tr.innerHTML = `
       <td class="table-index">#${String(index + 1).padStart(2, '0')}</td>
       <td class="table-asset">${escapeHTML(trade.asset)}</td>
       <td class="table-type ${typeClass}">${typeLabel}</td>
       <td>${formatDateBR(trade.date)}</td>
-      <td class="table-pnl ${pnlClass}">${ehZero ? '' : trade.pnl >= 0 ? '+' : ''}${formatCurrency(trade.pnl)}</td>
+      <td class="table-pnl ${pnlClass}" data-valor-real="${escapeHTML(textoPnl)}">${textoPnl}</td>
       <td class="table-notes" title="${escapeHTML(trade.notes || '')}">${escapeHTML(trade.notes || '-')}</td>
       <td>
         <div class="table-actions">
@@ -752,6 +759,7 @@ function renderListView(trades) {
     });
     DOM.tableBodyContainer.appendChild(tr);
   });
+  aplicarOcultacao(DOM.tableBodyContainer);
 }
 
 // ==========================================================================
