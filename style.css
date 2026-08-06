@@ -5,16 +5,43 @@
   --font-primary: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-secondary: 'Inter', sans-serif;
 
-  /* Colors */
-  --bg-main: #07090e;
-  --bg-gradient-start: #07090e;
-  --bg-gradient-end: #0c0f17;
-  --bg-card: #111622;
-  --bg-card-hover: #151c2c;
-  --bg-sidebar: #0a0d14;
-  --bg-topbar: rgba(8, 10, 15, 0.85);
-  
-  --border-color: var(--surface-6);
+  /* Colors
+     O card precisa se separar do fundo em TODA a extensão do gradiente, e o
+     ponto difícil não é a base escura — é o glow azulado do topo, bem onde
+     ficam os KPIs. Até ago/2026 o card (#111622) e esse glow (#0e1424) tinham
+     contraste de 1.015: indistinguíveis, com uma borda de 6% fazendo todo o
+     trabalho. Ao mexer aqui, refaça a conta contra --bg-gradient-glow, não
+     contra --bg-main.
+
+     A separação vem do CONTORNO, não da luminância da superfície. O card é
+     escuro (#151d2b) e quem recorta é a borda de 12%: contra o fundo ela dá
+     ~1.67, enquanto o contraste de superfície fica em ~1.16. Clarear o card é
+     o caminho óbvio e o errado aqui — numa tentativa ele foi a #1e2838 e a
+     interface inteira ficou acinzentada. Num app que se usa por horas, com o
+     gráfico e as cores de resultado como assunto, o fundo tem de sumir, não
+     competir.
+
+     O fundo já foi testado em preto puro (#000000), que sobe todos os
+     contrastes de uma vez sem clarear nada — 1.192 no pior caso, 1.707 no
+     recorte. Foi descartado por gosto do Nikolas (ago/2026): o quase-preto
+     azulado daqui é a escolha, não uma aproximação por falta de teste. */
+  --bg-main: #010305;
+  --bg-gradient-start: #010305;
+  --bg-gradient-end: #04070e;
+  --bg-card: #151d2b;
+  --bg-card-hover: #1a2333;
+  /* Sidebar e topbar são o mesmo degrau, entre o fundo e os cards, e ficam
+     ABAIXO do card de propósito: navegação e barra são moldura, o conteúdo é
+     que deve estar na frente. Antes ficavam a 1.03 do fundo — só a borda dizia
+     onde uma acabava e a outra começava. A topbar leva a mesma cor com alpha,
+     porque as duas se encontram no canto superior esquerdo e um degrau
+     diferente ali apareceria como emenda. */
+  --bg-sidebar: #0b1018;
+  --bg-topbar: rgba(11, 16, 24, 0.85);
+
+  /* 12%, contra os 6% de antes: como a separação passou a vir do contorno, é
+     esta linha que carrega o recorte de todo card, input e linha de tabela. */
+  --border-color: var(--surface-12);
   --border-light: var(--surface-3);
   --border-hover: rgba(255, 255, 255, 0.12);
   
@@ -47,9 +74,14 @@
   --surface-5: rgba(255, 255, 255, 0.05);
   --surface-6: rgba(255, 255, 255, 0.06);
   --surface-8: rgba(255, 255, 255, 0.08);
+  --surface-12: rgba(255, 255, 255, 0.12);
   --scrollbar-thumb: rgba(255, 255, 255, 0.1);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
-  --bg-gradient-glow: #0e1424;
+  /* O ponto mais claro do fundo (topo da página, atrás dos KPIs) — é contra
+     ele que o contraste do card tem de ser medido. Ver a nota em --bg-card.
+     Subir este valor é a forma mais fácil de estragar o contraste dos KPIs,
+     porque é exatamente atrás deles que o glow é mais forte. */
+  --bg-gradient-glow: #060b16;
 
   /* Slots vazios do diário — visíveis sem competir com os preenchidos */
   --slot-empty-border: rgba(255, 255, 255, 0.16);
@@ -2401,6 +2433,7 @@ body.light-theme {
   --surface-5: rgba(0, 0, 0, 0.05);
   --surface-6: rgba(0, 0, 0, 0.06);
   --surface-8: rgba(0, 0, 0, 0.08);
+  --surface-12: rgba(0, 0, 0, 0.12);
   --scrollbar-thumb: rgba(0, 0, 0, 0.15);
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
 

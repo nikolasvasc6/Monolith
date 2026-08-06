@@ -11,7 +11,7 @@
   justify-content: center;
   background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.18), transparent 50%),
               radial-gradient(circle at 70% 80%, rgba(16, 185, 129, 0.12), transparent 50%),
-              #0c0f17;
+              var(--bg-gradient-end, #080b12);
   z-index: 9999;
   padding: 1.25rem;
 }
@@ -27,9 +27,9 @@ body.light-theme #auth-screen {
 .auth-card {
   width: 100%;
   max-width: 420px;
-  background: rgba(17, 22, 34, 0.85);
+  background: rgba(21, 29, 43, 0.85);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
   padding: 2.25rem 2rem;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
@@ -202,7 +202,7 @@ body.light-theme #auth-info  { color: #047857; }
   display: none;
   align-items: center;
   justify-content: center;
-  background: rgba(12, 15, 23, 0.85);
+  background: rgba(1, 3, 5, 0.88);
   z-index: 9998;
   color: #e2e8f0;
   font-family: 'Inter', sans-serif;
@@ -245,7 +245,7 @@ body.light-theme #app-loading {
 .toast {
   min-width: 240px;
   max-width: 360px;
-  background: #111622;
+  background: var(--bg-card, #151d2b);
   color: #e2e8f0;
   padding: 0.75rem 1rem;
   border-radius: 8px;

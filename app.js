@@ -795,17 +795,25 @@ function renderChart(canvas, trades, opts = {}) {
   gradient.addColorStop(1, colorGradientEnd);
 
   const isLight = document.body.classList.contains('light-theme');
+  // Cores do tema lidas das variáveis, e não repetidas em hex aqui: o canvas
+  // não enxerga CSS, então tudo que ele desenha precisa vir por esta ponte —
+  // e um hex copiado aqui envelhece calado quando a paleta muda (foi o que
+  // aconteceu com o fundo do tooltip, preso no card antigo).
+  const estilosDoTema = getComputedStyle(document.body);
+  const varDoTema = (nome, alternativa) =>
+    estilosDoTema.getPropertyValue(nome).trim() || alternativa;
+
   const gridColorY = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.03)';
   const tickColor = isLight ? '#4b5563' : '#64748b';
-  const tooltipBg = isLight ? '#ffffff' : '#111622';
+  const tooltipBg = varDoTema('--bg-card', isLight ? '#ffffff' : '#151d2b');
   const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)';
   const tooltipText = isLight ? '#1f2937' : '#f8fafc';
-  // Cores do sinal do tooltip, lidas do tema como o neutro acima — as mesmas
-  // que `.pnl-positive`/`.pnl-negative` usam no card e na tabela.
-  const estilosDoTema = getComputedStyle(document.body);
-  const corLucro = estilosDoTema.getPropertyValue('--color-success').trim() || '#10b981';
-  const corPrejuizo = estilosDoTema.getPropertyValue('--color-danger').trim() || '#f43f5e';
-  const pointBorderColor = isLight ? '#ffffff' : '#0c0f17';
+  // As mesmas que `.pnl-positive`/`.pnl-negative` usam no card e na tabela.
+  const corLucro = varDoTema('--color-success', '#10b981');
+  const corPrejuizo = varDoTema('--color-danger', '#f43f5e');
+  // O ponto do gráfico é recortado do fundo do CARD, que é onde ele está
+  // desenhado — não do fundo da página.
+  const pointBorderColor = varDoTema('--bg-card', isLight ? '#ffffff' : '#151d2b');
   const crosshairColor = isLight ? 'rgba(0, 0, 0, 0.28)' : 'rgba(255, 255, 255, 0.28)';
 
   const crosshairPlugin = {
