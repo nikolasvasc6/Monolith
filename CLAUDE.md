@@ -164,6 +164,16 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   abria 6 em 1920). Travar a **largura da faixa** é o que preserva o card em 216px:
   fixar a *contagem de colunas* o faria esticar de novo, que é o defeito de jul/2026.
   Se um dia `TRADES_PER_BLOCK` mudar, revise o 5 junto — os dois números andam casados.
+- **A página tem uma coluna de conteúdo só, e ela é a faixa do bloco de 35.**
+  `--largura-conteudo` (1128px = 5 × 216 + 4 × 12) centraliza toda `.page-section`;
+  cabeçalho, KPIs, gráfico, barra de controle, grid e tabela compartilham a mesma borda.
+  Antes (até ago/2026) só o grid era centralizado e o resto esticava até o fim da janela,
+  o que dava à página duas bordas esquerdas. Três detalhes que não são enfeite:
+  o `max-width` **soma o padding** (`box-sizing: border-box` o desconta da faixa útil —
+  sem somar, o `auto-fill` cairia de 5 colunas para 4); o `width: 100%` impede que a seção
+  estoure o pai (item flex com margem auto no eixo transversal para de esticar e vira
+  scroll horizontal em janela < 1192px); e a **topbar fica de fora**, de propósito.
+  Página nova **não cria centralização própria** — herda a da `.page-section`.
 - **Todo texto de UI e mensagens de erro em pt-BR.**
 - **Toda I/O de dados passa pelos serviços** (`js/services/*`) — não chame `supabase`
   diretamente do `app.js`.

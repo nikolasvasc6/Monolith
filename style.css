@@ -67,6 +67,18 @@
      para preencher a faixa; a sobra vira margem. */
   --colunas-card-trade: 5;
 
+  /* Coluna de conteúdo das páginas (.page-section). É a MESMA faixa do bloco de
+     35 — o grid já nascia centralizado nessa medida, então cabeçalho, KPIs,
+     gráfico, barra de controle e tabela alinhados a ela dão à página uma borda
+     esquerda só, em vez das duas de antes (até ago/2026 tudo esticava até o fim
+     da janela e só o grid ficava recuado). Mexeu na largura do card ou no teto de
+     colunas, a coluna acompanha sozinha. */
+  --largura-conteudo: calc(
+    var(--colunas-card-trade) * var(--largura-card-trade) +
+    (var(--colunas-card-trade) - 1) * var(--gap-card-trade)
+  );
+  --padding-pagina: 32px;
+
   /* Altura da área do gráfico de performance (.chart-wrapper). É a fonte única:
      o gradiente do preenchimento é criado em JS com esta mesma altura
      (renderChart, em app.js) — gradiente mais curto que o canvas deixaria a
@@ -465,7 +477,21 @@ body:has(.modal-overlay.active) .badge-dot {
    ========================================================================== */
 .page-section {
   display: none;
-  padding: 32px;
+  padding: var(--padding-pagina);
+  /* O padding entra no max-width porque `box-sizing: border-box` o desconta da
+     faixa útil: sem somá-lo aqui sobrariam 64px a menos e o `auto-fill` do
+     .trades-grid cairia de 5 colunas para 4, quebrando as 7 linhas cheias do
+     bloco. A topbar fica de fora de propósito — barra é de janela inteira. */
+  max-width: calc(var(--largura-conteudo) + 2 * var(--padding-pagina));
+  /* O `width: 100%` não é decorativo: .main-content é `display: flex; column`,
+     e um item flex com margem auto no eixo transversal deixa de esticar e passa
+     a se dimensionar pelo próprio conteúdo — em janela menor que o max-width a
+     seção ficava mais larga que o pai e a página inteira ganhava scroll
+     horizontal (medido: janela de 1084px, seção de 1084px dentro de um pai de
+     806px). Com o 100% a largura volta a ser resolvida contra o pai, e o
+     max-width só morde quando sobra espaço. */
+  width: 100%;
+  margin-inline: auto;
   animation: fadeIn 0.4s ease;
 }
 
@@ -877,10 +903,7 @@ body:has(.modal-overlay.active) .badge-dot {
   grid-template-columns: repeat(auto-fill, minmax(0, var(--largura-card-trade)));
   justify-content: center;
   gap: var(--gap-card-trade);
-  max-width: calc(
-    var(--colunas-card-trade) * var(--largura-card-trade) +
-    (var(--colunas-card-trade) - 1) * var(--gap-card-trade)
-  );
+  max-width: var(--largura-conteudo);
   margin: 0 auto 40px;
 }
 
@@ -2356,15 +2379,12 @@ body.light-theme .empty-table-state :is(i, svg) {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 1100px;
-  margin: 0 auto 40px;
-}
-
-/* Cabeçalho da página alinhado ao container centralizado */
-#page-trading-plan .page-header {
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
+  /* Sem max-width próprio: quem centraliza é a coluna do .page-section
+     (--largura-conteudo), igual para todas as páginas. O 1100px que existia
+     aqui era a centralização isolada desta página e, com a coluna geral, virava
+     um segundo recuo — o cabeçalho do Plano ficava 28px mais estreito que o do
+     Diário. */
+  margin-bottom: 40px;
 }
 
 .plan-row-3 {
