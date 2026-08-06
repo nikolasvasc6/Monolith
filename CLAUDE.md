@@ -88,7 +88,13 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   rate** (`takes ÷ (total − zeros)`) — empate não é acerto nem erro —, mas continua
   contando nas operações registradas e na média por operação, porque ocupou um slot do
   bloco. Bloco sem nenhuma operação decidida mostra `—`, não `0%`, e saldo/média
-  exatamente zero são rotulados "neutro", sem cor.
+  exatamente zero saem **sem sinal e sem cor** — é assim que o zero neutro se distingue
+  do lucro e do prejuízo.
+- **Acumulado e média não têm linha de indicador** (ago/2026). "Saldo positivo",
+  "Média negativa" e companhia repetiam o que o sinal e a cor do valor já diziam, e
+  custavam uma linha em cada card. **Win rate mantém a dele** (`3 de 5 vitoriosos`),
+  que não é redundante: informa a base do cálculo, invisível no percentual. Vale nas
+  duas telas — Diário e Dashboard.
 - **Calculadoras de risco** (não persistem nada): Forex (lote por pip), Futuros EUA/CME,
   B3 (WIN/IND/WDO/DOL) e BTC CFD. Todas dimensionam a posição **arredondando para baixo**
   para nunca ultrapassar o risco definido.
@@ -130,8 +136,8 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   arquivo que já não existe mais. **O export JSON não leva as imagens**, só avisa
   quantas ficaram de fora.
 - **Ocultar valores (modo privacidade):** o botão de olho no Diário e no Dashboard troca
-  todo valor sensível das duas páginas por `•••••` — acumulado, win rate, média, os
-  indicadores (`Saldo positivo`, `3 de 5 vitoriosos`), o resumo do gráfico, o eixo Y e o
+  todo valor sensível das duas páginas por `•••••` — acumulado, win rate, média, o
+  indicador do win rate (`3 de 5 vitoriosos`), o resumo do gráfico, o eixo Y e o
   tooltip, o valor do card e a coluna de resultado da tabela. **"Operações registradas"
   e "Trades: N" ficam visíveis**: dizem quanto do bloco foi preenchido, não como você
   foi, e são o que permite continuar usando o app com os valores fechados. **Cor é

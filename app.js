@@ -101,11 +101,9 @@ function cacheDOM() {
   DOM.subRegistered     = document.getElementById('sub-registered');
   DOM.progressRegistered= document.getElementById('progress-registered');
   DOM.valAccumulated    = document.getElementById('val-accumulated');
-  DOM.indAccumulated    = document.getElementById('ind-accumulated');
   DOM.valWinrate        = document.getElementById('val-winrate');
   DOM.indWinrate        = document.getElementById('ind-winrate');
   DOM.valAverage        = document.getElementById('val-average');
-  DOM.indAverage        = document.getElementById('ind-average');
   DOM.kpiAccumulatedCard= document.getElementById('kpi-accumulated');
   DOM.kpiWinrateCard    = document.getElementById('kpi-winrate');
   DOM.kpiAverageCard    = document.getElementById('kpi-average');
@@ -126,11 +124,9 @@ function cacheDOM() {
   DOM.dashValRegistered      = document.getElementById('dash-val-registered');
   DOM.dashSubRegistered      = document.getElementById('dash-sub-registered');
   DOM.dashValAccumulated     = document.getElementById('dash-val-accumulated');
-  DOM.dashIndAccumulated     = document.getElementById('dash-ind-accumulated');
   DOM.dashValWinrate         = document.getElementById('dash-val-winrate');
   DOM.dashIndWinrate         = document.getElementById('dash-ind-winrate');
   DOM.dashValAverage         = document.getElementById('dash-val-average');
-  DOM.dashIndAverage         = document.getElementById('dash-ind-average');
 
   DOM.btnToggleGrid     = document.getElementById('btn-toggle-grid');
   DOM.btnToggleList     = document.getElementById('btn-toggle-list');
@@ -524,26 +520,20 @@ function updateKPIs(trades) {
   DOM.kpiWinrateCard.classList.remove('win-trend');
   DOM.kpiAverageCard.classList.remove('win-trend', 'loss-trend');
 
-  DOM.indAccumulated.className = 'kpi-indicator';
-  if (count === 0) {
+  // Sem linha de indicador: "Saldo positivo/negativo" repetia o que o sinal e a
+  // cor do próprio valor já dizem. Bloco vazio e saldo exatamente zero saem
+  // como `$0.00` sem cor — o zero neutro continua distinguível do lucro e do
+  // prejuízo pela ausência de sinal, que é o que "Saldo neutro" informava.
+  if (count === 0 || accumulated === 0) {
     escreverValor(DOM.valAccumulated, formatCurrency(accumulated));
     DOM.valAccumulated.className = 'kpi-value';
-    escreverValor(DOM.indAccumulated, 'Sem operações');
-  } else if (accumulated === 0) {
-    // Bloco fechado exatamente no zero — com 0x0 no jogo isso acontece de
-    // verdade, e chamar de "positivo" (verde) seria mentira
-    escreverValor(DOM.valAccumulated, formatCurrency(accumulated));
-    DOM.valAccumulated.className = 'kpi-value';
-    escreverValor(DOM.indAccumulated, 'Saldo neutro');
   } else if (accumulated > 0) {
     escreverValor(DOM.valAccumulated, formatCurrencySigned(accumulated));
     DOM.valAccumulated.className = 'kpi-value pnl-positive';
-    escreverValor(DOM.indAccumulated, 'Saldo positivo');
     DOM.kpiAccumulatedCard.classList.add('win-trend');
   } else {
     escreverValor(DOM.valAccumulated, formatCurrencySigned(accumulated));
     DOM.valAccumulated.className = 'kpi-value pnl-negative';
-    escreverValor(DOM.indAccumulated, 'Saldo negativo');
     DOM.kpiAccumulatedCard.classList.add('loss-trend');
   }
 
@@ -555,24 +545,17 @@ function updateKPIs(trades) {
     escreverValor(DOM.indWinrate, 'Taxa de acerto do bloco');
   }
 
-  DOM.indAverage.className = 'kpi-indicator';
-  if (count === 0) {
+  // Mesma razão do acumulado: o sinal e a cor do valor bastam.
+  if (count === 0 || average === 0) {
     escreverValor(DOM.valAverage, formatCurrency(average));
     DOM.valAverage.className = 'kpi-value';
-    escreverValor(DOM.indAverage, 'Média de lucro/prejuízo');
-  } else if (average === 0) {
-    escreverValor(DOM.valAverage, formatCurrency(average));
-    DOM.valAverage.className = 'kpi-value';
-    escreverValor(DOM.indAverage, 'Média neutra');
   } else if (average > 0) {
     escreverValor(DOM.valAverage, formatCurrencySigned(average));
     DOM.valAverage.className = 'kpi-value pnl-positive';
-    escreverValor(DOM.indAverage, 'Média positiva');
     DOM.kpiAverageCard.classList.add('win-trend');
   } else {
     escreverValor(DOM.valAverage, formatCurrencySigned(average));
     DOM.valAverage.className = 'kpi-value pnl-negative';
-    escreverValor(DOM.indAverage, 'Média negativa');
     DOM.kpiAverageCard.classList.add('loss-trend');
   }
 
@@ -817,6 +800,11 @@ function renderChart(canvas, trades, opts = {}) {
   const tooltipBg = isLight ? '#ffffff' : '#111622';
   const tooltipBorder = isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)';
   const tooltipText = isLight ? '#1f2937' : '#f8fafc';
+  // Cores do sinal do tooltip, lidas do tema como o neutro acima — as mesmas
+  // que `.pnl-positive`/`.pnl-negative` usam no card e na tabela.
+  const estilosDoTema = getComputedStyle(document.body);
+  const corLucro = estilosDoTema.getPropertyValue('--color-success').trim() || '#10b981';
+  const corPrejuizo = estilosDoTema.getPropertyValue('--color-danger').trim() || '#f43f5e';
   const pointBorderColor = isLight ? '#ffffff' : '#0c0f17';
   const crosshairColor = isLight ? 'rgba(0, 0, 0, 0.28)' : 'rgba(255, 255, 255, 0.28)';
 
@@ -862,15 +850,35 @@ function renderChart(canvas, trades, opts = {}) {
         legend: { display: false },
         tooltip: {
           backgroundColor: tooltipBg, titleColor: tooltipText, bodyColor: tooltipText,
-          titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
-          bodyFont: { family: 'Inter', size: 12 },
-          borderColor: tooltipBorder, borderWidth: 1, padding: 10, displayColors: false,
+          // O tooltip é a única leitura precisa do gráfico: é onde se lê quanto
+          // a conta valia naquela operação. Em 12px ele se perdia sobre a área
+          // preenchida; 14px no valor dá a ele o peso de um dado, não de nota
+          // de rodapé.
+          titleFont: { family: 'Plus Jakarta Sans', size: 13, weight: 'bold' },
+          bodyFont: { family: 'Inter', size: 14, weight: 'bold' },
+          borderColor: tooltipBorder, borderWidth: 1, padding: 14,
+          cornerRadius: 10, caretPadding: 8, displayColors: false,
           callbacks: {
             title: (c) => c[0].dataIndex === 0 ? startLabel : `Operação #${c[0].dataIndex}`,
             label: (c) => {
               if (estaOculto()) return `Acumulado: ${MASCARA}`;
               const v = c.raw;
               return `Acumulado: ${v > 0 ? '+' : ''}${formatCurrency(v)}`;
+            },
+            // Verde no lucro, vermelho no prejuízo — o mesmo sinal que o card e
+            // a tabela já dão. Sai das variáveis do tema (não de hex fixo) para
+            // acompanhar dark e light junto com o resto do app.
+            // **Cor é valor:** com os valores ocultos a linha volta ao neutro,
+            // senão ela entregaria o sinal do acumulado que a máscara acabou de
+            // esconder — é a mesma razão pela qual a linha do gráfico fica
+            // cinza no modo privacidade.
+            labelTextColor: (c) => {
+              if (estaOculto()) return tooltipText;
+              const v = c.raw;
+              if (v > 0) return corLucro;
+              if (v < 0) return corPrejuizo;
+              // Acumulado exatamente 0: nem lucro nem prejuízo
+              return tooltipText;
             }
           }
         }
@@ -879,8 +887,8 @@ function renderChart(canvas, trades, opts = {}) {
         // Sem grade vertical (decisão estética): quem dá referência de leitura é a
         // grade horizontal, do valor acumulado. Os rótulos do X continuam, e a
         // vertical que importa — a do crosshair — aparece sob o cursor.
-        x: { grid: { display: false, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 10 } } },
-        y: { grid: { color: gridColorY, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 10 }, callback: (v) => estaOculto() ? MASCARA_CURTA : formatCurrency(v) } }
+        x: { grid: { display: false, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 11 }, padding: 6 } },
+        y: { grid: { color: gridColorY, drawBorder: false }, ticks: { color: tickColor, font: { family: 'Inter', size: 11 }, padding: 8, callback: (v) => estaOculto() ? MASCARA_CURTA : formatCurrency(v) } }
       }
     }
   });
@@ -911,26 +919,17 @@ function renderDashboard() {
   DOM.dashKpiWinrateCard.classList.remove('win-trend');
   DOM.dashKpiAverageCard.classList.remove('win-trend', 'loss-trend');
 
-  DOM.dashIndAccumulated.className = 'kpi-indicator';
-  if (count === 0) {
+  // Sem linha de indicador — ver a nota em updateKPIs.
+  if (count === 0 || accumulated === 0) {
     escreverValor(DOM.dashValAccumulated, formatCurrency(accumulated));
     DOM.dashValAccumulated.className = 'kpi-value';
-    escreverValor(DOM.dashIndAccumulated, 'Sem operações');
-  } else if (accumulated === 0) {
-    // Bloco fechado exatamente no zero — com 0x0 no jogo isso acontece de
-    // verdade, e chamar de "positivo" (verde) seria mentira
-    escreverValor(DOM.dashValAccumulated, formatCurrency(accumulated));
-    DOM.dashValAccumulated.className = 'kpi-value';
-    escreverValor(DOM.dashIndAccumulated, 'Saldo neutro');
   } else if (accumulated > 0) {
     escreverValor(DOM.dashValAccumulated, formatCurrencySigned(accumulated));
     DOM.dashValAccumulated.className = 'kpi-value pnl-positive';
-    escreverValor(DOM.dashIndAccumulated, 'Saldo positivo');
     DOM.dashKpiAccumulatedCard.classList.add('win-trend');
   } else {
     escreverValor(DOM.dashValAccumulated, formatCurrencySigned(accumulated));
     DOM.dashValAccumulated.className = 'kpi-value pnl-negative';
-    escreverValor(DOM.dashIndAccumulated, 'Saldo negativo');
     DOM.dashKpiAccumulatedCard.classList.add('loss-trend');
   }
 
@@ -942,24 +941,16 @@ function renderDashboard() {
     escreverValor(DOM.dashIndWinrate, 'Taxa de acerto da conta');
   }
 
-  DOM.dashIndAverage.className = 'kpi-indicator';
-  if (count === 0) {
+  if (count === 0 || average === 0) {
     escreverValor(DOM.dashValAverage, formatCurrency(average));
     DOM.dashValAverage.className = 'kpi-value';
-    escreverValor(DOM.dashIndAverage, 'Média de lucro/prejuízo');
-  } else if (average === 0) {
-    escreverValor(DOM.dashValAverage, formatCurrency(average));
-    DOM.dashValAverage.className = 'kpi-value';
-    escreverValor(DOM.dashIndAverage, 'Média neutra');
   } else if (average > 0) {
     escreverValor(DOM.dashValAverage, formatCurrencySigned(average));
     DOM.dashValAverage.className = 'kpi-value pnl-positive';
-    escreverValor(DOM.dashIndAverage, 'Média positiva');
     DOM.dashKpiAverageCard.classList.add('win-trend');
   } else {
     escreverValor(DOM.dashValAverage, formatCurrencySigned(average));
     DOM.dashValAverage.className = 'kpi-value pnl-negative';
-    escreverValor(DOM.dashIndAverage, 'Média negativa');
     DOM.dashKpiAverageCard.classList.add('loss-trend');
   }
 
@@ -1220,6 +1211,12 @@ async function resolverImagensDoModal() {
  * número real e o usuário nunca mais o veria.
  */
 function aplicarModoResultado(tipo) {
+  // Cor do seletor (o CSS lê este atributo): verde no take, vermelho no stop,
+  // neutro no 0x0. Fica aqui, e não num listener próprio, porque esta função já
+  // é o ponto por onde passam os três caminhos que mudam o tipo — abrir para
+  // registrar, abrir para editar e trocar no seletor.
+  DOM.tradeType.dataset.tipo = tipo;
+
   if (tipo === 'zero') {
     if (!DOM.tradePnL.disabled) DOM.tradePnL.dataset.valorAntesDoZero = DOM.tradePnL.value;
     DOM.tradePnL.value = '0';
