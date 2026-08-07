@@ -201,6 +201,18 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   1.671 de recorte e os 20% de hoje dão 2.213. A escala medida dos dois temas
   está no `:root` — **os valores não se convertem entre temas por fórmula**
   (o claro parte de 1.070 e anda mais devagar); mexeu num, olhe o outro.
+- **No card de KPI, ícone e texto se alinham separadamente — cada um pelo card.**
+  Os quatro cards têm a mesma altura (o grid estica) mas não o mesmo conteúdo:
+  "Operações registradas" tem a barra de progresso e "Win rate" tem o indicador;
+  os outros dois param no valor. Daí o card ser `display: grid` **sem
+  `align-content` nem `align-items`** — a linha estica na altura toda e cada
+  item usa o `align-self` dele: `center` no ícone e no `.kpi-data`. **Alinhar os
+  dois juntos, como um bloco só, não funciona** (foi tentado nas duas variantes,
+  ago/2026): o ícone herda a posição do texto, que sobe ou desce conforme tenha
+  2 ou 3 linhas, e os quatro ícones desalinham. Consequência aceita: os valores
+  dos quatro cards não compartilham mais a linha de base — quem tem terceira
+  linha começa 7 a 11px acima. A âncora horizontal da faixa passou a ser a
+  linha dos ícones.
 - **O fio de luz cobre a borda de cima, não corre abaixo dela** (`top: -1px`).
   Com `top: 0` o pseudo-elemento fica dentro do padding box e o topo do painel
   ganha **duas linhas paralelas** — a da borda e a do fio —, que brigam: quanto

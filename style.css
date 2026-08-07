@@ -648,8 +648,27 @@ body:has(.modal-overlay.active) .badge-dot {
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: 20px;
-  display: flex;
-  align-items: flex-start;
+  /* Grid, e não flex, por causa da centragem vertical. Os quatro cards têm a
+     mesma altura (o grid estica), mas não o mesmo conteúdo: "Operações
+     registradas" tem a barra de progresso e "Win rate" tem o indicador
+     (`3 de 5 vitoriosos`) — os outros dois param no valor e sobrava um vazio
+     embaixo deles.
+
+     Ícone e texto são alinhados SEPARADAMENTE, cada um pelo card (ver os
+     `align-self` em `.kpi-icon-wrapper` e `.kpi-data`), e é justamente isso
+     que a regra precisa fazer. Enquanto os dois andavam juntos — o par
+     centrado como um bloco só, via `align-content: center` — o ícone herdava
+     a posição do texto, e como o texto tem 2 ou 3 linhas dependendo do card,
+     cada ícone parava numa altura diferente. Por isso NÃO há `align-content`
+     nem `align-items` aqui: a linha do grid estica na altura toda do card e
+     cada item se posiciona sozinho dentro dela.
+
+     Efeito colateral aceito (decisão do Nikolas, ago/2026): os valores dos
+     quatro cards deixam de compartilhar a mesma linha de base — quem tem
+     terceira linha começa 7 a 11px mais acima. Os ÍCONES é que passaram a ser
+     a linha horizontal compartilhada pelos quatro. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 16px;
   transition: var(--transition-normal);
   position: relative;
@@ -665,11 +684,26 @@ body:has(.modal-overlay.active) .badge-dot {
   box-shadow: var(--shadow-md);
 }
 
+/* 38px, e o número sai de uma proporção, não de gosto: o bloco de texto ao
+   lado (título + valor, com a margem entre eles) mede 51.6px, então o quadrado
+   fica em ~0.74 dele. A 44px, como era até ago/2026, a razão dava 0.85 e o
+   ícone competia com o número — que é o assunto do card. Serve de âncora o
+   ícone do card do gráfico (`.chart-title-icon`), que é 36/18 para um título
+   menor; o do KPI fica um degrau acima porque o valor ao lado é maior.
+   Mexeu no corpo de `.kpi-value` ou de `.kpi-title`? Refaça a conta. */
 .kpi-icon-wrapper {
+  /* Centrado no CARD, não no bloco de texto — e a diferença é tudo. Preso ao
+     card, o ícone não acompanha o texto, que sobe ou desce conforme tenha 2 ou
+     3 linhas; como os quatro cards têm a mesma altura, os quatro ícones caem
+     no mesmo Y. Centrar o ícone dentro da LINHA do grid (o que acontece com
+     `align-items: center` no card, junto de `align-content`) parece a mesma
+     coisa e não é: ali ele volta a herdar a posição do texto e os quatro
+     desalinham de novo. */
+  align-self: center;
   background-color: var(--surface-2);
   border: 1px solid var(--border-light);
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -679,12 +713,18 @@ body:has(.modal-overlay.active) .badge-dot {
 }
 
 .kpi-icon-wrapper :is(i, svg) {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
+/* Sem `flex-grow`: o card virou grid e quem dá a largura é o `minmax(0, 1fr)`
+   da segunda coluna. O `display: flex` daqui é o empilhamento interno
+   (título / valor / terceira linha) e continua valendo.
+   `align-self: center` centra o texto no card por conta própria — o ícone tem
+   o `align-self` dele, e é essa separação que mantém os quatro ícones no mesmo
+   Y mesmo com os textos em alturas diferentes. */
 .kpi-data {
-  flex-grow: 1;
+  align-self: center;
   display: flex;
   flex-direction: column;
 }
@@ -693,9 +733,11 @@ body:has(.modal-overlay.active) .badge-dot {
   /* Sem `text-transform: uppercase`: em caixa alta o rótulo fica ~20% mais
      largo, e com a coluna de conteúdo o card caiu de ~380px para ~270px —
      "Operações registradas" e "Resultado acumulado" passaram a quebrar em duas
-     linhas, o que desalinhava o valor de cada card numa altura diferente. Em
-     caixa normal os quatro rótulos cabem em uma linha, e os quatro valores
-     voltam a ficar na mesma linha de base. */
+     linhas. Em caixa normal os quatro rótulos cabem em uma linha, que é o que
+     mantém a ALTURA do rótulo igual nos quatro cards. (Isso também alinhava os
+     quatro valores na mesma linha de base; desde a centragem vertical do card
+     — ver `.kpi-card` — esse alinhamento não vale mais, e a razão de manter a
+     caixa normal passou a ser só a altura do rótulo.) */
   font-size: 0.76rem;
   font-weight: 600;
   color: var(--text-muted);
