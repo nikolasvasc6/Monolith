@@ -44,6 +44,21 @@
   --border-color: var(--surface-12);
   --border-light: var(--surface-3);
   --border-hover: rgba(255, 255, 255, 0.12);
+
+  /* Borda dos PAINÉIS de conteúdo — KPI, gráfico, calculadora e tabela —, os
+     quatro que assentam direto sobre o fundo da página. Mais forte que a
+     --border-color geral, que continua valendo para o que assenta sobre um
+     card (input, linha de tabela, botão) e para sidebar/topbar: engrossar o
+     recorte ali transformaria a tabela numa grade.
+
+     Desde o degradê do painel, esta linha é a ÚNICA coisa que separa o card do
+     fundo na base, onde a superfície já dissolveu — daí ela subir junto.
+     Medido contra --bg-gradient-glow (o ponto mais claro do fundo, atrás dos
+     KPIs, que é o caso difícil): 12% dava 1.671 de recorte, 20% dá 2.213 e
+     24% dá 2.551. 20% é a escolha — 24% fica disponível como o próximo degrau
+     se o contorno ainda parecer tímido; medido, não estimado. */
+  --border-card: rgba(255, 255, 255, 0.20);
+  --border-card-hover: rgba(255, 255, 255, 0.30);
   
   --color-primary: #2563eb;
   --color-primary-hover: #3b82f6;
@@ -618,9 +633,11 @@ body:has(.modal-overlay.active) .badge-dot {
   margin-bottom: 24px;
 }
 
+/* Sem `background-color`: o fundo vem da seção "PAINEL EM DEGRADÊ" — mesma
+   regra do card do gráfico e do card de Resultado. Cor chapada aqui pinta por
+   baixo do degradê e o anula, sem erro nenhum. */
 .kpi-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: 20px;
   display: flex;
@@ -632,7 +649,7 @@ body:has(.modal-overlay.active) .badge-dot {
 }
 
 .kpi-card:hover {
-  border-color: var(--border-hover);
+  border-color: var(--border-card-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -749,7 +766,7 @@ body:has(.modal-overlay.active) .badge-dot {
    aqui pintaria por baixo do degradê e mataria a dissolução da base, que é
    justamente o efeito. Para mudar a cor do card, mexa em `--bg-card`. */
 .card-chart-container {
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: 24px;
   margin-bottom: 24px;
@@ -1226,7 +1243,7 @@ body:has(.modal-overlay.active) .badge-dot {
    ========================================================================== */
 .table-container {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   overflow: hidden;
   overflow-x: auto; /* tabela larga rola dentro do card, não a página inteira */
@@ -1716,7 +1733,7 @@ body:has(.modal-overlay.active) .badge-dot {
 /* Estilo Base dos Cards de Calculadora */
 .calc-card {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-card);
   border-radius: var(--radius-lg); /* Cantos mais arredondados */
   padding: 30px;
   transition: box-shadow var(--transition-normal), border-color var(--transition-normal);
@@ -1724,7 +1741,7 @@ body:has(.modal-overlay.active) .badge-dot {
 }
 
 .calc-card:hover {
-  border-color: var(--border-hover);
+  border-color: var(--border-card-hover);
   box-shadow: var(--shadow-md);
 }
 
@@ -1964,10 +1981,10 @@ body.light-theme .input-with-icon select {
 /* ==========================================================================
    PAINEL EM DEGRADÊ (visual de "painel", compartilhado)
    ==========================================================================
-   Fonte única do efeito: card de Resultado das calculadoras e card do gráfico
-   de performance (Diário e Dashboard). Painel novo entra nos dois seletores
-   abaixo — não copie o bloco, senão o 165deg e o fio de luz passam a existir
-   em duas versões que envelhecem separadas.
+   Fonte única do efeito: os quatro KPIs, o card do gráfico de performance
+   (Diário e Dashboard) e o card de Resultado das calculadoras. Painel novo
+   entra nos seletores abaixo — não copie o bloco, senão o 165deg e o fio de
+   luz passam a existir em versões que envelhecem separadas.
 
    Por que funciona: o degradê vai da cor do card até `--surface-1`, que é um
    tinte de 1% — quase transparente. A base do painel não é "um azul mais
@@ -1984,20 +2001,18 @@ body.light-theme .input-with-icon select {
    pinta por baixo do degradê e o card de Resultado volta a ser fundo liso. */
 
 .calc-card-result,
-.card-chart-container {
+.card-chart-container,
+.kpi-card {
   background: linear-gradient(165deg, var(--bg-card) 0%, var(--surface-1) 100%);
   position: relative;
-}
-
-.calc-card-result {
-  border-color: var(--border-color);
 }
 
 /* Fio de luz na borda de cima. Recuado em `--radius-lg` de cada lado para
    morrer antes dos cantos arredondados — sem o recuo ele vaza no canto, onde
    a borda do card já virou curva. */
 .calc-card-result::before,
-.card-chart-container::before {
+.card-chart-container::before,
+.kpi-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -2414,8 +2429,12 @@ body.valores-ocultos :is(#summary-pl, #dash-summary-pl) {
   color: var(--text-secondary) !important;
 }
 
+/* A barra colorida da esquerda volta ao neutro — e neutro aqui é
+   `--border-card`, o mesmo dos outros três lados. Com `--border-color` (12%)
+   o card ficaria com um lado visivelmente mais apagado que o resto do
+   contorno, que é justamente o que a máscara não deve fazer: chamar atenção. */
 body.valores-ocultos .kpi-card:is(.win-trend, .loss-trend) {
-  border-left-color: var(--border-color);
+  border-left-color: var(--border-card);
 }
 
 body.valores-ocultos .kpi-card:is(.win-trend, .loss-trend) .kpi-icon-wrapper {
@@ -2446,6 +2465,12 @@ body.light-theme {
   --border-color: rgba(0, 0, 0, 0.08);
   --border-light: rgba(0, 0, 0, 0.04);
   --border-hover: rgba(0, 0, 0, 0.15);
+  /* Mesma função que no dark (ver a nota lá), com o valor refeito para cá: o
+     tema claro parte de um recorte muito menor — card branco sobre fundo
+     quase branco dá 1.07 a 8% —, então 14% aqui é o equivalente do salto que
+     20% faz no escuro, e não o mesmo número invertido. */
+  --border-card: rgba(0, 0, 0, 0.14);
+  --border-card-hover: rgba(0, 0, 0, 0.24);
 
   /* Texto */
   --text-primary: #1f2937;

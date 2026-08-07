@@ -181,14 +181,24 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   scroll horizontal em janela < 1192px); e a **topbar fica de fora**, de propósito.
   Página nova **não cria centralização própria** — herda a da `.page-section`.
 - **O "painel em degradê" é uma regra compartilhada, não um bloco para copiar.**
-  O card de Resultado das calculadoras e o card do gráfico (Diário e Dashboard)
-  leem a mesma seção do `style.css` — fundo `165deg` da cor do card até
-  `--surface-1` (tinte de 1%), mais o fio de luz de 2px no topo. A base do painel
-  não é uma cor mais escura: é **o fundo da página aparecendo por baixo**, e é por
-  isso que o efeito acompanha dark e light sozinho. Consequência: painel nesse
-  padrão **não pode ter `background-color` próprio** — a cor chapada pinta por
-  baixo do degradê e o card volta a ser fundo liso, sem erro nenhum. Painel novo
-  entra nos seletores existentes.
+  Os quatro KPIs, o card do gráfico (Diário e Dashboard) e o card de Resultado
+  das calculadoras leem a mesma seção do `style.css` — fundo `165deg` da cor do
+  card até `--surface-1` (tinte de 1%), mais o fio de luz de 2px no topo. A base
+  do painel não é uma cor mais escura: é **o fundo da página aparecendo por
+  baixo**, e é por isso que o efeito acompanha dark e light sozinho.
+  Consequência: painel nesse padrão **não pode ter `background-color` próprio** —
+  a cor chapada pinta por baixo do degradê e o card volta a ser fundo liso, sem
+  erro nenhum. Painel novo entra nos seletores existentes.
+- **Painel tem borda própria (`--border-card`), mais forte que `--border-color`.**
+  São duas linhas com funções diferentes: `--border-card` (20% no dark, 14% no
+  claro) recorta os painéis que assentam **no fundo da página** — KPI, gráfico,
+  calculadora, tabela; `--border-color` (12%/8%) fica com o que assenta **sobre
+  um card** (input, linha de tabela, botão) e com sidebar/topbar. Engrossar a
+  segunda transformaria a tabela numa grade. A separação subiu junto com o
+  degradê por necessidade: na base do painel a superfície dissolve no fundo, e
+  a borda passa a ser a **única** coisa que recorta o card ali. Medido contra
+  `--bg-gradient-glow` (o pior caso, atrás dos KPIs): 12% dava 1.671, os 20% de
+  hoje dão 2.213, e 24% daria 2.551 — o próximo degrau, se um dia parecer tímido.
 - **Todo texto de UI e mensagens de erro em pt-BR.**
 - **Toda I/O de dados passa pelos serviços** (`js/services/*`) — não chame `supabase`
   diretamente do `app.js`.
