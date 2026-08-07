@@ -190,7 +190,7 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   a cor chapada pinta por baixo do degradê e o card volta a ser fundo liso, sem
   erro nenhum. Painel novo entra nos seletores existentes.
 - **Painel tem borda própria (`--border-card`), mais forte que `--border-color`.**
-  São duas linhas com funções diferentes: `--border-card` (24% no dark, 20% no
+  São duas linhas com funções diferentes: `--border-card` (20% no dark, 14% no
   claro) recorta os painéis que assentam **no fundo da página** — KPI, gráfico,
   calculadora, tabela; `--border-color` (12%/8%) fica com o que assenta **sobre
   um card** (input, linha de tabela, botão) e com sidebar/topbar. Engrossar a
@@ -198,11 +198,17 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   degradê por necessidade: na base do painel a superfície dissolve no fundo, e
   a borda passa a ser a **única** coisa que recorta o card ali. Medido contra
   `--bg-gradient-glow` (o pior caso, atrás dos KPIs): a herança de 12% dava
-  1.671 de recorte e os 24% de hoje dão 2.551. **Os dois temas se acertam por
-  salto relativo, não pelo mesmo número:** o claro parte de um recorte bem
-  menor (1.070 a 8%) e anda mais devagar, então 20% lá equivale a 24% aqui.
-  A escala medida inteira está no comentário do `:root` — mexeu num tema,
-  refaça a conta no outro.
+  1.671 de recorte e os 20% de hoje dão 2.213. A escala medida dos dois temas
+  está no `:root` — **os valores não se convertem entre temas por fórmula**
+  (o claro parte de 1.070 e anda mais devagar); mexeu num, olhe o outro.
+- **O fio de luz cobre a borda de cima, não corre abaixo dela** (`top: -1px`).
+  Com `top: 0` o pseudo-elemento fica dentro do padding box e o topo do painel
+  ganha **duas linhas paralelas** — a da borda e a do fio —, que brigam: quanto
+  mais forte o contorno, mais o fio vira um risco a mais em vez de um brilho.
+  Foi o que apareceu com a borda a 24% (ago/2026). Consequência: `.kpi-card`
+  **não pode ter `overflow: hidden`**, que recorta no padding box e comeria
+  justamente esse 1px. Quem precisa de recorte lá dentro é a barra de
+  progresso, e ela tem o dela em `.progress-bar-container`.
 - **Todo texto de UI e mensagens de erro em pt-BR.**
 - **Toda I/O de dados passa pelos serviços** (`js/services/*`) — não chame `supabase`
   diretamente do `app.js`.

@@ -59,11 +59,14 @@
        8% → 1.464   12% → 1.671   14% → 1.790   17% → 1.989
        20% → 2.213  24% → 2.551   28% → 2.937
 
-     A escolha do Nikolas é 24%. A escala passou por 12% (o valor herdado da
-     --border-color) e 20% antes de parar aqui — os números acima ficam para
-     que o próximo ajuste seja uma leitura, não outra rodada de medição. */
-  --border-card: rgba(255, 255, 255, 0.24);
-  --border-card-hover: rgba(255, 255, 255, 0.34);
+     A escala passou por 12% (o valor herdado da --border-color), 20% e 24%
+     antes de voltar a 20%: a 24% o contorno passou a brigar com o fio de luz
+     do topo, que na época corria logo abaixo dele. A causa daquela briga era
+     estrutural e está resolvida (ver `top: -1px` na seção PAINEL EM DEGRADÊ),
+     então 24% voltou a ser uma opção — os números acima ficam para que o
+     próximo ajuste seja uma leitura, não outra rodada de medição. */
+  --border-card: rgba(255, 255, 255, 0.20);
+  --border-card-hover: rgba(255, 255, 255, 0.30);
   
   --color-primary: #2563eb;
   --color-primary-hover: #3b82f6;
@@ -650,7 +653,10 @@ body:has(.modal-overlay.active) .badge-dot {
   gap: 16px;
   transition: var(--transition-normal);
   position: relative;
-  overflow: hidden;
+  /* Sem `overflow: hidden` (que estava aqui): ele recorta no PADDING BOX, ou
+     seja, corta fora justamente o 1px em que o fio de luz cobre a borda de
+     cima. A barra de progresso, único filho que precisava de recorte, tem o
+     `overflow: hidden` dela mesma em `.progress-bar-container`. */
 }
 
 .kpi-card:hover {
@@ -2014,13 +2020,21 @@ body.light-theme .input-with-icon select {
 
 /* Fio de luz na borda de cima. Recuado em `--radius-lg` de cada lado para
    morrer antes dos cantos arredondados — sem o recuo ele vaza no canto, onde
-   a borda do card já virou curva. */
+   a borda do card já virou curva.
+
+   `top: -1px` é o detalhe que faz a coisa funcionar: o fio SOBE sobre a borda
+   e a substitui no trecho em que existe, em vez de correr logo abaixo dela.
+   Com `top: 0` (posição relativa ao padding box, ou seja, já dentro da borda)
+   o topo do card fica com DUAS linhas paralelas — a branca da borda e a azul
+   do fio —, e elas brigam: quanto mais forte o contorno, mais o fio vira só
+   mais um risco em vez de um brilho. Foi o que o Nikolas viu com a borda a
+   24%. Agora a borda aparece só nas pontas, onde o fio já desvaneceu. */
 .calc-card-result::before,
 .card-chart-container::before,
 .kpi-card::before {
   content: '';
   position: absolute;
-  top: 0;
+  top: -1px;
   left: var(--radius-lg);
   right: var(--radius-lg);
   height: 2px;
@@ -2473,12 +2487,18 @@ body.light-theme {
   /* Mesma função que no dark (ver a nota lá), com o valor refeito para cá e
      NÃO o mesmo número invertido: o tema claro parte de um recorte muito
      menor — card branco sobre fundo quase branco dá 1.070 a 8% — e a escala
-     anda mais devagar. Medido aqui: 14% → 1.235, 17% → 1.330, 20% → 1.436,
-     24% → 1.596. Os 20% acompanham os 24% do dark em SALTO RELATIVO
-     (+16% de recorte contra os +15% de lá), que é o que mantém os dois temas
-     com a mesma leitura. Ao mexer num, refaça esta conta no outro. */
-  --border-card: rgba(0, 0, 0, 0.20);
-  --border-card-hover: rgba(0, 0, 0, 0.30);
+     anda mais devagar. Medido aqui:
+
+       8% → 1.070   12% → 1.176   14% → 1.235   17% → 1.330
+       20% → 1.436  24% → 1.596   28% → 1.782
+
+     Não há fórmula fechada casando os dois temas: dependendo de você comparar
+     salto incremental ou ganho sobre a --border-color herdada, o "equivalente"
+     de um mesmo valor do dark cai em números diferentes aqui. A calibração é
+     por leitura, com a escala acima como referência — ao mexer num tema, olhe
+     o outro, não converta. */
+  --border-card: rgba(0, 0, 0, 0.14);
+  --border-card-hover: rgba(0, 0, 0, 0.24);
 
   /* Texto */
   --text-primary: #1f2937;
