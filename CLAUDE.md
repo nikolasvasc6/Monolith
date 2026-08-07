@@ -190,15 +190,19 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   a cor chapada pinta por baixo do degradê e o card volta a ser fundo liso, sem
   erro nenhum. Painel novo entra nos seletores existentes.
 - **Painel tem borda própria (`--border-card`), mais forte que `--border-color`.**
-  São duas linhas com funções diferentes: `--border-card` (20% no dark, 14% no
+  São duas linhas com funções diferentes: `--border-card` (24% no dark, 20% no
   claro) recorta os painéis que assentam **no fundo da página** — KPI, gráfico,
   calculadora, tabela; `--border-color` (12%/8%) fica com o que assenta **sobre
   um card** (input, linha de tabela, botão) e com sidebar/topbar. Engrossar a
   segunda transformaria a tabela numa grade. A separação subiu junto com o
   degradê por necessidade: na base do painel a superfície dissolve no fundo, e
   a borda passa a ser a **única** coisa que recorta o card ali. Medido contra
-  `--bg-gradient-glow` (o pior caso, atrás dos KPIs): 12% dava 1.671, os 20% de
-  hoje dão 2.213, e 24% daria 2.551 — o próximo degrau, se um dia parecer tímido.
+  `--bg-gradient-glow` (o pior caso, atrás dos KPIs): a herança de 12% dava
+  1.671 de recorte e os 24% de hoje dão 2.551. **Os dois temas se acertam por
+  salto relativo, não pelo mesmo número:** o claro parte de um recorte bem
+  menor (1.070 a 8%) e anda mais devagar, então 20% lá equivale a 24% aqui.
+  A escala medida inteira está no comentário do `:root` — mexeu num tema,
+  refaça a conta no outro.
 - **Todo texto de UI e mensagens de erro em pt-BR.**
 - **Toda I/O de dados passa pelos serviços** (`js/services/*`) — não chame `supabase`
   diretamente do `app.js`.

@@ -54,11 +54,16 @@
      Desde o degradê do painel, esta linha é a ÚNICA coisa que separa o card do
      fundo na base, onde a superfície já dissolveu — daí ela subir junto.
      Medido contra --bg-gradient-glow (o ponto mais claro do fundo, atrás dos
-     KPIs, que é o caso difícil): 12% dava 1.671 de recorte, 20% dá 2.213 e
-     24% dá 2.551. 20% é a escolha — 24% fica disponível como o próximo degrau
-     se o contorno ainda parecer tímido; medido, não estimado. */
-  --border-card: rgba(255, 255, 255, 0.20);
-  --border-card-hover: rgba(255, 255, 255, 0.30);
+     KPIs, que é o caso difícil), com o card em --bg-card por baixo:
+
+       8% → 1.464   12% → 1.671   14% → 1.790   17% → 1.989
+       20% → 2.213  24% → 2.551   28% → 2.937
+
+     A escolha do Nikolas é 24%. A escala passou por 12% (o valor herdado da
+     --border-color) e 20% antes de parar aqui — os números acima ficam para
+     que o próximo ajuste seja uma leitura, não outra rodada de medição. */
+  --border-card: rgba(255, 255, 255, 0.24);
+  --border-card-hover: rgba(255, 255, 255, 0.34);
   
   --color-primary: #2563eb;
   --color-primary-hover: #3b82f6;
@@ -2465,12 +2470,15 @@ body.light-theme {
   --border-color: rgba(0, 0, 0, 0.08);
   --border-light: rgba(0, 0, 0, 0.04);
   --border-hover: rgba(0, 0, 0, 0.15);
-  /* Mesma função que no dark (ver a nota lá), com o valor refeito para cá: o
-     tema claro parte de um recorte muito menor — card branco sobre fundo
-     quase branco dá 1.07 a 8% —, então 14% aqui é o equivalente do salto que
-     20% faz no escuro, e não o mesmo número invertido. */
-  --border-card: rgba(0, 0, 0, 0.14);
-  --border-card-hover: rgba(0, 0, 0, 0.24);
+  /* Mesma função que no dark (ver a nota lá), com o valor refeito para cá e
+     NÃO o mesmo número invertido: o tema claro parte de um recorte muito
+     menor — card branco sobre fundo quase branco dá 1.070 a 8% — e a escala
+     anda mais devagar. Medido aqui: 14% → 1.235, 17% → 1.330, 20% → 1.436,
+     24% → 1.596. Os 20% acompanham os 24% do dark em SALTO RELATIVO
+     (+16% de recorte contra os +15% de lá), que é o que mantém os dois temas
+     com a mesma leitura. Ao mexer num, refaça esta conta no outro. */
+  --border-card: rgba(0, 0, 0, 0.20);
+  --border-card-hover: rgba(0, 0, 0, 0.30);
 
   /* Texto */
   --text-primary: #1f2937;
