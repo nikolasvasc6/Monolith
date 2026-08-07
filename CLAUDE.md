@@ -180,6 +180,15 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
   estoure o pai (item flex com margem auto no eixo transversal para de esticar e vira
   scroll horizontal em janela < 1192px); e a **topbar fica de fora**, de propósito.
   Página nova **não cria centralização própria** — herda a da `.page-section`.
+- **O "painel em degradê" é uma regra compartilhada, não um bloco para copiar.**
+  O card de Resultado das calculadoras e o card do gráfico (Diário e Dashboard)
+  leem a mesma seção do `style.css` — fundo `165deg` da cor do card até
+  `--surface-1` (tinte de 1%), mais o fio de luz de 2px no topo. A base do painel
+  não é uma cor mais escura: é **o fundo da página aparecendo por baixo**, e é por
+  isso que o efeito acompanha dark e light sozinho. Consequência: painel nesse
+  padrão **não pode ter `background-color` próprio** — a cor chapada pinta por
+  baixo do degradê e o card volta a ser fundo liso, sem erro nenhum. Painel novo
+  entra nos seletores existentes.
 - **Todo texto de UI e mensagens de erro em pt-BR.**
 - **Toda I/O de dados passa pelos serviços** (`js/services/*`) — não chame `supabase`
   diretamente do `app.js`.

@@ -743,8 +743,12 @@ body:has(.modal-overlay.active) .badge-dot {
 /* ==========================================================================
    ACCOUNT PERFORMANCE CHART
    ========================================================================== */
+/* O fundo em degradê e o fio de luz do topo NÃO estão aqui: saem da seção
+   "PAINEL EM DEGRADÊ", compartilhada com o card de Resultado das calculadoras.
+   E não é descuido que falte `background-color` neste bloco — uma cor chapada
+   aqui pintaria por baixo do degradê e mataria a dissolução da base, que é
+   justamente o efeito. Para mudar a cor do card, mexa em `--bg-card`. */
 .card-chart-container {
-  background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 24px;
@@ -1958,18 +1962,42 @@ body.light-theme .input-with-icon select {
 }
 
 /* ==========================================================================
-   ESTILIZAÇÃO DO CARD DE RESULTADO (Visual de "Painel")
-   ========================================================================== */
+   PAINEL EM DEGRADÊ (visual de "painel", compartilhado)
+   ==========================================================================
+   Fonte única do efeito: card de Resultado das calculadoras e card do gráfico
+   de performance (Diário e Dashboard). Painel novo entra nos dois seletores
+   abaixo — não copie o bloco, senão o 165deg e o fio de luz passam a existir
+   em duas versões que envelhecem separadas.
 
-.calc-card-result {
-  /* Gradiente de fundo sutil para destacar a área */
+   Por que funciona: o degradê vai da cor do card até `--surface-1`, que é um
+   tinte de 1% — quase transparente. A base do painel não é "um azul mais
+   escuro": é o fundo da página aparecendo por baixo. Por isso o efeito
+   acompanha os dois temas sozinho (no claro os tintes invertem para preto) e
+   por isso nenhum dos dois cards pode ter `background-color` próprio.
+
+   Consequência aceita: na base, a superfície do painel encosta no fundo e o
+   recorte fica todo por conta da borda de 12% — que é exatamente o modelo de
+   contraste deste app (ver a nota em `--bg-card`), não uma exceção.
+
+   ESTE BLOCO PRECISA VIR DEPOIS DE `.calc-card`, que define
+   `background-color: var(--bg-card)`. Movido para antes, aquela cor chapada
+   pinta por baixo do degradê e o card de Resultado volta a ser fundo liso. */
+
+.calc-card-result,
+.card-chart-container {
   background: linear-gradient(165deg, var(--bg-card) 0%, var(--surface-1) 100%);
   position: relative;
+}
+
+.calc-card-result {
   border-color: var(--border-color);
 }
 
-/* Pseudo-elemento para uma borda superior colorida sutil */
-.calc-card-result::before {
+/* Fio de luz na borda de cima. Recuado em `--radius-lg` de cada lado para
+   morrer antes dos cantos arredondados — sem o recuo ele vaza no canto, onde
+   a borda do card já virou curva. */
+.calc-card-result::before,
+.card-chart-container::before {
   content: '';
   position: absolute;
   top: 0;

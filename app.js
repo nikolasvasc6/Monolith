@@ -812,7 +812,11 @@ function renderChart(canvas, trades, opts = {}) {
   const corLucro = varDoTema('--color-success', '#10b981');
   const corPrejuizo = varDoTema('--color-danger', '#f43f5e');
   // O ponto do gráfico é recortado do fundo do CARD, que é onde ele está
-  // desenhado — não do fundo da página.
+  // desenhado — não do fundo da página. Desde o degradê do painel (ver
+  // "PAINEL EM DEGRADÊ" no style.css) o recorte é exato no topo do card e vai
+  // ficando aproximado conforme desce, porque lá embaixo o card já dissolveu
+  // no fundo. Fica assim de propósito: são 2px que só aparecem sob o cursor, e
+  // seguir o degradê exigiria ler a cor do pixel a cada hover.
   const pointBorderColor = varDoTema('--bg-card', isLight ? '#ffffff' : '#151d2b');
   const crosshairColor = isLight ? 'rgba(0, 0, 0, 0.28)' : 'rgba(255, 255, 255, 0.28)';
 
