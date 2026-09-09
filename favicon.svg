@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Marca Monolith: quadrado azul arredondado + trending-up (Lucide) -->
-  <rect width="32" height="32" rx="7" fill="#2563eb"/>
-  <g transform="translate(4 4)" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
-    <polyline points="16 7 22 7 22 13"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Monolith — M esculpido</title>
+  <rect width="64" height="64" rx="14" fill="#0b1018"/>
+  <!-- O recorte central forma o M; a face lateral dá espessura ao monólito. -->
+  <path d="M12 50V16L22 12L32 28L42 12V46L32 50V34L22 26V46Z" fill="#f8fafc"/>
+  <path d="M42 12L52 16V50L42 46Z" fill="#2563eb"/>
+  <path d="M22 12L32 28L32 34L22 26Z" fill="#94a3b8"/>
 </svg>
