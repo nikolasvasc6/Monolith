@@ -234,20 +234,15 @@ body {
 }
 
 .logo-icon {
-  background-color: var(--color-primary);
-  color: #fff;
   width: 38px;
   height: 38px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-primary);
+  flex-shrink: 0;
 }
 
-.logo-icon :is(i, svg) {
-  width: 20px;
-  height: 20px;
+.logo-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .logo-text h2 {
