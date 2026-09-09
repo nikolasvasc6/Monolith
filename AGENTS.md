@@ -67,6 +67,14 @@ na nuvem entre dispositivos. Single-page app em **HTML/CSS/JavaScript vanilla (E
 
 ## Conceitos do domínio
 
+- **Moeda do diário: USD.** Nikolas confirmou em 2026-09-09 que todos os trades,
+  inclusive os antigos, estão em dólares. O campo de resultado deve indicar USD;
+  não apresentar "USD/R$" nem converter valores do histórico. A calculadora B3
+  continua usando reais, pois tem moeda própria e não grava no diário.
+- **Data da operação é local:** o preenchimento de novo trade e o fallback de
+  importação usam `dataLocalISO()` (`js/data-local.js`), sem converter para UTC.
+  Editar/importar uma operação com data informada preserva essa data. O timestamp
+  `exportedAt` do backup continua sendo um instante UTC.
 - **Bloco de 35 operações** (`TRADES_PER_BLOCK = 35`): o diário agrupa trades em blocos de
   35; ao completar um bloco, o próximo abre automaticamente. A UI navega entre blocos.
   Posições são contíguas (0..n-1): excluir renumera as seguintes no banco, e a autocura

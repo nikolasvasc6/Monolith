@@ -9,6 +9,7 @@
  */
 
 import { onAuthChange, getSession, signOut, refreshSession } from './js/auth.js';
+import { dataLocalISO } from './js/data-local.js';
 import { initAuthUI, showAuthScreen, hideAuthScreen, onAuthenticated } from './js/ui/auth-ui.js';
 import {
   fetchAllTradesByBlock,
@@ -1244,7 +1245,7 @@ function openTradeModal(trade = null, slotIndex = null) {
     DOM.modalTitle.textContent = `Registrar Operação #${String(slotIndex + 1).padStart(2, '0')}`;
     DOM.tradeIdInput.value = '';
     DOM.tradeSlotInput.value = slotIndex !== null ? slotIndex : '';
-    DOM.tradeDate.value = new Date().toISOString().split('T')[0];
+    DOM.tradeDate.value = dataLocalISO();
     DOM.tradeAsset.value = '';
     DOM.tradeType.value = 'take';
     DOM.tradePnL.value = '';

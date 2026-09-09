@@ -6,6 +6,7 @@
  * cliente estar autenticado. O RLS no banco impede qualquer leak.
  */
 import { supabase } from '../supabase-client.js';
+import { dataLocalISO } from '../data-local.js';
 
 const TABLE = 'trades';
 
@@ -149,7 +150,7 @@ export async function bulkImportTrades(userId, blocks, blockOffset = 0) {
         type:        tipo,
         // 0x0 é sempre zero: JSON adulterado não cria empate de R$ 300
         pnl:         tipo === 'zero' ? 0 : (Number(t.pnl) || 0),
-        trade_date:  t.date || new Date().toISOString().slice(0, 10),
+        trade_date:  t.date || dataLocalISO(),
         notes:       t.notes || null,
         // Backup JSON não carrega imagem (elas vivem no Storage)
         images:      [],
